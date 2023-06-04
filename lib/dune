@@ -1,2 +1,3 @@
 (library
- (name wiscodb))
+ (name wiscodb)
+ (libraries core stdint))
