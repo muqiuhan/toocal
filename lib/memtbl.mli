@@ -18,8 +18,8 @@ end
 (** memtbl_records: Array of records sorted by key.
     memtbl_size: The number of records filled in `records`. *)
 type t =
-  { memtbl_records : Record.t array;
-    mutable memtbl_size : int }
+  { records : Record.t array;
+    mutable size : int }
 
 (** Creates a new empty MemTable. *)
 val make : unit -> t

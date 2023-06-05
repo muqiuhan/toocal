@@ -22,27 +22,27 @@ module Record = struct
 end
 
 (** MemTable of the Database.
-    memtbl_records: Array of records sorted by key.
-    memtbl_size: The number of records filled in records. *)
+    records: Array of records sorted by key.
+    size: The number of records filled in records. *)
 type t =
-  { memtbl_records : Record.t array;
-    mutable memtbl_size : int }
+  { records : Record.t array;
+    mutable size : int }
 
 (** Creates a new empty MemTable. *)
 let create : unit -> t =
-  fun () -> {memtbl_size = 0; memtbl_records = Array.create ~len:max_size Record.empty}
+  fun () -> {size = 0; records = Array.create ~len:max_size Record.empty}
 ;;
 
 let binary_search : t -> string -> int option =
   fun memtbl key ->
-   Array.binary_search memtbl.memtbl_records `First_equal_to ~compare:Record.Cmp.key key
+   Array.binary_search memtbl.records `First_equal_to ~compare:Record.Cmp.key key
 ;;
 
 let insert_point : t -> string -> int =
   fun memtbl key ->
    match
      Array.binary_search
-       memtbl.memtbl_records
+       memtbl.records
        `First_greater_than_or_equal_to
        ~compare:Record.Cmp.key
        key
@@ -56,7 +56,7 @@ let insert_point : t -> string -> int =
     This function uses binary search for a runtime of O(log(n)). *)
 let get : t -> string -> Record.t option =
   fun memtbl key ->
-   Option.map (binary_search memtbl key) ~f:(fun index -> memtbl.memtbl_records.(index))
+   Option.map (binary_search memtbl key) ~f:(fun index -> memtbl.records.(index))
 ;;
 
 (** Sets a key-value pair in a MemTable.
@@ -65,14 +65,14 @@ let set : t -> string -> int -> unit =
   fun memtbl key value_loc ->
    let insert_index = insert_point memtbl key in
        Array.blit
-         ~src:memtbl.memtbl_records
+         ~src:memtbl.records
          ~src_pos:insert_index
-         ~dst:memtbl.memtbl_records
+         ~dst:memtbl.records
          ~dst_pos:(insert_index + 1)
-         ~len:(memtbl.memtbl_size - insert_index);
-       memtbl.memtbl_records.(insert_index)
+         ~len:(memtbl.size - insert_index);
+       memtbl.records.(insert_index)
          <- Record.{key; value_loc; key_len = String.length key};
-       memtbl.memtbl_size <- memtbl.memtbl_size + 1
+       memtbl.size <- memtbl.size + 1
 ;;
 
 (** Deletes a record from a MemTable.

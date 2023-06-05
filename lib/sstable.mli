@@ -20,7 +20,6 @@ module Record : sig
       value_loc : int }
 end
 
-(** *)
 type t =
   { (* Path of the SSTable on-disk. *)
     path : string;
@@ -46,32 +45,32 @@ type t =
 
 and compation_level = |
 
-(** @brief Parses the creation timestamp in microseconds from a SSTable filename. *)
+(** Parses the creation timestamp in microseconds from a SSTable filename. *)
 val parse_timestamp : string -> float
 
-(** @brief Parses the compaction level from a SSTable filename. *)
+(** Parses the compaction level from a SSTable filename. *)
 val parse_compaction_level : string -> compation_level
 
-(** @brief Loads a SSTable at a path.
+(** Loads a SSTable at a path.
     This operation scans the entire SSTable to build the index. *)
 val create : string -> t
 
-(** @brief Creates a new SSTable from a full MemTable. 
-    @note This function will create a new SSTable at a path.
+(** Creates a new SSTable from a full MemTable. 
+    This function will create a new SSTable at a path.
            If a file already exists at this path, then the file will be overwritten. *)
 val create_from_memtbl : string -> Memtbl.t -> t
 
-(** @brief Gets the location of a value on the ValueLog from a key.
-    @note This function uses the in-memory index to seek each record on disk.
+(** Gets the location of a value on the ValueLog from a key.
+    This function uses the in-memory index to seek each record on disk.
            This function uses binary search for a runtime of O(log(n)) seeks. 
 
-    @return This function returns the position in the ValueLog if the key is found.
+    This function returns the position in the ValueLog if the key is found.
              -2 if the key is not in the SSTable.
              -1 if there is an error reading the record. *)
 val get_value_loc : t -> string -> int
 
-(** @brief Checks if the given key could be in this SSTable.
-    @note This function runs in constant time without any operations on disk. 
+(** Checks if the given key could be in this SSTable.
+    This function runs in constant time without any operations on disk. 
 
-    @return This function returns 1 if the key is in the range and 0 if it is not. *)
+    This function returns 1 if the key is in the range and 0 if it is not. *)
 val in_key_ranges : t -> int -> int
