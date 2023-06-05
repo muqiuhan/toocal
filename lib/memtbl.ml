@@ -12,9 +12,9 @@ module Record = struct
   type t =
     { key : string;
       key_len : int;
-      value_loc : int64 }
+      value_loc : int }
 
-  let empty = {key = ""; key_len = 0; value_loc = Int64.zero}
+  let empty = {key = ""; key_len = 0; value_loc = 0}
 
   module Cmp = struct
     let key : t -> string -> int = fun record key -> compare_string key record.key
@@ -61,7 +61,7 @@ let get : t -> string -> Record.t option =
 
 (** Sets a key-value pair in a MemTable.
     This function uses binary search for a runtime of O(log(n)) *)
-let set : t -> string -> int64 -> unit =
+let set : t -> string -> int -> unit =
   fun memtbl key value_loc ->
    let insert_index = insert_point memtbl key in
        Array.blit
@@ -78,4 +78,4 @@ let set : t -> string -> int64 -> unit =
 (** Deletes a record from a MemTable.
     This function uses binary search for a runtime of O(log(n)).
     Note: This function will set a tombstone to propagate the delete into the SSTables. *)
-let delete : t -> string -> unit = fun memtbl key -> set memtbl key (Int64.of_int (-1))
+let delete : t -> string -> unit = fun memtbl key -> set memtbl key (-1)

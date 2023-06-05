@@ -10,7 +10,7 @@ module Record : sig
   type t =
     { key : string;
       key_len : int;
-      value_loc : int64 }
+      value_loc : int }
 end
 
 (** MemTable of the Database. 
@@ -35,4 +35,4 @@ val delete : t -> string -> unit
 
 (** Sets a key-value pair in a MemTable.
     This function uses binary search for a runtime of O(log(n)) *)
-val set : t -> string -> int64 -> unit
+val set : t -> string -> int -> unit
