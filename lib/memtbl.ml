@@ -69,13 +69,6 @@ let get : t -> string -> Record.t option =
      memtbl.memtbl_records.(index))
 ;;
 
-(** Deletes a record from a MemTable.
-    This function uses binary search for a runtime of O(log(n)).
-    Note: This function will set a tombstone to propagate the delete into the SSTables. *)
-let delete : t -> string -> int64 =
-  fun memtbl key -> Int64.zero
-;;
-
 (** Sets a key-value pair in a MemTable.
     This function uses binary search for a runtime of O(log(n)) *)
 let set : t -> string -> int64 -> unit =
@@ -103,4 +96,11 @@ let set : t -> string -> int64 -> unit =
                     key_len = String.length key }
        end;
        memtbl.memtbl_size <- memtbl.memtbl_size + 1
+;;
+
+(** Deletes a record from a MemTable.
+    This function uses binary search for a runtime of O(log(n)).
+    Note: This function will set a tombstone to propagate the delete into the SSTables. *)
+let delete : t -> string -> unit =
+  fun memtbl key -> set memtbl key (Int64.of_int 1)
 ;;
