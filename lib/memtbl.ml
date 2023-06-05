@@ -29,7 +29,7 @@ type t =
     mutable memtbl_size : int }
 
 (** Creates a new empty MemTable. *)
-let make : unit -> t =
+let create : unit -> t =
   fun () -> {memtbl_size = 0; memtbl_records = Array.create ~len:max_size Record.empty}
 ;;
 

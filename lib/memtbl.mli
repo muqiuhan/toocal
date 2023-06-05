@@ -1,3 +1,5 @@
+(** MemTable of the Database. *)
+
 (** Max number of MemTableRecords in a MemTable *)
 val max_size : int
 
@@ -13,8 +15,7 @@ module Record : sig
       value_loc : int }
 end
 
-(** MemTable of the Database. 
-    memtbl_records: Array of records sorted by key.
+(** memtbl_records: Array of records sorted by key.
     memtbl_size: The number of records filled in `records`. *)
 type t =
   { memtbl_records : Record.t array;

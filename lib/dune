@@ -2,4 +2,4 @@
  (name wiscodb)
  (flags
   (:standard -w -69))
- (libraries core))
+ (libraries core core_unix))

@@ -2,7 +2,7 @@ open Wiscodb
 open Core
 
 let test_set () =
-  let memtbl = Memtbl.make () in
+  let memtbl = Memtbl.create () in
       Memtbl.set memtbl "aaa" 9;
       match memtbl.memtbl_records |> Array.to_list with
       | record :: _ ->
@@ -13,7 +13,7 @@ let test_set () =
 ;;
 
 let test_set_multi_elements () =
-  let memtbl = Memtbl.make () in
+  let memtbl = Memtbl.create () in
       Memtbl.set memtbl "aaa" 0;
       Memtbl.set memtbl "bbb" 0;
       Memtbl.set memtbl "ccc" 0;
@@ -32,7 +32,7 @@ let test_set_multi_elements () =
 ;;
 
 let test_set_overwrite () =
-  let memtbl = Memtbl.make () in
+  let memtbl = Memtbl.create () in
       Memtbl.set memtbl "aaa" 0;
       Memtbl.set memtbl "aaa" 1;
       match memtbl.memtbl_records |> Array.to_list with
@@ -47,7 +47,7 @@ let test_set_overwrite () =
 ;;
 
 let test_get () =
-  let memtbl = Memtbl.make () in
+  let memtbl = Memtbl.create () in
       Memtbl.set memtbl "aaa" 0;
       match Memtbl.get memtbl "aaa" with
       | None -> Alcotest.fail "test_get"
@@ -58,7 +58,7 @@ let test_get () =
 ;;
 
 let test_get_not_exists () =
-  let memtbl = Memtbl.make () in
+  let memtbl = Memtbl.create () in
       Memtbl.set memtbl "aaa" 0;
       match Memtbl.get memtbl "bbb" with
       | None -> ()
@@ -66,7 +66,7 @@ let test_get_not_exists () =
 ;;
 
 let test_get_same_key () =
-  let memtbl = Memtbl.make () in
+  let memtbl = Memtbl.create () in
       Memtbl.set memtbl "aaa" 0;
       Memtbl.set memtbl "aaa" 1;
       match Memtbl.get memtbl "aaa" with
@@ -78,7 +78,7 @@ let test_get_same_key () =
 ;;
 
 let test_delete () =
-  let memtbl = Memtbl.make () in
+  let memtbl = Memtbl.create () in
       Memtbl.set memtbl "aaa" 0;
       Memtbl.delete memtbl "aaa";
       match Memtbl.get memtbl "aaa" with
