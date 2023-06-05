@@ -1,3 +1,5 @@
 (library
  (name wiscodb)
+ (preprocess
+  (pps ppx_jane))
  (libraries core stdint))
