@@ -17,9 +17,7 @@ module Record = struct
   let empty = {key = ""; key_len = 0; value_loc = Int64.zero}
 
   module Cmp = struct
-    let key : t -> string -> int =
-      fun record key -> compare_string key record.key
-    ;;
+    let key : t -> string -> int = fun record key -> compare_string key record.key
   end
 end
 
@@ -32,32 +30,25 @@ type t =
 
 (** Creates a new empty MemTable. *)
 let make : unit -> t =
-  fun () ->
-  { memtbl_size = 0;
-    memtbl_records =
-      Array.create ~len:max_size Record.empty }
+  fun () -> {memtbl_size = 0; memtbl_records = Array.create ~len:max_size Record.empty}
 ;;
 
 let binary_search : t -> string -> int option =
   fun memtbl key ->
-  Array.binary_search
-    memtbl.memtbl_records
-    `First_equal_to
-    ~compare:Record.Cmp.key
-    key
+   Array.binary_search memtbl.memtbl_records `First_equal_to ~compare:Record.Cmp.key key
 ;;
 
 let insert_point : t -> string -> int =
   fun memtbl key ->
-  match
-    Array.binary_search
-      memtbl.memtbl_records
-      `First_greater_than_or_equal_to
-      ~compare:Record.Cmp.key
-      key
-  with
-  | None -> 0
-  | Some index -> index
+   match
+     Array.binary_search
+       memtbl.memtbl_records
+       `First_greater_than_or_equal_to
+       ~compare:Record.Cmp.key
+       key
+   with
+   | None -> 0
+   | Some index -> index
 ;;
 
 (** Gets a MemTableRecord from a MemTable by key.
@@ -65,30 +56,26 @@ let insert_point : t -> string -> int =
     This function uses binary search for a runtime of O(log(n)). *)
 let get : t -> string -> Record.t option =
   fun memtbl key ->
-  Option.map (binary_search memtbl key) ~f:(fun index ->
-      memtbl.memtbl_records.(index))
+   Option.map (binary_search memtbl key) ~f:(fun index -> memtbl.memtbl_records.(index))
 ;;
 
 (** Sets a key-value pair in a MemTable.
     This function uses binary search for a runtime of O(log(n)) *)
 let set : t -> string -> int64 -> unit =
   fun memtbl key value_loc ->
-  let insert_index = insert_point memtbl key in
-  Array.blit
-    ~src:memtbl.memtbl_records
-    ~src_pos:insert_index
-    ~dst:memtbl.memtbl_records
-    ~dst_pos:(insert_index + 1)
-    ~len:(memtbl.memtbl_size - insert_index);
-  memtbl.memtbl_records.(insert_index)
-  <- Record.
-     {key; value_loc; key_len = String.length key};
-  memtbl.memtbl_size <- memtbl.memtbl_size + 1
+   let insert_index = insert_point memtbl key in
+       Array.blit
+         ~src:memtbl.memtbl_records
+         ~src_pos:insert_index
+         ~dst:memtbl.memtbl_records
+         ~dst_pos:(insert_index + 1)
+         ~len:(memtbl.memtbl_size - insert_index);
+       memtbl.memtbl_records.(insert_index)
+         <- Record.{key; value_loc; key_len = String.length key};
+       memtbl.memtbl_size <- memtbl.memtbl_size + 1
 ;;
 
 (** Deletes a record from a MemTable.
     This function uses binary search for a runtime of O(log(n)).
     Note: This function will set a tombstone to propagate the delete into the SSTables. *)
-let delete : t -> string -> unit =
-  fun memtbl key -> set memtbl key (Int64.of_int 1)
-;;
+let delete : t -> string -> unit = fun memtbl key -> set memtbl key (Int64.of_int 1)

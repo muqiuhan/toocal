@@ -21,4 +21,3 @@ let-binding-indent=4
 match-indent=0
 match-indent-nested=always
 cases-exp-indent=4
-margin=60
