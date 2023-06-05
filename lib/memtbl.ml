@@ -78,4 +78,4 @@ let set : t -> string -> int64 -> unit =
 (** Deletes a record from a MemTable.
     This function uses binary search for a runtime of O(log(n)).
     Note: This function will set a tombstone to propagate the delete into the SSTables. *)
-let delete : t -> string -> unit = fun memtbl key -> set memtbl key (Int64.of_int 1)
+let delete : t -> string -> unit = fun memtbl key -> set memtbl key (Int64.of_int (-1))

@@ -57,6 +57,14 @@ let test_get () =
         Alcotest.(check int64) "same value_loc" Int64.zero record.value_loc
 ;;
 
+let test_get_not_exists () =
+  let memtbl = Memtbl.make () in
+      Memtbl.set memtbl "aaa" Int64.zero;
+      match Memtbl.get memtbl "bbb" with
+      | None -> ()
+      | Some _ -> Alcotest.fail "test_get_not_exists"
+;;
+
 let test_get_same_key () =
   let memtbl = Memtbl.make () in
       Memtbl.set memtbl "aaa" Int64.zero;
@@ -69,6 +77,18 @@ let test_get_same_key () =
         Alcotest.(check int64) "same value_loc" Int64.one record.value_loc
 ;;
 
+let test_delete () =
+  let memtbl = Memtbl.make () in
+      Memtbl.set memtbl "aaa" Int64.zero;
+      Memtbl.delete memtbl "aaa";
+      match Memtbl.get memtbl "aaa" with
+      | None -> Alcotest.fail "test_get"
+      | Some record ->
+        Alcotest.(check string) "same key" "aaa" record.key;
+        Alcotest.(check int) "same key_len" 3 record.key_len;
+        Alcotest.(check int64) "same value_loc" (Int64.of_int (-1)) record.value_loc
+;;
+
 let tests =
   Alcotest.(
     ( "Memtbl",
@@ -76,5 +96,7 @@ let tests =
         test_case "Memtbl.set muti elements" `Quick test_set_multi_elements;
         test_case "Memtbl.set overwrite" `Quick test_set_overwrite;
         test_case "Memtbl.get" `Quick test_get;
-        test_case "Memtbl.get same key" `Quick test_get_same_key ] ))
+        test_case "Memtbl.get same key" `Quick test_get_same_key;
+        test_case "Memtbl.get not exists" `Quick test_get_not_exists;
+        test_case "Memtbl.delete" `Quick test_delete ] ))
 ;;
