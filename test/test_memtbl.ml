@@ -4,7 +4,7 @@ open Core
 let test_set () =
   let memtbl = Memtbl.create () in
       Memtbl.set memtbl "aaa" 9;
-      match memtbl.memtbl_records |> Array.to_list with
+      match memtbl.records |> Array.to_list with
       | record :: _ ->
         Alcotest.(check string) "same key" "aaa" record.key;
         Alcotest.(check int) "same key_len" 3 record.key_len;
@@ -17,7 +17,7 @@ let test_set_multi_elements () =
       Memtbl.set memtbl "aaa" 0;
       Memtbl.set memtbl "bbb" 0;
       Memtbl.set memtbl "ccc" 0;
-      match memtbl.memtbl_records |> Array.to_list with
+      match memtbl.records |> Array.to_list with
       | record1 :: record2 :: record3 :: _ ->
         Alcotest.(check string) "same key" "ccc" record1.key;
         Alcotest.(check int) "same key_len" 3 record1.key_len;
@@ -35,7 +35,7 @@ let test_set_overwrite () =
   let memtbl = Memtbl.create () in
       Memtbl.set memtbl "aaa" 0;
       Memtbl.set memtbl "aaa" 1;
-      match memtbl.memtbl_records |> Array.to_list with
+      match memtbl.records |> Array.to_list with
       | record1 :: record2 :: _ ->
         Alcotest.(check string) "same key" "aaa" record1.key;
         Alcotest.(check int) "same key_len" 3 record1.key_len;

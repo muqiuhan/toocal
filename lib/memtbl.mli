@@ -22,7 +22,7 @@ type t =
     mutable size : int }
 
 (** Creates a new empty MemTable. *)
-val make : unit -> t
+val create : unit -> t
 
 (** Gets a MemTableRecord from a MemTable by key. 
     This function will return None if none of the records in the MemTable.
