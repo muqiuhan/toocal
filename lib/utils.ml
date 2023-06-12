@@ -1,4 +1,6 @@
-module Unix = Core_unix
+module Unix = struct
+  include Core_unix
+end
 
 module Array_list = struct
   open Core
