@@ -1,5 +1,3 @@
 (library
- (name wiscodb)
- (flags
-  (:standard -w -69))
- (libraries core core_unix))
+ (name wisco)
+ (libraries wisco_core))

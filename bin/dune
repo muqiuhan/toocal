@@ -1,4 +1,4 @@
 (executable
  (public_name wiscodb)
  (name main)
- (libraries wiscodb))
+ (libraries wisco))
