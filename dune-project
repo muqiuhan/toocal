@@ -19,7 +19,7 @@
  (name wiscodb)
  (synopsis "WiscKey-based key-value database written in OCaml")
  (description "WiscKey-based key-value database written in OCaml")
- (depends ocaml core stdint alcotest)
+ (depends ocaml core alcotest core_unix)
  (tags
   (database "wisc key" wisckey)))
 

@@ -13,8 +13,8 @@ depends: [
   "dune" {>= "3.7"}
   "ocaml"
   "core"
-  "stdint"
   "alcotest"
+  "core_unix"
   "odoc" {with-doc}
 ]
 build: [

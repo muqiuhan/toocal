@@ -24,6 +24,7 @@ WiscKey is a persistent LSM-tree-based key-value store with a performance-orient
 ## Dependencies
 - [Alcotest: A lightweight and colourful test framework](https://github.com/mirage/alcotest)
 - [Core: Jane Street Capital's standard library overlay](https://github.com/janestreet/core)
+- [Core_unix: Unix-specific portions of Core](https://github.com/janestreet/core_unix)
 
 ## Reference
 - [WiscKey: Key-value database based on the WiscKey paper](https://github.com/adambcomer/WiscKey)
