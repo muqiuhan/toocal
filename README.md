@@ -6,36 +6,41 @@
 
 ![OCaml5.0](https://img.shields.io/badge/OCaml5.0.0-%23EC6813)
 
+
+![](https://github.com/muqiuhan/wiscodb/workflows/Linux/badge.svg)
+![](https://github.com/muqiuhan/wiscodb/workflows/Windows/badge.svg)
+![](https://github.com/muqiuhan/wiscodb/workflows/MacOS/badge.svg)
+
 </div>
 
 ## Introduction
 WiscKey is a persistent LSM-tree-based key-value store with a performance-oriented data layout that separates keys from values to minimize I/O amplifi- cation. The design of WiscKey is highly SSD optimized, leveraging both the sequential and random performance characteristics of the device.
 
-
 - Original Paper: https://www.usenix.org/system/files/conference/fast16/fast16-papers-lu.pdf
 
 ## Usage
-...
+> ...
 
-## LICENSE
-The MIT License (MIT)
+## Dependencies
+- [Alcotest: A lightweight and colourful test framework](https://github.com/mirage/alcotest)
+- [Core: Jane Street Capital's standard library overlay](https://github.com/janestreet/core)
 
-Copyright (c) 2022 Muqiu Han
+## Reference
+- [WiscKey: Key-value database based on the WiscKey paper](https://github.com/adambcomer/WiscKey)
+- [WiscKey: Separating Keys from Values in SSD-conscious Storage](https://www.usenix.org/system/files/conference/fast16/fast16-papers-lu.pdf)
+- [The Log-Structured Merge-Tree (LSM-Tree)](https://www.cs.umb.edu/~poneil/lsmtree.pdf)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+## [LICENSE](./LICENSE)
+Copyright 2022 Muqiu Han
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
