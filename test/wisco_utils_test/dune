@@ -1,0 +1,3 @@
+(library
+ (name wisco_utils_test)
+ (libraries alcotest wisco_utils))

@@ -1,0 +1,3 @@
+(library
+ (name wisco_utils)
+ (libraries core))

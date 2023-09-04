@@ -14,15 +14,5 @@
  * limitations under the License.
  *)
 
-(** Each MemTableRecord holds the key and the position of the record in the ValueLog.
-    [key] The key of the record
-    [value_loc] the location of the key in the value log. *)
-type memtbl_record =
-  { key : string;
-    value_loc : int }
-
-(** In-memory table of the records that have been modified most recently.
-    At any given time, there is only one active MemTable in the database engine.
-    The MemTable is always the first store to be searched when a key-value pair is requested.
-    [records] Array of the records sort by key *)
-type memtbl = {records : memtbl_record array}
+(** Max number of MemTableRecords in a MemTable *)
+let memtbl_size = 1024

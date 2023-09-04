@@ -18,13 +18,21 @@ WiscKey is a persistent LSM-tree-based key-value store with a performance-orient
 
 - Original Paper: https://www.usenix.org/system/files/conference/fast16/fast16-papers-lu.pdf
 
-## Usage
-> ...
+## Build, Run and Test
+- Install deps
+  > opam install . --deps-only --with-doc --with-test
+
+- Build
+  > opam exec -- make build
+
+- Test
+  > opam exec -- make test
 
 ## Dependencies
 - [Alcotest: A lightweight and colourful test framework](https://github.com/mirage/alcotest)
 - [Core: Jane Street Capital's standard library overlay](https://github.com/janestreet/core)
 - [Core_unix: Unix-specific portions of Core](https://github.com/janestreet/core_unix)
+- [ocaml-skiplist: A SkipList behaves as a sorted list with, typically, O(log(n)) cost for insertion, look-up and removal](https://github.com/nikosl/ocaml-skiplist)
 
 ## Reference
 - [WiscKey: Key-value database based on the WiscKey paper](https://github.com/adambcomer/WiscKey)
