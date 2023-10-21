@@ -1,0 +1,7 @@
+(library
+ (name dal)
+ (flags
+  (-w -33))
+ (preprocess
+  (pps stdint-literals))
+ (libraries utils))

@@ -1,2 +1,3 @@
 (library
- (name toocal))
+ (name toocal)
+ (libraries dal))
