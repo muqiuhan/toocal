@@ -1,3 +1,13 @@
+<div align="center">
+
+<img src=".github/logo.png" height="150px">
+
+# Toocal
+
+*An minimalist persistent key/value store in OCaml*
+
+</div>
+
 ## INTRODUCTION
 
 <div align="center">
