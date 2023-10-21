@@ -1,26 +1,26 @@
-(lang dune 3.7)
+(lang dune 3.11)
 
-(name wiscodb)
+(name toocal)
 
 (generate_opam_files true)
 
 (source
- (github muqiuhan/wiscodb))
+ (github username/reponame))
 
-(authors "Muqiu Han")
+(authors "Author Name")
 
-(maintainers "Muqiu Han")
+(maintainers "Maintainer Name")
 
-(license MIT)
+(license LICENSE)
 
-(documentation https://github.com/muqiuhan/wiscodb)
+(documentation https://url/to/documentation)
 
 (package
- (name wiscodb)
- (synopsis "WiscKey-based key-value database written in OCaml")
- (description "WiscKey-based key-value database written in OCaml")
- (depends ocaml core alcotest core_unix)
+ (name toocal)
+ (synopsis "A short synopsis")
+ (description "A longer description")
+ (depends ocaml dune)
  (tags
-  (database "wisc key" wisckey)))
+  (topics "to describe" your project)))
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/dune-files.html#dune-project

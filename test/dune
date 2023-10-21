@@ -1,3 +1,2 @@
 (test
- (name test_wiscodb)
- (libraries wisco_utils_test))
+ (name toocal))

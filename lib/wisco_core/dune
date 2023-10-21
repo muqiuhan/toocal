@@ -1,3 +1,0 @@
-(library
- (name wisco_core)
- (libraries core core_unix wisco_utils))

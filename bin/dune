@@ -1,4 +1,4 @@
 (executable
- (public_name wiscodb)
+ (public_name toocal)
  (name main)
- (libraries wisco))
+ (libraries toocal))
