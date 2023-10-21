@@ -8,15 +8,17 @@
 +----------+    +-------------------+    +---------+
 ```
 
+Underlying data structure is B-Tree, and the page size is 4KB.
+
 </div>
 
-- Page size: 4KB
-- Underlying Data Structure: B-Tree / Hash buckets / LSM Tree(WiscKey)
-
 ## REFERENCE
-- [Wikipedia: NoSQL](https://en.wikipedia.org/wiki/NoSQL)
 - [Bolt: An embedded key/value database for Go.](https://github.com/boltdb/bolt)
 - [LibraDB is a simple, persistent key/value store written in pure Go for learning purposes.](https://github.com/amit-davidson/LibraDB)
+- [Wikipedia: NoSQL](https://en.wikipedia.org/wiki/NoSQL)
+- [Wikipedia: Hash Table](https://en.wikipedia.org/wiki/Hash_table)
+- [Wikipedia: B+ Tree](https://en.wikipedia.org/wiki/B%2B_tree)
+- [Wikipedia: B Tree](https://en.wikipedia.org/wiki/B-tree)
 
 ## LICENSE
 The MIT License (MIT)
