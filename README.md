@@ -6,6 +6,8 @@
 
 *An minimalist persistent key/value store in OCaml*
 
+![](https://github.com/muqiuhan/toocal/workflows/build/badge.svg)
+
 </div>
 
 ## INTRODUCTION
