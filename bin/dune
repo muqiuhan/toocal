@@ -1,0 +1,4 @@
+(executable
+ (public_name toocal)
+ (name main)
+ (libraries toocal))
