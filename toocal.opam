@@ -13,6 +13,10 @@ depends: [
   "ocaml"
   "dune" {>= "3.11"}
   "core"
+  "simlog"
+  "core_unix"
+  "stdint"
+  "stdint-literals"
   "odoc" {with-doc}
 ]
 build: [

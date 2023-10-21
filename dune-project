@@ -19,7 +19,7 @@
  (name toocal)
  (synopsis "A simple, persistent key/value store")
  (description "A simple, persistent key/value store")
- (depends ocaml dune core)
+ (depends ocaml dune core simlog core_unix stdint stdint-literals)
  (tags
   (database "key value")))
 
