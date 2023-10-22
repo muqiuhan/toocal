@@ -3,6 +3,9 @@
     writing the database pages to the disk, and reclaiming free pages to avoid fragmentation. *)
 
 open Utils
+module Page = Page
+module Page_num = Page_num
+module Freelist = Freelist
 
 type t =
   { file : Unix.File_descr.t;

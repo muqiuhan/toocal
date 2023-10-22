@@ -10,6 +10,9 @@ type t =
   { data : bytes;
     num : Page_num.t }
 
+(** Get the system memory page size *)
+external system_page_size : unit -> int = "__ocaml_system_memory_page_size"
+
 (** This is the maximum pgnum that is used by the db for its own purposes.
     For now, only page 0 is used as the header page.
     It means all other page numbers can be used.*)

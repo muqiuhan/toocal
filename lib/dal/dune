@@ -4,4 +4,7 @@
   (-w -33))
  (preprocess
   (pps stdint-literals))
+ (foreign_stubs
+  (language c)
+  (names system_memory_page_size))
  (libraries utils))
