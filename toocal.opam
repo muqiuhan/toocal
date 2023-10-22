@@ -11,7 +11,7 @@ doc: "https://github.com/muqiuhan/toocal/"
 bug-reports: "https://github.com/muqiuhan/toocal/issues"
 depends: [
   "ocaml"
-  "dune" {>= "3.11"}
+  "dune" {>= "3.10"}
   "core"
   "simlog"
   "core_unix"
