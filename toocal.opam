@@ -17,6 +17,7 @@ depends: [
   "core_unix"
   "stdint"
   "stdint-literals"
+  "alcotest"
   "odoc" {with-doc}
 ]
 build: [
