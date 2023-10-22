@@ -6,7 +6,7 @@
 
 *An minimalist persistent key/value store in OCaml*
 
-![](https://github.com/muqiuhan/toocal/workflows/build/badge.svg)
+![](https://github.com/muqiuhan/toocal/actions/workflows/build.yml/badge.svg)
 
 </div>
 
