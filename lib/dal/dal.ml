@@ -8,7 +8,7 @@ module Page_num = Page_num
 module Freelist = Freelist
 
 type t =
-  { file : Unix.File_descr.t;
+  { file : Unix.file_descr;
     page_size : int;
     freelist : Freelist.t }
 
@@ -22,12 +22,15 @@ let close (dal : t) = Unix.close dal.file
 
 let read_page (dal : t) (num : Page_num.t) =
   let page = Page.make dal.page_size in
-  let offset = (page.num |> Page_num.to_int) * dal.page_size in
-    Unix.read dal.file ~buf:page.data ~pos:offset |> ignore;
+  let offset = (page.num |> Page_num.to_int) * dal.page_size
+  and len = Bytes.length page.data in
+    ExtUnix.All.pread dal.file offset page.data 0 len |> ignore;
     page
 ;;
 
 let write_page (dal : t) (page : Page.t) =
-  let offset = page.num |> Page_num.to_int |> ( * ) dal.page_size in
-    Unix.write dal.file ~buf:page.data ~pos:offset |> ignore
+  let offset = page.num |> Page_num.to_int |> ( * ) dal.page_size
+  and data = page.data |> Bytes.to_string
+  and len = Bytes.length page.data in
+    ExtUnix.All.pwrite dal.file offset data 0 len |> ignore
 ;;

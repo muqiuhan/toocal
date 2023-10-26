@@ -1,3 +1,3 @@
 (library
  (name utils)
- (libraries core core_unix simlog stdint))
+ (libraries core simlog stdint extunix))

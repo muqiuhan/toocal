@@ -18,4 +18,4 @@ external system_page_size : unit -> int = "__ocaml_system_memory_page_size"
     It means all other page numbers can be used.*)
 let meta = Page_num.of_int 0
 
-let make (page_size : int) = {data = Bytes.create page_size; num = 0I}
+let make (page_size : int) = {data = Bytes.create page_size; num = meta}

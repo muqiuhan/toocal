@@ -14,10 +14,11 @@ depends: [
   "dune" {>= "3.8"}
   "core"
   "simlog"
-  "core_unix"
   "stdint"
   "stdint-literals"
   "alcotest"
+  "unix"
+  "extunix"
   "odoc" {with-doc}
 ]
 build: [
