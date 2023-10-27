@@ -17,7 +17,6 @@ depends: [
   "stdint"
   "stdint-literals"
   "alcotest"
-  "unix"
   "extunix"
   "odoc" {with-doc}
 ]

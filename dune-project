@@ -27,7 +27,6 @@
   stdint
   stdint-literals
   alcotest
-  unix
   extunix)
  (tags
   (database "key value")))

@@ -13,21 +13,23 @@ type t =
     freelist : Freelist.t }
 
 let make (path : string) (page_size : int) =
-  { file = Unix.openfile ~mode:[Unix.O_CREAT; Unix.O_RDWR] ~perm:0666 path;
+  { file = Unix.openfile ~mode:[Unix.O_CREAT; Unix.O_RDWR] ~perm:0o666 path;
     page_size;
     freelist = Freelist.make () }
 ;;
 
 let close (dal : t) = Unix.close dal.file
 
+(** Read page from dal, [num] is the page number *)
 let read_page (dal : t) (num : Page_num.t) =
   let page = Page.make dal.page_size in
-  let offset = (page.num |> Page_num.to_int) * dal.page_size
+  let offset = num |> Page_num.to_int |> ( * ) dal.page_size
   and len = Bytes.length page.data in
     ExtUnix.All.pread dal.file offset page.data 0 len |> ignore;
     page
 ;;
 
+(** Write [page] to the dal *)
 let write_page (dal : t) (page : Page.t) =
   let offset = page.num |> Page_num.to_int |> ( * ) dal.page_size
   and data = page.data |> Bytes.to_string
