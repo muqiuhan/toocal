@@ -1,0 +1,11 @@
+[*.fs]
+indent_size = 2
+max_line_length = 80
+fsharp_space_before_parameter = true
+fsharp_space_before_class_constructor = true
+fsharp_space_before_member = true
+fsharp_space_before_colon = true
+fsharp_space_after_comma = true
+fsharp_space_around_delimiter = true
+fsharp_newline_between_type_definition_and_members = true
+fsharp_align_function_signature_to_indentation = true

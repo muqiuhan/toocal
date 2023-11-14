@@ -1,12 +1,18 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
-
   <ItemGroup>
-    <Compile Include="Program.fs" />
+    <Compile Include="Errors.fs" />
+    <Compile Include="Logging.fs" />
+    <Compile Include="Function.fs" />
+    <Compile Include="Freelist.fs" />
+    <Compile Include="Page.fs" />
+    <Compile Include="DataAccessLayer.fs" />
   </ItemGroup>
-
+  <ItemGroup>
+    <PackageReference Include="FsToolkit.ErrorHandling" Version="4.11.0" />
+    <PackageReference Include="ZeroLog" Version="2.1.1" />
+  </ItemGroup>
 </Project>
