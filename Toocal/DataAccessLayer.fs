@@ -8,6 +8,7 @@ open Toocal.Core.Errors
 open Toocal.Core.Errors.DataAccessLayer
 open Toocal.Core.DataAccessLayer.Page
 open Toocal.Core.DataAccessLayer.Freelist
+open Toocal.Core.DataAccessLayer.Meta
 
 /// Data Access Layer (DAL) handles all disk operations and how data is
 /// organized on the disk. It’s responsible for managing the underlying data
@@ -21,6 +22,7 @@ type Dal (path : String, pageSize : int32) =
     member this.Dispose () = !(fun () -> file.Dispose())
 
   member public this.Freelist = new Freelist()
+  member public this.Meta = new Meta()
 
   static member public InitFile (path : String) : Dal.Result<IO.FileStream> =
     try
@@ -46,3 +48,18 @@ type Dal (path : String, pageSize : int32) =
 
     !(fun _ -> file.Seek(offset, IO.SeekOrigin.Begin))
     == !(fun _ -> file.Write(page.Data))
+
+  member public this.WriteMeta (meta : Meta) =
+    let page = new Page(Meta.META_PAGE_NUM, Array.zeroCreate<Byte> (pageSize))
+
+    meta.Serialize(page.Data)
+    this.WritePage(page)
+
+    page
+
+  member public this.ReadMeta () =
+    let page = this.ReadPage(Meta.META_PAGE_NUM)
+    let meta = new Meta()
+
+    meta.Deserialize(page.Data)
+    page
