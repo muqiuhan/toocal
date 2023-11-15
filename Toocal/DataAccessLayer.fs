@@ -7,6 +7,7 @@ open Toocal.Core.Function.Ignore
 open Toocal.Core.Errors
 open Toocal.Core.Errors.DataAccessLayer
 open Toocal.Core.DataAccessLayer.Page
+open Toocal.Core.DataAccessLayer.Freelist
 
 /// Data Access Layer (DAL) handles all disk operations and how data is
 /// organized on the disk. It’s responsible for managing the underlying data
@@ -15,6 +16,7 @@ open Toocal.Core.DataAccessLayer.Page
 type Dal (path : String, pageSize : int32) =
   static let logger = LogManager.GetLogger("Toocal.Core.DataAccessLayer.Dal")
   let file = Dal.InitFile(path) => (fun e -> logger.Error(e.ToString()))
+  let freelist = new Freelist()
 
   interface IDisposable with
     member this.Dispose () = !(fun () -> file.Dispose())

@@ -7,8 +7,8 @@
     <Compile Include="Errors.fs" />
     <Compile Include="Logging.fs" />
     <Compile Include="Function.fs" />
-    <Compile Include="Freelist.fs" />
     <Compile Include="Page.fs" />
+    <Compile Include="Freelist.fs" />
     <Compile Include="DataAccessLayer.fs" />
   </ItemGroup>
   <ItemGroup>
