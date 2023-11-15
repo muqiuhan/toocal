@@ -16,10 +16,11 @@ open Toocal.Core.DataAccessLayer.Freelist
 type Dal (path : String, pageSize : int32) =
   static let logger = LogManager.GetLogger("Toocal.Core.DataAccessLayer.Dal")
   let file = Dal.InitFile(path) => (fun e -> logger.Error(e.ToString()))
-  let freelist = new Freelist()
 
   interface IDisposable with
     member this.Dispose () = !(fun () -> file.Dispose())
+
+  member public this.Freelist = new Freelist()
 
   static member public InitFile (path : String) : Dal.Result<IO.FileStream> =
     try
@@ -27,6 +28,9 @@ type Dal (path : String, pageSize : int32) =
       |> Ok
     with e ->
       Dal.CannotOpenFile path |> Error
+
+  member public this.AllocateEmptyPage (num : PageNum) =
+    new Page(num, Array.zeroCreate<Byte> (pageSize))
 
   member public this.ReadPage (num : PageNum) =
     let data = Array.zeroCreate<Byte> (pageSize)

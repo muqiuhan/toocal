@@ -21,5 +21,4 @@ type Freelist () =
       maxPage <- maxPage + 1UL
       maxPage
 
-  member inline public this.ReleasePage (page : PageNum) =
-    releasePages.Add(page)
+  member public this.ReleasePage (page : PageNum) = releasePages.Add(page)
