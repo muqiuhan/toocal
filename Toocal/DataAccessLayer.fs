@@ -14,15 +14,31 @@ open Toocal.Core.DataAccessLayer.Meta
 /// organized on the disk. It’s responsible for managing the underlying data
 /// structure, writing the database pages to the disk, and reclaiming free pages
 /// to avoid fragmentation.
-type Dal (path : String, pageSize : int32) =
+type Dal (path : String, pageSize : int32) as self =
   static let logger = LogManager.GetLogger("Toocal.Core.DataAccessLayer.Dal")
-  let file = Dal.InitFile(path) => (fun e -> logger.Error(e.ToString()))
+
+  let file =
+    Dal.InitFile(path)
+    => (fun err -> logger.Error($"Cannot open database file: {path}"))
+
+  let mutable freelist = new Freelist()
+  let mutable meta = new Meta()
+
+  do
+    if IO.Path.Exists(path) then
+      meta <- self.ReadMeta()
+      freelist <- self.ReadFreelist()
+    else
+      meta.FreelistPage <- freelist.NextPage()
+      self.WriteFreelist() |> ignore
+      self.WriteMeta(meta) |> ignore
+
 
   interface IDisposable with
     member this.Dispose () = !(fun () -> file.Dispose())
 
-  member public this.Freelist = new Freelist()
-  member public this.Meta = new Meta()
+  member public this.Freelist = freelist
+  member public this.Meta = meta
 
   static member public InitFile (path : String) : Dal.Result<IO.FileStream> =
     try
@@ -62,4 +78,14 @@ type Dal (path : String, pageSize : int32) =
     let meta = new Meta()
 
     meta.Deserialize(page.Data)
-    page
+    meta
+
+  member public this.WriteFreelist () =
+    let page = this.AllocateEmptyPage(this.Meta.FreelistPage)
+    this.Freelist.Serialize(page.Data)
+    this.Meta.FreelistPage <- page.Num
+
+  member public this.ReadFreelist () =
+    let freelist = new Freelist()
+    freelist.Deserialize(this.ReadPage(this.Meta.FreelistPage).Data)
+    freelist
