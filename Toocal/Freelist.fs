@@ -33,14 +33,17 @@ type Freelist () =
     let releasePageCountSerialized =
       BitConverter.GetBytes(releasePages.Count |> uint16)
 
-    Array.Copy(maxPageSerialized, buffer[pos..], maxPageSerialized.Length)
+    Array.blit maxPageSerialized 0 buffer pos maxPageSerialized.Length
+    printfn $"{buffer |> List.ofArray}"
+
     pos <- pos + 2
 
-    Array.Copy(
-      releasePageCountSerialized,
-      buffer[pos..],
+    Array.blit
+      releasePageCountSerialized
+      0
+      buffer
+      pos
       releasePageCountSerialized.Length
-    )
 
     pos <- pos + 2
 
@@ -48,7 +51,7 @@ type Freelist () =
 
     while page.MoveNext() do
       let pageSerialized = BitConverter.GetBytes(page.Current)
-      Array.Copy(pageSerialized, buffer[pos..], pageSerialized.Length)
+      Array.blit pageSerialized 0 buffer pos pageSerialized.Length
       pos <- pos + Page.PAGE_NUM_SIZE
 
   member public this.Deserialize (buffer : array<Byte>) =

@@ -39,8 +39,6 @@ type Dal (path : String, pageSize : int32) as self =
       self.WriteFreelist() |> ignore
       self.WriteMeta(meta) |> ignore
 
-
-
   interface IDisposable with
     member this.Dispose () = !(fun () -> file.Dispose())
 
@@ -90,7 +88,7 @@ type Dal (path : String, pageSize : int32) as self =
   member public this.WriteFreelist () =
     let page = this.AllocateEmptyPage(this.Meta.FreelistPage)
     this.Freelist.Serialize(page.Data)
-    this.Meta.FreelistPage <- page.Num
+    this.WritePage(page)
 
   member public this.ReadFreelist () =
     let freelist = new Freelist()
