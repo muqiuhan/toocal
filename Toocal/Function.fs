@@ -20,4 +20,4 @@ module Retry =
   let inline (!) f = retry f 3
 
 module Ignore =
-  let (==) (A: 'A) (B: 'B) = ()
+  let (==) (A : 'A) (B : 'B) = ()

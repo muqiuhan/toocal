@@ -34,7 +34,6 @@ type Freelist () =
       BitConverter.GetBytes(releasePages.Count |> uint16)
 
     Array.blit maxPageSerialized 0 buffer pos maxPageSerialized.Length
-    printfn $"{buffer |> List.ofArray}"
 
     pos <- pos + 2
 
@@ -59,9 +58,10 @@ type Freelist () =
     maxPage <- BitConverter.ToUInt16(buffer) |> uint64
 
     pos <- pos + 2
-    let releasePageCount = BitConverter.ToUInt16(buffer[pos..]) |> int
+    let mutable releasePageCount = BitConverter.ToUInt16(buffer[pos..]) |> int
     pos <- pos + 2
 
-    for _ = 0 to releasePageCount do
+    while releasePageCount <> 0 do
       releasePages.Push(BitConverter.ToUInt64(buffer[pos..]))
       pos <- pos + Page.PAGE_NUM_SIZE
+      releasePageCount <- releasePageCount - 1

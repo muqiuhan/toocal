@@ -10,7 +10,7 @@ open Toocal.Core.DataAccessLayer.Page
 [<Test>]
 let test () =
   IO.File.Delete("db.db")
-  
+
   let ``Initialize an data access layer and create a new page then commit it.`` =
     use dal = new Dal("db.db", Environment.SystemPageSize)
     let page = dal.AllocateEmptyPage(dal.Freelist.NextPage())
