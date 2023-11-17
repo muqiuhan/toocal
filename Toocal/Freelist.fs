@@ -13,18 +13,18 @@ type Freelist () =
   let mutable maxPage : PageNum = Meta.META_PAGE_NUM
 
   /// Pages that were previouslly allocated but are now free
-  let releasePages = new Collections.Generic.List<PageNum>()
+  let releasePages = new Collections.Generic.Stack<PageNum>()
 
   /// If possible, fetch pages first from the released pages.
   /// Else, increase the maximum page
   member public this.NextPage () =
     if releasePages.Count <> 0 then
-      releasePages[releasePages.Count - 1]
+      releasePages.Pop()
     else
       maxPage <- maxPage + 1UL
       maxPage
 
-  member public this.ReleasePage (page : PageNum) = releasePages.Add(page)
+  member public this.ReleasePage (page : PageNum) = releasePages.Push(page)
 
   member public this.Serialize (buffer : array<Byte>) =
     let mutable pos = 0
@@ -44,11 +44,12 @@ type Freelist () =
 
     pos <- pos + 2
 
-    releasePages.ForEach(fun page ->
-      let pageSerialized = BitConverter.GetBytes(page)
-      Array.Copy(pageSerialized, buffer[pos..], pageSerialized.Length)
-      pos <- pos + Page.PAGE_NUM_SIZE)
+    let mutable page = releasePages.GetEnumerator()
 
+    while page.MoveNext() do
+      let pageSerialized = BitConverter.GetBytes(page.Current)
+      Array.Copy(pageSerialized, buffer[pos..], pageSerialized.Length)
+      pos <- pos + Page.PAGE_NUM_SIZE
 
   member public this.Deserialize (buffer : array<Byte>) =
     let mutable pos = 0
@@ -59,5 +60,5 @@ type Freelist () =
     pos <- pos + 2
 
     for _ = 0 to releasePageCount do
-      releasePages.Add(BitConverter.ToUInt64(buffer[pos..]))
+      releasePages.Push(BitConverter.ToUInt64(buffer[pos..]))
       pos <- pos + Page.PAGE_NUM_SIZE
