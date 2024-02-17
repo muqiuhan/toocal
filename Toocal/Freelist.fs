@@ -2,66 +2,67 @@ module Toocal.Core.DataAccessLayer.Freelist
 
 open System
 open Toocal.Core.DataAccessLayer.Page
-open Toocal.Core.DataAccessLayer.Meta
 
 /// Which pages are free and which are occupied.
 /// Pages can also be freed if they become empty,
 /// so we need to reclaim them for future use to avoid fragmentation.
-type Freelist () =
-
-  /// Holds the maximum page allocated. maxPage*PageSize = fileSize
-  let mutable maxPage : PageNum = Meta.META_PAGE_NUM
+type Freelist = {
+  /// Holds the maximum page allocated. this.max_page*PageSize = fileSize
+  mutable max_page: PageNum
 
   /// Pages that were previouslly allocated but are now free
-  let releasePages = new Collections.Generic.Stack<PageNum>()
+  released_pages: Collections.Generic.Stack<PageNum>
+} with
+
+  static member public init () = {
+    max_page = 0UL
+    released_pages = new Collections.Generic.Stack<PageNum> ()
+  }
 
   /// If possible, fetch pages first from the released pages.
   /// Else, increase the maximum page
-  member public this.NextPage () =
-    if releasePages.Count <> 0 then
-      releasePages.Pop()
+  member public this.next_page () =
+    if this.released_pages.Count <> 0 then
+      this.released_pages.Pop ()
     else
-      maxPage <- maxPage + 1UL
-      maxPage
+      this.max_page <- this.max_page + 1UL
+      this.max_page
 
-  member public this.ReleasePage (page : PageNum) = releasePages.Push(page)
+  member public this.release_page (page: PageNum) =
+    this.released_pages.Push (page)
 
-  member public this.Serialize (buffer : array<Byte>) =
+  member public this.serialize (buffer: array<Byte>) =
     let mutable pos = 0
-    let maxPageSerialized = BitConverter.GetBytes(maxPage |> uint16)
+    let serialized_max_page = BitConverter.GetBytes (this.max_page |> uint16)
 
-    let releasePageCountSerialized =
-      BitConverter.GetBytes(releasePages.Count |> uint16)
+    let serialized_page_count =
+      BitConverter.GetBytes (this.released_pages.Count |> uint16)
 
-    Array.blit maxPageSerialized 0 buffer pos maxPageSerialized.Length
-
-    pos <- pos + 2
-
-    Array.blit
-      releasePageCountSerialized
-      0
-      buffer
-      pos
-      releasePageCountSerialized.Length
+    Array.blit serialized_max_page 0 buffer pos serialized_max_page.Length
 
     pos <- pos + 2
+    Array.blit serialized_page_count 0 buffer pos serialized_page_count.Length
+    pos <- pos + 2
 
-    let mutable page = releasePages.GetEnumerator()
+    let mutable page = this.released_pages.GetEnumerator ()
 
-    while page.MoveNext() do
-      let pageSerialized = BitConverter.GetBytes(page.Current)
-      Array.blit pageSerialized 0 buffer pos pageSerialized.Length
-      pos <- pos + Page.PAGE_NUM_SIZE
+    while page.MoveNext () do
+      let serialized_page = BitConverter.GetBytes (page.Current)
+      Array.blit serialized_page 0 buffer pos serialized_page.Length
+      pos <- pos + Page.SIZE
 
-  member public this.Deserialize (buffer : array<Byte>) =
+  member public this.deserialize (buffer: array<Byte>) =
     let mutable pos = 0
-    maxPage <- BitConverter.ToUInt16(buffer) |> uint64
+    this.max_page <- BitConverter.ToUInt16 (buffer) |> uint64
 
     pos <- pos + 2
-    let mutable releasePageCount = BitConverter.ToUInt16(buffer[pos..]) |> int
+
+    let mutable released_page_count =
+      BitConverter.ToUInt16 (buffer[pos..]) |> int
+
     pos <- pos + 2
 
-    while releasePageCount <> 0 do
-      releasePages.Push(BitConverter.ToUInt64(buffer[pos..]))
-      pos <- pos + Page.PAGE_NUM_SIZE
-      releasePageCount <- releasePageCount - 1
+    while released_page_count <> 0 do
+      this.released_pages.Push (BitConverter.ToUInt64 (buffer[pos..]))
+      pos <- pos + Page.SIZE
+      released_page_count <- released_page_count - 1

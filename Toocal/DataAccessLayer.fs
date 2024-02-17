@@ -1,96 +1,92 @@
 module Toocal.Core.DataAccessLayer.Dal
 
 open System
-open ZeroLog
-open Toocal.Core.Function.Retry
-open Toocal.Core.Function.Ignore
-open Toocal.Core.Errors
-open Toocal.Core.Errors.DataAccessLayer
-open Toocal.Core.DataAccessLayer.Page
 open Toocal.Core.DataAccessLayer.Freelist
+open Toocal.Core.DataAccessLayer.Page
 open Toocal.Core.DataAccessLayer.Meta
+open ZeroLog
 
 /// Data Access Layer (DAL) handles all disk operations and how data is
 /// organized on the disk. It’s responsible for managing the underlying data
 /// structure, writing the database pages to the disk, and reclaiming free pages
 /// to avoid fragmentation.
-type Dal (path : String, pageSize : int32) as self =
-  static let logger = LogManager.GetLogger("Toocal.Core.DataAccessLayer.Dal")
+type Dal = {
+  path: String
+  page_size: int32
+  freelist: Freelist
+  meta: Meta
+  file: IO.FileStream
+} with
 
-  let mutable freelist = new Freelist()
-  let mutable meta = new Meta()
+  static member public make (path: String, page_size: int32) : Dal =
+    let self = {
+      path = path
+      page_size = page_size
+      file = Dal.init(path)
+      meta = Meta.init()
+      freelist = Freelist.init()
+    }
 
-  let mutable file = null
-
-  do
-    if IO.Path.Exists(path) then
-      file <-
-        Dal.InitFile(path)
-        => (fun err -> logger.Error($"Cannot open database file: {path}"))
-
-      meta <- self.ReadMeta()
-      freelist <- self.ReadFreelist()
+    if IO.Path.Exists (path) then
+      { self with meta = self.read_meta(); freelist = self.read_freelist() }
     else
-      file <-
-        Dal.InitFile(path)
-        => (fun err -> logger.Error($"Cannot open database file: {path}"))
+      self.meta.freelist_page <- self.freelist.next_page()
+      self.write_freelist() |> ignore
+      self.write_meta(self.meta) |> ignore
+      self
 
-      meta.FreelistPage <- freelist.NextPage()
-      self.WriteFreelist() |> ignore
-      self.WriteMeta(meta) |> ignore
+  static let logger = LogManager.GetLogger ("Toocal.Core.DataAccessLayer.Dal")
 
   interface IDisposable with
-    member this.Dispose () = !(fun () -> file.Dispose())
+    member this.Dispose () = this.file.Dispose ()
 
-  member public this.Freelist = freelist
-  member public this.Meta = meta
+  static member public init (path: String) : IO.FileStream =
+    IO.File.Open (path, IO.FileMode.OpenOrCreate, IO.FileAccess.ReadWrite)
 
-  static member public InitFile (path : String) : Dal.Result<IO.FileStream> =
-    try
-      IO.File.Open(path, IO.FileMode.OpenOrCreate, IO.FileAccess.ReadWrite)
-      |> Ok
-    with e ->
-      Dal.CannotOpenFile path |> Error
+  member public this.alloc_empty_page (num: PageNum) = {
+    num = num
+    data = Array.zeroCreate<Byte>(this.page_size)
+  }
 
-  member public this.AllocateEmptyPage (num : PageNum) =
-    new Page(num, Array.zeroCreate<Byte> (pageSize))
+  member public this.read_page (num: PageNum) =
+    let data = Array.zeroCreate<Byte>(this.page_size)
+    let offset = ((num |> int32) * this.page_size) |> int64
 
-  member public this.ReadPage (num : PageNum) =
-    let data = Array.zeroCreate<Byte> (pageSize)
-    let offset = ((num |> int32) * pageSize) |> int64
+    this.file.Seek (offset, IO.SeekOrigin.Begin) |> ignore
+    this.file.Read (data) |> ignore
 
-    !(fun _ -> file.Seek(offset, IO.SeekOrigin.Begin))
-    == !(fun _ -> file.Read(data))
+    { num = num; data = data }
 
-    new Page(num, data)
+  member public this.write_page (page: Page) =
+    let offset = ((page.num |> int32) * this.page_size) |> int64
 
-  member public this.WritePage (page : Page) =
-    let offset = ((page.Num |> int32) * pageSize) |> int64
+    this.file.Seek (offset, IO.SeekOrigin.Begin) |> ignore
+    this.file.Write (page.data) |> ignore
 
-    !(fun _ -> file.Seek(offset, IO.SeekOrigin.Begin))
-    == !(fun _ -> file.Write(page.Data))
+  member public this.write_meta (meta: Meta) =
+    let page = {
+      num = Meta.META_PAGE_NUM
+      data = Array.zeroCreate<Byte>(this.page_size)
+    }
 
-  member public this.WriteMeta (meta : Meta) =
-    let page = new Page(Meta.META_PAGE_NUM, Array.zeroCreate<Byte> (pageSize))
-
-    meta.Serialize(page.Data)
-    this.WritePage(page)
+    meta.serialize(page.data)
+    this.write_page(page)
 
     page
 
-  member public this.ReadMeta () =
-    let page = this.ReadPage(Meta.META_PAGE_NUM)
-    let meta = new Meta()
+  member public this.read_meta () =
+    let page = this.read_page(Meta.META_PAGE_NUM)
+    let meta = Meta.init()
 
-    meta.Deserialize(page.Data)
+    meta.deserialize(page.data)
     meta
 
-  member public this.WriteFreelist () =
-    let page = this.AllocateEmptyPage(this.Meta.FreelistPage)
-    this.Freelist.Serialize(page.Data)
-    this.WritePage(page)
+  member public this.write_freelist () =
+    let page = this.alloc_empty_page(this.meta.freelist_page)
+    this.freelist.serialize(page.data)
+    this.write_page(page)
 
-  member public this.ReadFreelist () =
-    let freelist = new Freelist()
-    freelist.Deserialize(this.ReadPage(this.Meta.FreelistPage).Data)
+  member public this.read_freelist () =
+    let freelist = Freelist.init()
+    freelist.deserialize(this.read_page(this.meta.freelist_page).data)
     freelist
