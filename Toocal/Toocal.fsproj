@@ -4,9 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Errors.fs" />
     <Compile Include="Logging.fs" />
-    <Compile Include="Function.fs" />
     <Compile Include="Page.fs" />
     <Compile Include="Meta.fs" />
     <Compile Include="Freelist.fs" />

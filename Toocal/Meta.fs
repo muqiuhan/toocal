@@ -3,18 +3,16 @@ module Toocal.Core.DataAccessLayer.Meta
 open System
 open Toocal.Core.DataAccessLayer.Page
 
-type Meta () =
-  let mutable freelistPage : PageNum = 0UL
+type Meta = {
+  mutable freelist_page: PageNum
+} with
 
-  static member public META_PAGE_NUM : PageNum = 0UL
+  static member public init () = { freelist_page = 0UL }
+  static member public META_PAGE_NUM: PageNum = 0UL
 
-  member public this.FreelistPage
-    with get () = freelistPage
-    and set (num : PageNum) = freelistPage <- num
+  member public this.serialize (buffer: array<Byte>) =
+    let serialized_freelist = BitConverter.GetBytes (this.freelist_page)
+    Array.blit serialized_freelist 0 buffer 0 serialized_freelist.Length
 
-  member public this.Serialize (buffer : array<Byte>) =
-    let freelistSerialized = BitConverter.GetBytes(freelistPage)
-    Array.blit freelistSerialized 0 buffer 0 freelistSerialized.Length
-
-  member public this.Deserialize (buffer : array<Byte>) =
-    freelistPage <- BitConverter.ToUInt64(buffer)
+  member public this.deserialize (buffer: array<Byte>) =
+    this.freelist_page <- BitConverter.ToUInt64 (buffer)
