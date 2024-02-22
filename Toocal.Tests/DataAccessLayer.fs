@@ -12,7 +12,8 @@ let test () =
 
   let ``Initialize an data access layer and create a new page then commit it.`` =
     use dal = Dal.make("db.db", Environment.SystemPageSize)
-    let page = dal.alloc_empty_page(dal.freelist.next_page())
+    let page = dal.alloc_empty_page()
+    page.num <- dal.freelist.next_page()
     let data = Text.Encoding.UTF8.GetBytes ("data")
     Array.Copy (data, page.data, data.Length)
     dal.write_page(page)
@@ -20,7 +21,8 @@ let test () =
 
   let ``We expect the freelist state was saved`` =
     use dal = Dal.make("db.db", Environment.SystemPageSize)
-    let page = dal.alloc_empty_page(dal.freelist.next_page())
+    let page = dal.alloc_empty_page()
+    page.num <- dal.freelist.next_page()
     let data = Text.Encoding.UTF8.GetBytes ("data2")
     Array.Copy (data, page.data, data.Length)
     dal.write_page(page)

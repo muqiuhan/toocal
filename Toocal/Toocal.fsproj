@@ -11,8 +11,8 @@
     <Compile Include="Page.fs" />
     <Compile Include="Meta.fs" />
     <Compile Include="Freelist.fs" />
-    <Compile Include="DataAccessLayer.fs" />
     <Compile Include="Node.fs" />
+    <Compile Include="DataAccessLayer.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FsToolkit.ErrorHandling" Version="4.11.0" />

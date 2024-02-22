@@ -3,6 +3,7 @@ module Toocal.Core.DataAccessLayer.Dal
 open System
 open Toocal.Core.DataAccessLayer.Freelist
 open Toocal.Core.DataAccessLayer.Page
+open Toocal.Core.DataAccessLayer.Node
 open Toocal.Core.DataAccessLayer.Meta
 open ZeroLog
 
@@ -43,8 +44,8 @@ type Dal = {
   static member public init (path: String) : IO.FileStream =
     IO.File.Open (path, IO.FileMode.OpenOrCreate, IO.FileAccess.ReadWrite)
 
-  member public this.alloc_empty_page (num: PageNum) = {
-    num = num
+  member public this.alloc_empty_page () = {
+    num = 0UL
     data = Array.zeroCreate<Byte> this.page_size
   }
 
@@ -82,7 +83,8 @@ type Dal = {
     meta
 
   member public this.write_freelist () =
-    let page = this.alloc_empty_page this.meta.freelist_page
+    let page = this.alloc_empty_page()
+    page.num <- this.meta.freelist_page
     this.freelist.serialize page.data
     this.write_page page
 
@@ -90,3 +92,24 @@ type Dal = {
     let freelist = Freelist.make()
     freelist.deserialize(this.read_page(this.meta.freelist_page).data)
     freelist
+
+  member public this.get_node (page_num: PageNum) =
+    let node = Node.init()
+
+    node.deserialize(this.read_page(page_num).data)
+    node.page_num <- page_num
+
+    node
+
+  member public this.write_node (node: Node) =
+    let page = this.alloc_empty_page()
+
+    if node.page_num = 0UL then
+      page.num <- this.freelist.next_page()
+      node.page_num <- page.num
+    else
+      page.num <- node.page_num
+
+    page.data <- node.serialize page.data
+    this.write_page page
+    node

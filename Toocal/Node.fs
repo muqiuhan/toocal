@@ -1,16 +1,20 @@
 module Toocal.Core.DataAccessLayer.Node
 
-open Toocal.Core.DataAccessLayer.Dal
 open Toocal.Core.DataAccessLayer.Page
 open Toocal.Core.DataAccessLayer.Serializer
 open System
 
 type Node = {
-  dal: Dal
   mutable page_num: PageNum
   items: Collections.Generic.List<Item>
   children: Collections.Generic.List<PageNum>
 } with
+
+  static member public init () = {
+    page_num = 0UL
+    items = new Collections.Generic.List<Item> ()
+    children = Collections.Generic.List<PageNum> ()
+  }
 
   member public this.is_leaf () = this.children.Count = 0
 
@@ -106,10 +110,15 @@ type Node = {
 
     left_pos <- this.serialize_header is_leaf left_pos buffer
 
-    (left_pos, right_pos) <-
+    let (new_left_pos, new_right_pos) =
       this.serialize_body is_leaf left_pos right_pos buffer
 
+    left_pos <- new_left_pos
+    right_pos <- new_right_pos
+
     this.serialize_last_child is_leaf left_pos buffer
+
+    buffer
 
   member public this.deserialize (buffer: byte[]) =
     let mutable left_pos = 0
