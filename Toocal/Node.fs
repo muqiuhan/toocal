@@ -2,6 +2,7 @@ module Toocal.Core.DataAccessLayer.Node
 
 open Toocal.Core.DataAccessLayer.Dal
 open Toocal.Core.DataAccessLayer.Page
+open Toocal.Core.DataAccessLayer.Serializer
 open System
 
 type Node = {
@@ -13,13 +14,14 @@ type Node = {
 
   member public this.is_leaf () = this.children.Count = 0
 
-  member public this.serialize (buffer: Byte[]) =
-    let is_leaf = this.is_leaf()
-    let mutable left_pos = 0
-    let mutable right_pos = buffer.Length - 1
+  /// Serialize page header: isLeaf, key-value pairs count and node num
+  member private this.serialize_header
+    (is_leaf: bool)
+    (left_pos: int)
+    (buffer: Byte[])
+    =
     let bit_set_var = if is_leaf then 1 else 0
-
-    // Serialize page header: isLeaf, key-value pairs count and node num
+    let mutable left_pos = left_pos
     buffer[left_pos] <- bit_set_var |> byte
     left_pos <- left_pos + 1
 
@@ -34,24 +36,32 @@ type Node = {
       key_value_pairs_count.Length
 
     left_pos <- left_pos + 2
+    left_pos
 
-    // We use slotted pages for storing data in the page. It means the actual keys and values (the cells) are appended
-    // to right of the page whereas offsets have a fixed size and are appended from the left.
-    // It's easier to preserve the logical order (alphabetical in the case of b-tree) using the metadata and performing
-    // pointer arithmetic. Using the data itself is harder as it varies by size.
-    //
-    // Page structure is:
-    // ----------------------------------------------------------------------------------
-    // |  Page  | key-value /  child node    key-value 		      |    key-value		 |
-    // | Header |   offset /	 pointer	  offset         .... |      data      ..... |
-    // ----------------------------------------------------------------------------------
+  /// We use slotted pages for storing data in the page. It means the actual keys and values (the cells) are appended
+  /// to right of the page whereas offsets have a fixed size and are appended from the left.
+  /// It's easier to preserve the logical order (alphabetical in the case of b-tree) using the metadata and performing
+  /// pointer arithmetic. Using the data itself is harder as it varies by size.
+  ///
+  /// Page structure is:
+  /// ----------------------------------------------------------------------------------
+  /// |  Page  | key-value /  child node    key-value 		      |    key-value	    	 |
+  /// | Header |   offset /	 pointer	  offset         ......   |      data      ..... |
+  /// ----------------------------------------------------------------------------------
+  member private this.serialize_body
+    (is_leaf: bool)
+    (left_pos: int)
+    (right_pos: int)
+    (buffer: Byte[])
+    =
+    let mutable left_pos = left_pos
+    let mutable right_pos = right_pos
 
     for i = 0 to this.items.Count - 1 do
       let item = this.items[i]
 
       if not is_leaf then
         let child = this.children[i]
-
         // Write the child page as a fixed size of 8 bytes
         let child = (child |> uint64 |> BitConverter.GetBytes)
         Array.blit child 0 buffer left_pos child.Length
@@ -64,21 +74,24 @@ type Node = {
 
       Array.blit offset 0 buffer left_pos offset.Length
       left_pos <- left_pos + 2
-
       right_pos <- right_pos - item.value.Length
       Array.blit item.value 0 buffer right_pos item.value.Length
-
       right_pos <- right_pos - 1
       buffer[right_pos] <- item.value.Length |> byte
-
       right_pos <- right_pos - item.key.Length
       Array.blit item.key 0 buffer right_pos item.key.Length
-
       right_pos <- right_pos - 1
       buffer[right_pos] <- item.key.Length |> byte
 
+    (left_pos, right_pos)
+
+  /// Write the last child
+  member private this.serialize_last_child
+    (is_leaf: bool)
+    (left_pos: int)
+    (buffer: Byte[])
+    =
     if not is_leaf then
-      // Write the last child
       let last_child =
         this.children[this.children.Count - 1]
         |> uint64
@@ -86,7 +99,17 @@ type Node = {
 
       Array.blit last_child 0 buffer left_pos last_child.Length
 
-    buffer
+  member public this.serialize (buffer: Byte[]) =
+    let is_leaf = this.is_leaf()
+    let mutable left_pos = 0
+    let mutable right_pos = buffer.Length - 1
+
+    left_pos <- this.serialize_header is_leaf left_pos buffer
+
+    (left_pos, right_pos) <-
+      this.serialize_body is_leaf left_pos right_pos buffer
+
+    this.serialize_last_child is_leaf left_pos buffer
 
   member public this.deserialize (buffer: byte[]) =
     let mutable left_pos = 0

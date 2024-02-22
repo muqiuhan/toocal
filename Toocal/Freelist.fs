@@ -2,6 +2,7 @@ module Toocal.Core.DataAccessLayer.Freelist
 
 open System
 open Toocal.Core.DataAccessLayer.Page
+open Toocal.Core.DataAccessLayer.Serializer
 
 /// Which pages are free and which are occupied.
 /// Pages can also be freed if they become empty,
@@ -31,7 +32,7 @@ type Freelist = {
   member public this.release_page (page: PageNum) =
     this.released_pages.Push page
 
-  member public this.serialize (buffer: Byte[]) =
+  member this.serialize (buffer: Byte[]) =
     let mutable pos = 0
     let serialized_max_page = this.max_page |> uint16 |> BitConverter.GetBytes
 
@@ -39,11 +40,9 @@ type Freelist = {
       this.released_pages.Count |> uint16 |> BitConverter.GetBytes
 
     Array.blit serialized_max_page 0 buffer pos serialized_max_page.Length
-
     pos <- pos + 2
     Array.blit serialized_page_count 0 buffer pos serialized_page_count.Length
     pos <- pos + 2
-
     let mutable page = this.released_pages.GetEnumerator ()
 
     while page.MoveNext () do
@@ -51,14 +50,11 @@ type Freelist = {
       Array.blit serialized_page 0 buffer pos serialized_page.Length
       pos <- pos + Page.SIZE
 
-  member public this.deserialize (buffer: Byte[]) =
+  member this.deserialize (buffer: Byte[]) =
     let mutable pos = 0
     this.max_page <- BitConverter.ToUInt16 buffer |> uint64
-
     pos <- pos + 2
-
     let mutable released_page_count = BitConverter.ToUInt16 buffer[pos..] |> int
-
     pos <- pos + 2
 
     while released_page_count <> 0 do
