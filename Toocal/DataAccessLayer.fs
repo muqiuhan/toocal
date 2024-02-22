@@ -12,6 +12,7 @@ open ZeroLog
 /// structure, writing the database pages to the disk, and reclaiming free pages
 /// to avoid fragmentation.
 type Dal (Path: String, PageSize: int32) as self =
+  static let logger = LogManager.GetLogger ("Toocal.Core.DataAccessLayer.Dal")
 
   let mutable _Freelist: Freelist = new Freelist ()
   let mutable _Meta: Meta = new Meta ()
@@ -28,8 +29,6 @@ type Dal (Path: String, PageSize: int32) as self =
       _Meta.FreelistPage <- _Freelist.NextPage ()
       self.WriteFreelist () |> ignore
       self.WriteMeta _Meta |> ignore
-
-  static let logger = LogManager.GetLogger ("Toocal.Core.DataAccessLayer.Dal")
 
   member public this.Freelist = _Freelist
 
@@ -80,7 +79,7 @@ type Dal (Path: String, PageSize: int32) as self =
     freelist.Deserialize (this.ReadPage(_Meta.FreelistPage).Data)
     freelist
 
-  member public this.getNode (pageNum: PageNum) =
+  member public this.GetNode (pageNum: PageNum) =
     let node = new Node ()
 
     node.Deserialize (this.ReadPage(pageNum).Data)

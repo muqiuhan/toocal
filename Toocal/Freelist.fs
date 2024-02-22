@@ -52,10 +52,8 @@ type Freelist () =
     let mutable pos = 0
     _MaxPage <- BitConverter.ToUInt16 buffer |> uint64
     pos <- pos + 2
-    let mutable releasedPagesCound = BitConverter.ToUInt16 buffer[pos..] |> int
     pos <- pos + 2
 
-    while releasedPagesCound <> 0 do
+    for _ = 0 to (BitConverter.ToUInt16 buffer[pos..] |> int) - 1 do
       buffer[pos..] |> BitConverter.ToUInt64 |> _ReleasedPages.Push
       pos <- pos + Page.SIZE
-      releasedPagesCound <- releasedPagesCound - 1
