@@ -1,46 +1,38 @@
 module Toocal.Core.DataAccessLayer.Node
 
 open Toocal.Core.DataAccessLayer.Page
-open Toocal.Core.DataAccessLayer.Serializer
 open System
 
-type Node = {
-  mutable page_num: PageNum
-  items: Collections.Generic.List<Item>
-  children: Collections.Generic.List<PageNum>
-} with
+type Node () =
+  let mutable _PageNum: PageNum = 0UL
+  let _Items = new Collections.Generic.List<Item> ()
+  let _Children = new Collections.Generic.List<PageNum> ()
 
-  static member public init () = {
-    page_num = 0UL
-    items = new Collections.Generic.List<Item> ()
-    children = Collections.Generic.List<PageNum> ()
-  }
+  member public this.PageNum
+    with get () = _PageNum
+    and set (pageNum: PageNum) = _PageNum <- pageNum
 
-  member public this.is_leaf () = this.children.Count = 0
+  member public this.isLeaf () = _Children.Count = 0
 
   /// Serialize page header: isLeaf, key-value pairs count and node num
-  member private this.serialize_header
-    (is_leaf: bool)
-    (left_pos: int)
-    (buffer: Byte[])
+  member private this.SerializeHeader
+    (
+      isLeaf: bool,
+      left: int,
+      buffer: Byte[]
+    )
     =
-    let bit_set_var = if is_leaf then 1 else 0
-    let mutable left_pos = left_pos
-    buffer[left_pos] <- bit_set_var |> byte
-    left_pos <- left_pos + 1
+    let bitSetVar = if isLeaf then 1 else 0
+    let mutable left = left
+    buffer[left] <- bitSetVar |> byte
+    left <- left + 1
 
-    let key_value_pairs_count =
-      (this.items.Count |> uint16 |> BitConverter.GetBytes)
+    let keyValuePairsCount = (_Items.Count |> uint16 |> BitConverter.GetBytes)
 
-    Array.blit
-      key_value_pairs_count
-      0
-      buffer
-      left_pos
-      key_value_pairs_count.Length
+    Array.blit keyValuePairsCount 0 buffer left keyValuePairsCount.Length
 
-    left_pos <- left_pos + 2
-    left_pos
+    left <- left + 2
+    left
 
   /// We use slotted pages for storing data in the page. It means the actual keys and values (the cells) are appended
   /// to right of the page whereas offsets have a fixed size and are appended from the left.
@@ -52,107 +44,108 @@ type Node = {
   /// |  Page  | key-value /  child node    key-value 		      |    key-value	    	 |
   /// | Header |   offset /	 pointer	  offset         ......   |      data      ..... |
   /// ----------------------------------------------------------------------------------
-  member private this.serialize_body
-    (is_leaf: bool)
-    (left_pos: int)
-    (right_pos: int)
-    (buffer: Byte[])
+  member private this.SerializeBody
+    (
+      isLeaf: bool,
+      left: int,
+      right: int,
+      buffer: Byte[]
+    )
     =
-    let mutable left_pos = left_pos
-    let mutable right_pos = right_pos
+    let mutable left = left
+    let mutable right = right
 
-    for i = 0 to this.items.Count - 1 do
-      let item = this.items[i]
+    for i = 0 to _Items.Count - 1 do
+      let item = _Items[i]
 
-      if not is_leaf then
-        let child = this.children[i]
+      if not isLeaf then
+        let child = _Children[i]
         // Write the child page as a fixed size of 8 bytes
         let child = (child |> uint64 |> BitConverter.GetBytes)
-        Array.blit child 0 buffer left_pos child.Length
-        left_pos <- left_pos + Page.SIZE
+        Array.blit child 0 buffer left child.Length
+        left <- left + Page.SIZE
 
       let offset =
-        right_pos - item.key.Length - item.value.Length - 2
+        right - item.key.Length - item.value.Length - 2
         |> uint16
         |> BitConverter.GetBytes
 
-      Array.blit offset 0 buffer left_pos offset.Length
-      left_pos <- left_pos + 2
-      right_pos <- right_pos - item.value.Length
-      Array.blit item.value 0 buffer right_pos item.value.Length
-      right_pos <- right_pos - 1
-      buffer[right_pos] <- item.value.Length |> byte
-      right_pos <- right_pos - item.key.Length
-      Array.blit item.key 0 buffer right_pos item.key.Length
-      right_pos <- right_pos - 1
-      buffer[right_pos] <- item.key.Length |> byte
+      Array.blit offset 0 buffer left offset.Length
+      left <- left + 2
+      right <- right - item.value.Length
+      Array.blit item.value 0 buffer right item.value.Length
+      right <- right - 1
+      buffer[right] <- item.value.Length |> byte
+      right <- right - item.key.Length
+      Array.blit item.key 0 buffer right item.key.Length
+      right <- right - 1
+      buffer[right] <- item.key.Length |> byte
 
-    (left_pos, right_pos)
+    (left, right)
 
   /// Write the last child
-  member private this.serialize_last_child
-    (is_leaf: bool)
-    (left_pos: int)
-    (buffer: Byte[])
+  member private this.SerializeLastChild
+    (
+      isLeaf: bool,
+      left: int,
+      buffer: Byte[]
+    )
     =
-    if not is_leaf then
+    if not isLeaf then
       let last_child =
-        this.children[this.children.Count - 1]
-        |> uint64
-        |> BitConverter.GetBytes
+        _Children[_Children.Count - 1] |> uint64 |> BitConverter.GetBytes
 
-      Array.blit last_child 0 buffer left_pos last_child.Length
+      Array.blit last_child 0 buffer left last_child.Length
 
-  member public this.serialize (buffer: Byte[]) =
-    let is_leaf = this.is_leaf()
-    let mutable left_pos = 0
-    let mutable right_pos = buffer.Length - 1
+  member public this.Serialize (buffer: Byte[]) =
+    let isLeaf = this.isLeaf()
+    let mutable left = 0
+    let mutable right = buffer.Length - 1
 
-    left_pos <- this.serialize_header is_leaf left_pos buffer
+    left <- this.SerializeHeader (isLeaf, left, buffer)
 
-    let (new_left_pos, new_right_pos) =
-      this.serialize_body is_leaf left_pos right_pos buffer
+    let (new_left, new_right) = this.SerializeBody (isLeaf, left, right, buffer)
 
-    left_pos <- new_left_pos
-    right_pos <- new_right_pos
+    left <- new_left
+    right <- new_right
 
-    this.serialize_last_child is_leaf left_pos buffer
+    this.SerializeLastChild (isLeaf, left, buffer)
 
     buffer
 
-  member public this.deserialize (buffer: byte[]) =
-    let mutable left_pos = 0
-    let is_leaf = buffer[0] |> uint16
-    let items_count = buffer[1..3] |> BitConverter.ToUInt16
-    left_pos <- left_pos + 3
+  member public this.Deserialize (buffer: byte[]) =
+    let mutable left = 0
+    let isLeaf = buffer[0] |> uint16
+    let itemsCount = buffer[1..3] |> BitConverter.ToUInt16
+    left <- left + 3
 
     // Read body
-    for i = 0 to items_count - 1us |> int do
-      if is_leaf = 0us then
-        this.page_num <- buffer[left_pos..] |> BitConverter.ToUInt64
-        left_pos <- left_pos + Page.SIZE
-        this.children.Add (this.page_num)
+    for i = 0 to itemsCount - 1us |> int do
+      if isLeaf = 0us then
+        _PageNum <- buffer[left..] |> BitConverter.ToUInt64
+        left <- left + Page.SIZE
+        _Children.Add (_PageNum)
 
         // Read offset
-        let mutable offset = buffer[left_pos..] |> BitConverter.ToUInt16 |> int
-        left_pos <- left_pos + 2
+        let mutable offset = buffer[left..] |> BitConverter.ToUInt16 |> int
+        left <- left + 2
 
-        let klen = buffer[left_pos..] |> BitConverter.ToUInt16 |> int
-        left_pos <- left_pos + 1
+        let klen = buffer[left..] |> BitConverter.ToUInt16 |> int
+        left <- left + 1
 
         let key = buffer[offset .. offset + klen]
         offset <- offset + klen
 
-        let vlen = buffer[left_pos..] |> BitConverter.ToUInt16 |> int
-        left_pos <- left_pos + 1
+        let vlen = buffer[left..] |> BitConverter.ToUInt16 |> int
+        left <- left + 1
 
         let value = buffer[offset .. offset + vlen]
         offset <- offset + vlen
 
-        this.items.Add ({ key = key; value = value })
+        _Items.Add ({ key = key; value = value })
 
-    if is_leaf = 0us then
+    if isLeaf = 0us then
       // Read the last child nod
-      this.children.Add (buffer[left_pos..] |> BitConverter.ToUInt64)
+      _Children.Add (buffer[left..] |> BitConverter.ToUInt64)
 
 and Item = { key: Byte[]; value: Byte[] }
