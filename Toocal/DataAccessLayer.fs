@@ -3,6 +3,7 @@ module Toocal.Core.DataAccessLayer.Dal
 open System
 open Toocal.Core.DataAccessLayer.Freelist
 open Toocal.Core.DataAccessLayer.Page
+open Toocal.Core.DataAccessLayer.Node
 open Toocal.Core.DataAccessLayer.Meta
 open ZeroLog
 
@@ -10,83 +11,91 @@ open ZeroLog
 /// organized on the disk. It’s responsible for managing the underlying data
 /// structure, writing the database pages to the disk, and reclaiming free pages
 /// to avoid fragmentation.
-type Dal = {
-  path: String
-  page_size: int32
-  freelist: Freelist
-  meta: Meta
-  file: IO.FileStream
-} with
-
-  static member public make (path: String, page_size: int32) : Dal =
-    let self = {
-      path = path
-      page_size = page_size
-      file = Dal.init path
-      meta = Meta.make()
-      freelist = Freelist.make()
-    }
-
-    if IO.Path.Exists (path) then
-      { self with meta = self.read_meta(); freelist = self.read_freelist() }
-    else
-      self.meta.freelist_page <- self.freelist.next_page()
-      self.write_freelist() |> ignore
-      self.write_meta self.meta |> ignore
-      self
-
+type Dal (Path: String, PageSize: int32) as self =
   static let logger = LogManager.GetLogger ("Toocal.Core.DataAccessLayer.Dal")
 
+  let mutable _Freelist: Freelist = new Freelist ()
+  let mutable _Meta: Meta = new Meta ()
+
+  let _File: IO.FileStream =
+    IO.File.Open (Path, IO.FileMode.OpenOrCreate, IO.FileAccess.ReadWrite)
+
+  do
+    if IO.Path.Exists (Path) then
+      _Meta <- self.ReadMeta ()
+      _Freelist <- self.ReadFreelist ()
+
+    else
+      _Meta.FreelistPage <- _Freelist.NextPage ()
+      self.WriteFreelist () |> ignore
+      self.WriteMeta _Meta |> ignore
+
+  member public this.Freelist = _Freelist
+
   interface IDisposable with
-    member this.Dispose () = this.file.Dispose ()
+    member this.Dispose () = _File.Dispose ()
 
-  static member public init (path: String) : IO.FileStream =
-    IO.File.Open (path, IO.FileMode.OpenOrCreate, IO.FileAccess.ReadWrite)
+  member public this.AllocEmptyPage () =
+    new Page (0UL, Array.zeroCreate<Byte> PageSize)
 
-  member public this.alloc_empty_page (num: PageNum) = {
-    num = num
-    data = Array.zeroCreate<Byte> this.page_size
-  }
+  member public this.ReadPage (num: PageNum) =
+    let data = Array.zeroCreate<Byte> PageSize
+    let offset = ((num |> int32) * PageSize) |> int64
 
-  member public this.read_page (num: PageNum) =
-    let data = Array.zeroCreate<Byte> this.page_size
-    let offset = ((num |> int32) * this.page_size) |> int64
+    _File.Seek (offset, IO.SeekOrigin.Begin) |> ignore
+    _File.Read data |> ignore
 
-    this.file.Seek (offset, IO.SeekOrigin.Begin) |> ignore
-    this.file.Read data |> ignore
+    new Page (num, data)
 
-    { num = num; data = data }
+  member public this.WritePage (page: Page) =
+    let offset = ((page.Num |> int32) * PageSize) |> int64
 
-  member public this.write_page (page: Page) =
-    let offset = ((page.num |> int32) * this.page_size) |> int64
+    _File.Seek (offset, IO.SeekOrigin.Begin) |> ignore
+    _File.Write page.Data |> ignore
 
-    this.file.Seek (offset, IO.SeekOrigin.Begin) |> ignore
-    this.file.Write page.data |> ignore
+  member public this.WriteMeta (meta: Meta) =
+    let page = Page (Meta.META_PAGE_NUM, Array.zeroCreate<Byte> PageSize)
 
-  member public this.write_meta (meta: Meta) =
-    let page = {
-      num = Meta.META_PAGE_NUM
-      data = Array.zeroCreate<Byte> this.page_size
-    }
-
-    meta.serialize page.data
-    this.write_page page
+    meta.Serialize page.Data
+    this.WritePage page
 
     page
 
-  member public this.read_meta () =
-    let page = this.read_page Meta.META_PAGE_NUM
-    let meta = Meta.make()
+  member public this.ReadMeta () =
+    let page = this.ReadPage Meta.META_PAGE_NUM
+    let meta = new Meta ()
 
-    meta.deserialize(page.data)
+    meta.Deserialize (page.Data)
     meta
 
-  member public this.write_freelist () =
-    let page = this.alloc_empty_page this.meta.freelist_page
-    this.freelist.serialize page.data
-    this.write_page page
+  member public this.WriteFreelist () =
+    let page = this.AllocEmptyPage ()
+    page.Num <- _Meta.FreelistPage
+    _Freelist.Serialize page.Data
+    this.WritePage page
 
-  member public this.read_freelist () =
-    let freelist = Freelist.make()
-    freelist.deserialize(this.read_page(this.meta.freelist_page).data)
+  member public this.ReadFreelist () =
+    let freelist = new Freelist ()
+    freelist.Deserialize (this.ReadPage(_Meta.FreelistPage).Data)
     freelist
+
+  member public this.GetNode (pageNum: PageNum) =
+    let node = new Node ()
+
+    node.Deserialize (this.ReadPage(pageNum).Data)
+    node.PageNum <- pageNum
+
+    node
+
+  member public this.WriteNode (node: Node) =
+    let page = this.AllocEmptyPage ()
+
+    if node.PageNum = 0UL then
+      page.Num <- _Freelist.NextPage ()
+      node.PageNum <- page.Num
+    else
+      page.Num <- node.PageNum
+
+    page.Data <- node.Serialize page.Data
+    this.WritePage page
+    node
