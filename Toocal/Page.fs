@@ -7,7 +7,7 @@ type PageNum = uint64
 
 type Page = {
   num: PageNum
-  data: array<Byte>
+  data: Byte[]
 } with
 
   static let logger = LogManager.GetLogger ("Toocal.Core.DataAccessLayer.Page")

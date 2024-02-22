@@ -31,7 +31,7 @@ type Freelist = {
   member public this.release_page (page: PageNum) =
     this.released_pages.Push page
 
-  member public this.serialize (buffer: array<Byte>) =
+  member public this.serialize (buffer: Byte[]) =
     let mutable pos = 0
     let serialized_max_page = this.max_page |> uint16 |> BitConverter.GetBytes
 
@@ -51,7 +51,7 @@ type Freelist = {
       Array.blit serialized_page 0 buffer pos serialized_page.Length
       pos <- pos + Page.SIZE
 
-  member public this.deserialize (buffer: array<Byte>) =
+  member public this.deserialize (buffer: Byte[]) =
     let mutable pos = 0
     this.max_page <- BitConverter.ToUInt16 buffer |> uint64
 

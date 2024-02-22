@@ -6,14 +6,14 @@ open System
 
 type Node = {
   dal: Dal
-  page_num: PageNum
-  items: array<Item>
-  children: array<PageNum>
+  mutable page_num: PageNum
+  items: Collections.Generic.List<Item>
+  children: Collections.Generic.List<PageNum>
 } with
 
-  member public this.is_leaf () = this.children.Length = 0
+  member public this.is_leaf () = this.children.Count = 0
 
-  member public this.serialize (buffer: array<byte>) =
+  member public this.serialize (buffer: Byte[]) =
     let is_leaf = this.is_leaf()
     let mutable left_pos = 0
     let mutable right_pos = buffer.Length - 1
@@ -24,7 +24,7 @@ type Node = {
     left_pos <- left_pos + 1
 
     let key_value_pairs_count =
-      (this.items.Length |> uint16 |> BitConverter.GetBytes)
+      (this.items.Count |> uint16 |> BitConverter.GetBytes)
 
     Array.blit
       key_value_pairs_count
@@ -46,7 +46,7 @@ type Node = {
     // | Header |   offset /	 pointer	  offset         .... |      data      ..... |
     // ----------------------------------------------------------------------------------
 
-    for i = 0 to this.items.Length - 1 do
+    for i = 0 to this.items.Count - 1 do
       let item = this.items[i]
 
       if not is_leaf then
@@ -80,10 +80,47 @@ type Node = {
     if not is_leaf then
       // Write the last child
       let last_child =
-        this.children |> Array.last |> uint64 |> BitConverter.GetBytes
+        this.children[this.children.Count - 1]
+        |> uint64
+        |> BitConverter.GetBytes
 
       Array.blit last_child 0 buffer left_pos last_child.Length
 
     buffer
 
-and Item = { key: array<byte>; value: array<byte> }
+  member public this.deserialize (buffer: byte[]) =
+    let mutable left_pos = 0
+    let is_leaf = buffer[0] |> uint16
+    let items_count = buffer[1..3] |> BitConverter.ToUInt16
+    left_pos <- left_pos + 3
+
+    // Read body
+    for i = 0 to items_count - 1us |> int do
+      if is_leaf = 0us then
+        this.page_num <- buffer[left_pos..] |> BitConverter.ToUInt64
+        left_pos <- left_pos + Page.SIZE
+        this.children.Add (this.page_num)
+
+        // Read offset
+        let mutable offset = buffer[left_pos..] |> BitConverter.ToUInt16 |> int
+        left_pos <- left_pos + 2
+
+        let klen = buffer[left_pos..] |> BitConverter.ToUInt16 |> int
+        left_pos <- left_pos + 1
+
+        let key = buffer[offset .. offset + klen]
+        offset <- offset + klen
+
+        let vlen = buffer[left_pos..] |> BitConverter.ToUInt16 |> int
+        left_pos <- left_pos + 1
+
+        let value = buffer[offset .. offset + vlen]
+        offset <- offset + vlen
+
+        this.items.Add ({ key = key; value = value })
+
+    if is_leaf = 0us then
+      // Read the last child nod
+      this.children.Add (buffer[left_pos..] |> BitConverter.ToUInt64)
+
+and Item = { key: Byte[]; value: Byte[] }
