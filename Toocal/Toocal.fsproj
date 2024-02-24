@@ -6,12 +6,13 @@
     <PublishReadyToRun>true</PublishReadyToRun>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Serializable.fs" />
     <Compile Include="Logging.fs" />
     <Compile Include="Page.fs" />
     <Compile Include="Meta.fs" />
     <Compile Include="Freelist.fs" />
-    <Compile Include="Node.fs" />
     <Compile Include="DataAccessLayer.fs" />
+    <Compile Include="Node.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FsToolkit.ErrorHandling" Version="4.11.0" />

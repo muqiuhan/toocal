@@ -1,11 +1,11 @@
 [*.fs]
 indent_size = 2
-max_line_length = 80
-fsharp_space_before_parameter = true
-fsharp_space_before_class_constructor = true
-fsharp_space_before_uppercase_invocation = true
+max_line_length = 90
+fsharp_space_before_parameter = false
+fsharp_space_before_class_constructor = false
+fsharp_space_before_uppercase_invocation = false
 fsharp_space_before_lowercase_invocation = false
-fsharp_space_before_member = true
+fsharp_space_before_member = false
 fsharp_space_before_colon = false
 fsharp_space_after_comma = true
 fsharp_space_around_delimiter = true

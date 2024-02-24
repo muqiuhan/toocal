@@ -5,8 +5,8 @@ open ZeroLog
 
 type PageNum = uint64
 
-type Page (num: PageNum, data: Byte[]) =
-  static let logger = LogManager.GetLogger ("Toocal.Core.DataAccessLayer.Page")
+type Page(num: PageNum, data: Byte[]) =
+  static let logger = LogManager.GetLogger("Toocal.Core.DataAccessLayer.Page")
 
   let mutable _num = num
   let mutable _data = data
