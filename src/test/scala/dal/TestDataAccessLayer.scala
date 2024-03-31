@@ -10,4 +10,6 @@ class TestDataAccessLayer extends munit.FunSuite:
     assert(File(randomFileName).exists())
     assert(File(randomFileName).canRead)
     assert(File(randomFileName).canWrite)
+
+    File(randomFileName).deleteOnExit()
   }

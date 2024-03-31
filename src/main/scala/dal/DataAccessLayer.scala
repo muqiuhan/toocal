@@ -16,7 +16,7 @@ class DataAccessLayer(path: String, pageSize: Int):
       case -1 =>
         throw ReadPageException("There is no more data because the end of the database file has been reached.")
       case bytes: Int if bytes != page.num =>
-        throw ReadPageException(s"Incomplete read, successfully read ${bytes} bytes")
+        throw ReadPageException(s"Incomplete read, successfully read $bytes bytes")
       case _ =>
         page
 
@@ -26,7 +26,7 @@ private object DataAccessLayer:
   def openDataBaseFile(path: String): RandomAccessFile =
     val file = File(path)
 
-    if !(file.exists()) then
+    if !file.exists() then
       file.createNewFile()
     else
       if !file.canRead then
