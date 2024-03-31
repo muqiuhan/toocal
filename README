@@ -1,5 +1,5 @@
 * Toocal
-* A minimalist cross-platform nosql database written in F#
+* A cross-platform nosql database for minimalists
 * Copyright (c) 2023 Muqiu Han
 
 Docs: https://github.com/muqiuhan/toocal
@@ -7,12 +7,13 @@ Issues: https://github.com/muqiuhan/toocal/issues
 Contribute: https://github.com/muqiuhan/toocal/pulls
 
 
-To build and run locally with dotnet 8.0+:
+--------------------------------------------------------------------------
 
-   To build:          dotnet build
-   To test:           dotnet test
-   To publish:        dotnet publish
 
+This project is based on Scala 3.4.1, and its packaged using sbt-assembly.
+When packaging, tests will be run first to ensure that toocal is available on the current platform:
+
+sbt assembly
 
 --------------------------------------------------------------------------
 
