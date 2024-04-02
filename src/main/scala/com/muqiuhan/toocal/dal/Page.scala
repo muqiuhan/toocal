@@ -30,4 +30,7 @@ package com.muqiuhan.toocal.dal
 
 type PageNum = Long
 
-case class Page(num: PageNum, data: Array[Byte])
+case class Page(var num: PageNum, var data: Array[Byte])
+
+object Page:
+  val PAGE_NUM_SIZE: Int = 8
