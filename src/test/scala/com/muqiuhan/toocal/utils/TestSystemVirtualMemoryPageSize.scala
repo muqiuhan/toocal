@@ -29,8 +29,8 @@
 package com.muqiuhan.toocal.utils
 
 class TestSystemVirtualMemoryPageSize extends munit.FunSuite:
-  test("get") {
+  test("SIZE") {
     scribe.info(
-      s"Current system virtual memory page size: ${com.muqiuhan.toocal.utils.SystemVirtualMemoryPageSize.get()}"
+      s"Current system virtual memory page size: ${com.muqiuhan.toocal.utils.SystemVirtualMemoryPageSize.SIZE}"
     )
   }

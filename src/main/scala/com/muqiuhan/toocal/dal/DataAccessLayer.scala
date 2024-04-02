@@ -67,14 +67,8 @@ class DataAccessLayer(path: String, pageSize: Int):
         page
 
   def writePage(page: Page): Unit =
-    scribe.error(
-      s"page size = ${page.data.length}, offset = ${page.num * pageSize}"
-    )
-
     file.seek(page.num.toInt * pageSize)
-    file.write(
-      page.data
-    )
+    file.write(page.data)
 
   inline def getNextPage: PageNum = freeList.getNextPage
 
@@ -82,6 +76,7 @@ class DataAccessLayer(path: String, pageSize: Int):
     val page = allocateEmptyPage()
     page.num = Meta.PAGE_NUM
     meta.serialize(page.data)
+    scribe.info(s"meta page = ${page.data.toList(0)}")
     writePage(page)
     page
 
@@ -94,7 +89,6 @@ class DataAccessLayer(path: String, pageSize: Int):
     val page = allocateEmptyPage()
     page.num = meta.freeListPage
     freeList.serialize(page.data)
-    scribe.error(s"page.num = ${page.num}")
     writePage(page)
     meta.freeListPage = page.num
 

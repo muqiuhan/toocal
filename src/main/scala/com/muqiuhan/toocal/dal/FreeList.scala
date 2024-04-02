@@ -44,18 +44,29 @@ class FreeList:
   def releasePage(page: PageNum): Unit = releasePages.push(page)
 
   def serialize(buffer: Array[Byte]): Array[Byte] =
-    buffer ++ ByteBuffer
+    var pos = 0
+
+    ByteBuffer
       .allocate(Page.PAGE_NUM_SIZE)
       .putShort(maxPage.toShort)
       .array()
+      .copyToArray(buffer, pos)
+    pos = pos + 2
 
-    buffer ++ ByteBuffer
+    ByteBuffer
       .allocate(Page.PAGE_NUM_SIZE)
       .putShort(releasePages.length.toShort)
       .array()
+      .copyToArray(buffer, pos)
+    pos = pos + 2
 
     releasePages.foreach(page =>
-      buffer ++ ByteBuffer.allocate(Page.PAGE_NUM_SIZE).putLong(page).array()
+      ByteBuffer
+        .allocate(Page.PAGE_NUM_SIZE)
+        .putLong(page)
+        .array()
+        .copyToArray(buffer, pos)
+      pos = pos + Page.PAGE_NUM_SIZE
     )
 
     buffer

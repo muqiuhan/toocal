@@ -42,7 +42,7 @@ object SystemVirtualMemoryPageSize:
     * @return
     *   system virtual memory page size in kb.
     */
-  def get(): Int =
+  val SIZE: Int =
     val field: Field = classOf[Unsafe].getDeclaredField("theUnsafe")
     field.setAccessible(true)
     field.get(null).asInstanceOf[Unsafe].pageSize()

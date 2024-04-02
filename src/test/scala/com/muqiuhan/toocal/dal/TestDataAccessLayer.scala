@@ -32,6 +32,10 @@ import com.muqiuhan.toocal.utils.SystemVirtualMemoryPageSize
 
 import java.io.File
 import java.nio.charset.StandardCharsets
+import java.io.RandomAccessFile
+import java.io.FileInputStream
+import scala.util.chaining.*
+import java.nio.ByteBuffer
 
 class TestDataAccessLayer extends munit.FunSuite:
   test("openDataBaseFile") {
@@ -47,15 +51,29 @@ class TestDataAccessLayer extends munit.FunSuite:
 
   test("initialize db") {
     val dal =
-      try DataAccessLayer("db.db", SystemVirtualMemoryPageSize.get())
+      try DataAccessLayer("db.db", SystemVirtualMemoryPageSize.SIZE)
       catch
         case e: Exception =>
           File("db.db").delete()
           throw e
-    
+
     val page = dal.allocateEmptyPage()
     val data = "data".getBytes(StandardCharsets.UTF_8)
 
+    dal.writeFreelist()
+    dal.close()
+  }
+
+  test("write new page") {
+    val dal =
+      try DataAccessLayer("db.db", SystemVirtualMemoryPageSize.SIZE)
+      catch
+        case e: Exception =>
+          File("db.db").delete()
+          throw e
+
+    val page = dal.allocateEmptyPage()
+    val data = "data".getBytes(StandardCharsets.UTF_8)
     page.num = dal.getNextPage
     Array.copy(data, 0, page.data, 0, data.length)
 
@@ -66,5 +84,6 @@ class TestDataAccessLayer extends munit.FunSuite:
         dal.close()
         throw e
 
+    dal.writeFreelist()
     dal.close()
   }
