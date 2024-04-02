@@ -10,5 +10,8 @@ lazy val root = project
       (Test / test).value,
     assembly / mainClass := Some("com.muqiuhan.Toocal"),
     scalaVersion         := scala3Version,
-    libraryDependencies ++= Seq("org.scalameta" %% "munit" % "0.7.29" % Test)
+    libraryDependencies ++= Seq(
+      "org.scalameta" %% "munit"  % "0.7.29" % Test,
+      "com.outr"      %% "scribe" % "3.13.2"
+    )
   )
