@@ -28,6 +28,7 @@
 
 package com.muqiuhan.toocal.dal
 
+import java.nio.ByteBuffer
 import scala.collection.mutable
 
 class FreeList:
@@ -35,13 +36,36 @@ class FreeList:
   private val releasePages: mutable.Stack[PageNum] = mutable.Stack()
 
   def getNextPage: PageNum =
-    if releasePages.nonEmpty then
-      releasePages.pop()
+    if releasePages.nonEmpty then releasePages.pop()
     else
       maxPage = maxPage + 1
       maxPage
 
   def releasePage(page: PageNum): Unit = releasePages.push(page)
+
+  def serialize(buffer: Array[Byte]): Array[Byte] =
+    buffer ++ ByteBuffer
+      .allocate(Page.PAGE_NUM_SIZE)
+      .putShort(maxPage.toShort)
+      .array()
+
+    buffer ++ ByteBuffer
+      .allocate(Page.PAGE_NUM_SIZE)
+      .putShort(releasePages.length.toShort)
+      .array()
+
+    releasePages.foreach(page =>
+      buffer ++ ByteBuffer.allocate(Page.PAGE_NUM_SIZE).putLong(page).array()
+    )
+
+    buffer
+
+  def deserialize(buffer: Array[Byte]): Unit =
+    val bufferView = ByteBuffer.wrap(buffer)
+    maxPage = bufferView.getShort()
+
+    for i <- 0 until bufferView.getShort() do
+      releasePages.push(bufferView.getLong())
 
 private object FreeList:
   private val META_PAGE: PageNum = 0L
