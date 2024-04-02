@@ -1,19 +1,23 @@
 * Toocal
 * A cross-platform nosql database for minimalists
 * Copyright (c) 2023 Muqiu Han
-
-Docs: https://github.com/muqiuhan/toocal
-Issues: https://github.com/muqiuhan/toocal/issues
-Contribute: https://github.com/muqiuhan/toocal/pulls
-
+*
+* Docs: https://github.com/muqiuhan/toocal
+* Issues: https://github.com/muqiuhan/toocal/issues
+* Contribute: https://github.com/muqiuhan/toocal/pulls
 
 --------------------------------------------------------------------------
 
+o- Test: sbt test
+o- Build: sbt build
+o- Package: sbt assembly
 
-This project is based on Scala 3.4.1, and its packaged using sbt-assembly.
-When packaging, tests will be run first to ensure that toocal is available on the current platform:
+--------------------------------------------------------------------------
 
-sbt assembly
+Dependencies:
+
+o- Munit: https://github.com/scalameta/munit
+o- Scribe: https://github.com/outr/scribe
 
 --------------------------------------------------------------------------
 
