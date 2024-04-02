@@ -31,39 +31,100 @@ package com.muqiuhan.toocal.dal
 import java.io.{File, RandomAccessFile}
 
 class DataAccessLayer(path: String, pageSize: Int):
-  private val file     = DataAccessLayer.openDataBaseFile(path)
-  private val freeList = FreeList()
+  private val (file, databaseFileStatus) =
+    DataAccessLayer.openDataBaseFile(path)
+
+  private var freeList = FreeList()
+  private var meta     = Meta()
+
+  databaseFileStatus match
+    case DataBaseFileStatus.Exist =>
+      meta = readMeta()
+      freeList = readFreeList()
+    case DataBaseFileStatus.NotExist =>
+      meta.freeListPage = getNextPage
+      writeFreelist()
+      writeMeta(meta)
 
   def close(): Unit = file.close()
 
-  def allocateEmptyPage(): Page = Page(num = pageSize, data = new Array[Byte](pageSize))
+  def allocateEmptyPage(): Page =
+    Page(num = pageSize, data = new Array[Byte](pageSize))
 
   def readPage(pageNum: PageNum): Page =
     val page = allocateEmptyPage()
 
-    file.read(page.data, pageNum.asInstanceOf[Int] * pageSize, page.data.length) match
+    file.read(page.data, pageNum.toInt * pageSize, page.data.length) match
       case -1 =>
-        throw ReadPageException("There is no more data because the end of the database file has been reached.")
+        throw ReadPageException(
+          "There is no more data because the end of the database file has been reached."
+        )
       case bytes: Int if bytes != page.num =>
-        throw ReadPageException(s"Incomplete read, successfully read $bytes bytes")
+        throw ReadPageException(
+          s"Incomplete read, successfully read $bytes bytes"
+        )
       case _ =>
         page
 
-  def writePage(page: Page): Unit = file.write(page.data, page.num.asInstanceOf[Int] * pageSize, page.data.length)
+  def writePage(page: Page): Unit =
+    scribe.error(
+      s"page size = ${page.data.length}, offset = ${page.num * pageSize}"
+    )
+
+    file.seek(page.num.toInt * pageSize)
+    file.write(
+      page.data
+    )
+
+  inline def getNextPage: PageNum = freeList.getNextPage
+
+  def writeMeta(meta: Meta): Page =
+    val page = allocateEmptyPage()
+    page.num = Meta.PAGE_NUM
+    meta.serialize(page.data)
+    writePage(page)
+    page
+
+  def readMeta(): Meta =
+    val meta = Meta()
+    meta.deserialize(readPage(Meta.PAGE_NUM).data)
+    meta
+
+  def writeFreelist(): Unit =
+    val page = allocateEmptyPage()
+    page.num = meta.freeListPage
+    freeList.serialize(page.data)
+    scribe.error(s"page.num = ${page.num}")
+    writePage(page)
+    meta.freeListPage = page.num
+
+  def readFreeList(): FreeList =
+    val freeList = FreeList()
+    freeList.deserialize(readPage(meta.freeListPage).data)
+    freeList
 
 private object DataAccessLayer:
-  def openDataBaseFile(path: String): RandomAccessFile =
+
+  def openDataBaseFile(path: String): (RandomAccessFile, DataBaseFileStatus) =
     val file = File(path)
 
     if !file.exists() then
       file.createNewFile()
+      (RandomAccessFile(path, "rw"), DataBaseFileStatus.NotExist)
     else
       if !file.canRead then
-        DataBaseFileException("The database file does not have read permission!")
+        DataBaseFileException(
+          "The database file does not have read permission!"
+        )
       if !file.canWrite then
-        DataBaseFileException("The database file does not have write permission!")
+        DataBaseFileException(
+          "The database file does not have write permission!"
+        )
+      (RandomAccessFile(path, "rw"), DataBaseFileStatus.Exist)
 
-    RandomAccessFile(path, "rw")
+private enum DataBaseFileStatus:
+  case Exist
+  case NotExist
 
 class DataBaseFileException(msg: String) extends RuntimeException(msg)
 class ReadPageException(msg: String)     extends RuntimeException(msg)
