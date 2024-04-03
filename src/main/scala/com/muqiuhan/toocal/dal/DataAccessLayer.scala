@@ -28,14 +28,14 @@
 
 package com.muqiuhan.toocal.dal
 
-import java.io.{File, RandomAccessFile}
+import java.io.{ File, RandomAccessFile }
 
 class DataAccessLayer(path: String, pageSize: Int):
   private val (file, databaseFileStatus) =
     DataAccessLayer.openDataBaseFile(path)
 
   private var freeList = FreeList()
-  private var meta     = Meta()
+  private var meta = Meta()
 
   databaseFileStatus match
     case DataBaseFileStatus.Exist =>
@@ -54,15 +54,12 @@ class DataAccessLayer(path: String, pageSize: Int):
   def readPage(pageNum: PageNum): Page =
     val page = allocateEmptyPage()
 
-    file.read(page.data, pageNum.toInt * pageSize, page.data.length) match
+    file.seek(pageNum.toInt * pageSize)
+    file.read(page.data) match
       case -1 =>
-        throw ReadPageException(
-          "There is no more data because the end of the database file has been reached."
-        )
+        throw ReadPageException("There is no more data because the end of the database file has been reached.")
       case bytes: Int if bytes != page.num =>
-        throw ReadPageException(
-          s"Incomplete read, successfully read $bytes bytes"
-        )
+        throw ReadPageException(s"Incomplete read, successfully read $bytes bytes")
       case _ =>
         page
 
@@ -106,14 +103,8 @@ private object DataAccessLayer:
       file.createNewFile()
       (RandomAccessFile(path, "rw"), DataBaseFileStatus.NotExist)
     else
-      if !file.canRead then
-        DataBaseFileException(
-          "The database file does not have read permission!"
-        )
-      if !file.canWrite then
-        DataBaseFileException(
-          "The database file does not have write permission!"
-        )
+      if !file.canRead then DataBaseFileException("The database file does not have read permission!")
+      if !file.canWrite then DataBaseFileException("The database file does not have write permission!")
       (RandomAccessFile(path, "rw"), DataBaseFileStatus.Exist)
 
 private enum DataBaseFileStatus:
@@ -121,4 +112,4 @@ private enum DataBaseFileStatus:
   case NotExist
 
 class DataBaseFileException(msg: String) extends RuntimeException(msg)
-class ReadPageException(msg: String)     extends RuntimeException(msg)
+class ReadPageException(msg: String) extends RuntimeException(msg)

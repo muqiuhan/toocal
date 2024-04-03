@@ -60,11 +60,32 @@ class TestDataAccessLayer extends munit.FunSuite:
     val page = dal.allocateEmptyPage()
     val data = "data".getBytes(StandardCharsets.UTF_8)
 
+    page.num = dal.getNextPage
+    Array.copy(data, 0, page.data, 0, data.length)
+
+    try dal.writePage(page)
+    catch
+      case e: Exception =>
+        File("db.db").delete()
+        dal.close()
+        throw e
+
     dal.writeFreelist()
     dal.close()
   }
 
-  test("write new page") {
+  test("load db") {
+    val dal =
+      try DataAccessLayer("db.db", SystemVirtualMemoryPageSize.SIZE)
+      catch
+        case e: Exception =>
+          File("db.db").delete()
+          throw e
+
+    dal.close()
+  }
+
+  test("write a new page") {
     val dal =
       try DataAccessLayer("db.db", SystemVirtualMemoryPageSize.SIZE)
       catch
@@ -73,7 +94,8 @@ class TestDataAccessLayer extends munit.FunSuite:
           throw e
 
     val page = dal.allocateEmptyPage()
-    val data = "data".getBytes(StandardCharsets.UTF_8)
+    val data = "data2".getBytes(StandardCharsets.UTF_8)
+
     page.num = dal.getNextPage
     Array.copy(data, 0, page.data, 0, data.length)
 

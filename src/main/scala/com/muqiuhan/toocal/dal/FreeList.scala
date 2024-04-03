@@ -32,7 +32,7 @@ import java.nio.ByteBuffer
 import scala.collection.mutable
 
 class FreeList:
-  private var maxPage: PageNum                     = FreeList.META_PAGE
+  private var maxPage: PageNum = FreeList.META_PAGE
   private val releasePages: mutable.Stack[PageNum] = mutable.Stack()
 
   def getNextPage: PageNum =
@@ -46,26 +46,14 @@ class FreeList:
   def serialize(buffer: Array[Byte]): Array[Byte] =
     var pos = 0
 
-    ByteBuffer
-      .allocate(Page.PAGE_NUM_SIZE)
-      .putShort(maxPage.toShort)
-      .array()
-      .copyToArray(buffer, pos)
+    ByteBuffer.allocate(2).putShort(maxPage.toShort).array().copyToArray(buffer, pos)
     pos = pos + 2
 
-    ByteBuffer
-      .allocate(Page.PAGE_NUM_SIZE)
-      .putShort(releasePages.length.toShort)
-      .array()
-      .copyToArray(buffer, pos)
+    ByteBuffer.allocate(2).putShort(releasePages.length.toShort).array().copyToArray(buffer, pos)
     pos = pos + 2
 
     releasePages.foreach(page =>
-      ByteBuffer
-        .allocate(Page.PAGE_NUM_SIZE)
-        .putLong(page)
-        .array()
-        .copyToArray(buffer, pos)
+      ByteBuffer.allocate(Page.PAGE_NUM_SIZE).putLong(page).array().copyToArray(buffer, pos)
       pos = pos + Page.PAGE_NUM_SIZE
     )
 
@@ -75,8 +63,7 @@ class FreeList:
     val bufferView = ByteBuffer.wrap(buffer)
     maxPage = bufferView.getShort()
 
-    for i <- 0 until bufferView.getShort() do
-      releasePages.push(bufferView.getLong())
+    for i <- 0 until bufferView.getShort() do releasePages.push(bufferView.getLong())
 
 private object FreeList:
   private val META_PAGE: PageNum = 0L
