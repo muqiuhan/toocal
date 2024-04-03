@@ -33,13 +33,19 @@ import scala.collection.mutable
 import java.nio.ByteBuffer
 import com.muqiuhan.toocal.dal.Page.PAGE_NUM_SIZE
 
+case class Item(key: Array[Byte], value: Array[Byte])
+
 /** Nodes in the database are implemented as B-tree. */
-class Node:
+class Node(dal: DataAccessLayer):
   var pageNum: PageNum = 0L
   var items            = mutable.Queue[Item]()
   var childNodes       = mutable.Queue[PageNum]()
 
   def isLeaf(): Boolean = childNodes.length == 0
+
+  inline def writeNode                = dal.writeNode
+  inline def writeNodes(nodes: Node*) = nodes.foreach(writeNode)
+  inline def getNode                  = dal.getNode
 
   /** Node is stored using slotted pages technique. The page is divided into two
     * memory regions. At end of the page lie the keys and values, whereas at the
@@ -112,4 +118,28 @@ class Node:
 
     buffer
 
-case class Item(key: Array[Byte], value: Array[Byte])
+  def deserialize(buffer: Array[Byte]): Unit =
+    val bufferView = ByteBuffer.wrap(buffer)
+    val isLeaf     = bufferView.get() == 0
+
+    for i <- 0 until bufferView.getShort() do
+      if !isLeaf then childNodes.append(bufferView.getLong())
+
+      var offset = bufferView.getShort().toInt
+
+      val keyLen = bufferView.get(offset)
+      offset += 1
+
+      val valueLen = bufferView.get(offset)
+      offset += 1
+
+      val key   = new Array[Byte](keyLen)
+      val value = new Array[Byte](valueLen)
+      items.append(
+        Item(
+          key = bufferView.get(offset, key).array(),
+          value = bufferView.get(offset + keyLen, key).array()
+        )
+      )
+
+    if !isLeaf then childNodes.append(bufferView.getLong())

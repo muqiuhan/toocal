@@ -30,6 +30,7 @@
 package com.muqiuhan.toocal.dal
 
 import java.io.{File, RandomAccessFile}
+import com.muqiuhan.toocal.log.ToocalLogger.log
 
 /** Data Access Layer (DAL) handles all disk operations and how data is
   * organized on the disk. It’s responsible for managing the underlying data
@@ -48,12 +49,17 @@ class DataAccessLayer(path: String, pageSize: Int):
    * otherwise create a new database file and write freelist and meta */
   databaseFileStatus match
     case DataBaseFileStatus.Exist =>
+      log.info(s"Loading the database $path...")
       meta = readMeta()
       freeList = readFreeList()
     case DataBaseFileStatus.NotExist =>
-      meta.freeListPage = getNextPage
+      log.info(s"Initialize the database $path...")
+      meta.freeListPage = nextPage
       writeFreelist()
       writeMeta(meta)
+
+  inline def nextPage    = freeList.getNextPage
+  inline def releasePage = freeList.releasePage
 
   def close(): Unit = file.close()
 
@@ -80,13 +86,10 @@ class DataAccessLayer(path: String, pageSize: Int):
     file.seek(page.num.toInt * pageSize)
     file.write(page.data)
 
-  inline def getNextPage: PageNum = freeList.getNextPage
-
   def writeMeta(meta: Meta): Page =
     val page = allocateEmptyPage()
     page.num = Meta.PAGE_NUM
     meta.serialize(page.data)
-    scribe.info(s"meta page = ${page.data.toList(0)}")
     writePage(page)
     page
 
@@ -107,8 +110,30 @@ class DataAccessLayer(path: String, pageSize: Int):
     freeList.deserialize(readPage(meta.freeListPage).data)
     freeList
 
-private object DataAccessLayer:
+  def getNode(pageNum: PageNum): Node =
+    val page = readPage(pageNum)
+    val node = Node(this)
 
+    node.deserialize(page.data)
+    node.pageNum = page.num
+
+    node
+
+  def writeNode(node: Node): Node =
+    val page = allocateEmptyPage()
+    if node.pageNum == 0 then
+      page.num = nextPage
+      node.pageNum = page.num
+    else page.num = node.pageNum
+
+    node.serialize(page.data)
+    writePage(page)
+
+    node
+
+  inline def deleteNode(pageNum: PageNum): Unit = releasePage(pageNum)
+
+private object DataAccessLayer:
   def openDataBaseFile(path: String): (RandomAccessFile, DataBaseFileStatus) =
     val file = File(path)
 

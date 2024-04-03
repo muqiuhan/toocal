@@ -61,7 +61,7 @@ class TestDataAccessLayer extends munit.FunSuite:
     val page = dal.allocateEmptyPage()
     val data = "data".getBytes(StandardCharsets.UTF_8)
 
-    page.num = dal.getNextPage
+    page.num = dal.nextPage
     Array.copy(data, 0, page.data, 0, data.length)
 
     try dal.writePage(page)
@@ -97,7 +97,7 @@ class TestDataAccessLayer extends munit.FunSuite:
     val page = dal.allocateEmptyPage()
     val data = "data2".getBytes(StandardCharsets.UTF_8)
 
-    page.num = dal.getNextPage
+    page.num = dal.nextPage
     Array.copy(data, 0, page.data, 0, data.length)
 
     try dal.writePage(page)
