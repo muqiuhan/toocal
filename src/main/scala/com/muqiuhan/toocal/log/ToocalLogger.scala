@@ -8,14 +8,9 @@ import java.time.LocalDateTime
 import scribe.format.FormatBlock.*
 
 object ToocalLogger extends Logging:
-  scribe.Logger.root
-    .clearHandlers()
-    .clearModifiers()
-    .withHandler(
+    scribe.Logger.root.clearHandlers().clearModifiers().withHandler(
       minimumLevel = Some(Level.Debug),
-      formatter =
-        formatter"| $date ${string("[")}$levelColored${string("]")} ${green(ClassNameSimple)} - $messages$mdc"
-    )
-    .replace()
+      formatter = formatter"| $date ${string("[")}$levelColored${string("]")} ${green(ClassNameSimple)} - $messages$mdc"
+    ).replace()
 
-  val log = logger
+    val log = logger

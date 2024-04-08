@@ -32,114 +32,117 @@ package com.muqiuhan.toocal.dal
 import scala.collection.mutable
 import java.nio.ByteBuffer
 import com.muqiuhan.toocal.dal.Page.PAGE_NUM_SIZE
+import java.util.Arrays
 
 case class Item(key: Array[Byte], value: Array[Byte])
 
 /** Nodes in the database are implemented as B-tree. */
 class Node(dal: DataAccessLayer):
-  var pageNum: PageNum = 0L
-  var items            = mutable.Queue[Item]()
-  var childNodes       = mutable.Queue[PageNum]()
+    var pageNum: PageNum = 0L
+    var items            = mutable.Queue[Item]()
+    var childNodes       = mutable.Queue[PageNum]()
 
-  def isLeaf(): Boolean = childNodes.length == 0
+    def isLeaf(): Boolean = childNodes.length == 0
 
-  inline def writeNode                = dal.writeNode
-  inline def writeNodes(nodes: Node*) = nodes.foreach(writeNode)
-  inline def getNode                  = dal.getNode
+    inline def writeNode                = dal.writeNode
+    inline def writeNodes(nodes: Node*) = nodes.foreach(writeNode)
+    inline def getNode                  = dal.getNode
 
-  /** Node is stored using slotted pages technique. The page is divided into two
-    * memory regions. At end of the page lie the keys and values, whereas at the
-    * beginning are fixed size offsets to the records.
-    */
-  def serialize(buffer: Array[Byte]): Array[Byte] =
-    var leftPos    = 0
-    var rightPos   = buffer.length - 1
-    val isLeafFlag = isLeaf()
+    /** Iterates all the items and finds the key. If the key is found, then the item is returned. If the key isn't found
+      * then return the index where it should have been (the first index that key is greater than it's previous)
+      */
+    def findWithKey(key: Array[Byte]): (Boolean, Int) =
+        var index = 0
+        var exist = false
 
-    /* page header: isLeaf, key-value pairs count, node num */
-    buffer(leftPos) = (if isLeafFlag then 1 else 0).toByte
-    leftPos += 1
+        items.find((item: Item) =>
+            index += 1
+            Arrays.compare(item.key, key) match
+                case 0 =>
+                    exist = true
+                    true
+                case 1 =>
+                    exist = false
+                    true
+                case _ => false
+        ) match
+            case None    => (false, items.length)
+            case Some(_) => (exist, index)
 
-    ByteBuffer
-      .allocate(2)
-      .putShort(items.length.toShort)
-      .array()
-      .copyToArray(buffer, leftPos)
-    leftPos += 2
+    /** Node is stored using slotted pages technique. The page is divided into two memory regions. At end of the page
+      * lie the keys and values, whereas at the beginning are fixed size offsets to the records.
+      */
+    def serialize(buffer: Array[Byte]): Array[Byte] =
+        var leftPos    = 0
+        var rightPos   = buffer.length - 1
+        val isLeafFlag = isLeaf()
 
-    /* The actual keys and values (the cells) are appended to right of the page
-     * whereas offsets have a fixed size and are appended from the left.
-     *
-     * It's easier to preserve the logical order (alphabetical in the case of b-tree)
-     * using the metadata and performing pointer arithmetic.
-     *
-     * Using the data itself is harder as it varies by size. Page structure is:
-     * ----------------------------------------------------------------------------------
-     * |  Page  | key-value /  child node    key-value 		      |    key-value		 |
-     * | Header |   offset /	 pointer	  offset         .... |      data      ..... |
-     * ---------------------------------------------------------------------------------- */
-    for i <- 0 until items.length do
-      val item = items(i)
-      if isLeafFlag then
-        /* Write the child page as a fixed size of PAGE_NUM_SIZE bytes */
-        ByteBuffer
-          .allocate(PAGE_NUM_SIZE)
-          .putLong(childNodes(i))
-          .array()
-          .copyToArray(buffer, leftPos)
-        leftPos += Page.PAGE_NUM_SIZE
+        /* page header: isLeaf, key-value pairs count, node num */
+        buffer(leftPos) = (if isLeafFlag then 1 else 0).toByte
+        leftPos += 1
 
-      /* Write offset */
-      ByteBuffer
-        .allocate(2)
-        .putShort((rightPos - item.key.length - item.value.length - 2).toShort)
-        .array()
-        .copyToArray(buffer, leftPos)
-      leftPos += 2
+        ByteBuffer.allocate(2).putShort(items.length.toShort).array().copyToArray(buffer, leftPos)
+        leftPos += 2
 
-      rightPos -= item.value.length
-      item.value.copyToArray(buffer, rightPos)
+        /* The actual keys and values (the cells) are appended to right of the page
+         * whereas offsets have a fixed size and are appended from the left.
+         *
+         * It's easier to preserve the logical order (alphabetical in the case of b-tree)
+         * using the metadata and performing pointer arithmetic.
+         *
+         * Using the data itself is harder as it varies by size. Page structure is:
+         * ----------------------------------------------------------------------------------
+         * |  Page  | key-value /  child node    key-value 		      |    key-value		 |
+         * | Header |   offset /	 pointer	  offset         .... |      data      ..... |
+         * ---------------------------------------------------------------------------------- */
+        for i <- 0 until items.length do
+            val item = items(i)
+            if isLeafFlag then
+                /* Write the child page as a fixed size of PAGE_NUM_SIZE bytes */
+                ByteBuffer.allocate(PAGE_NUM_SIZE).putLong(childNodes(i)).array().copyToArray(buffer, leftPos)
+                leftPos += Page.PAGE_NUM_SIZE
 
-      rightPos -= 1
-      buffer(rightPos) = item.value.length.toByte
+            /* Write offset */
+            ByteBuffer.allocate(2).putShort((rightPos - item.key.length - item.value.length - 2).toShort).array()
+                .copyToArray(buffer, leftPos)
+            leftPos += 2
 
-      rightPos -= item.key.length
-      item.key.copyToArray(buffer, rightPos)
+            rightPos -= item.value.length
+            item.value.copyToArray(buffer, rightPos)
 
-      rightPos -= 1
-      buffer(rightPos) = item.key.length.toByte
+            rightPos -= 1
+            buffer(rightPos) = item.value.length.toByte
 
-    if isLeafFlag then
-      ByteBuffer
-        .allocate(Page.PAGE_NUM_SIZE)
-        .putLong(childNodes.last)
-        .array()
-        .copyToArray(buffer, leftPos)
+            rightPos -= item.key.length
+            item.key.copyToArray(buffer, rightPos)
 
-    buffer
+            rightPos -= 1
+            buffer(rightPos) = item.key.length.toByte
 
-  def deserialize(buffer: Array[Byte]): Unit =
-    val bufferView = ByteBuffer.wrap(buffer)
-    val isLeaf     = bufferView.get() == 0
+        if isLeafFlag then
+            ByteBuffer.allocate(Page.PAGE_NUM_SIZE).putLong(childNodes.last).array().copyToArray(buffer, leftPos)
 
-    for i <- 0 until bufferView.getShort() do
-      if !isLeaf then childNodes.append(bufferView.getLong())
+        buffer
 
-      var offset = bufferView.getShort().toInt
+    def deserialize(buffer: Array[Byte]): Unit =
+        val bufferView = ByteBuffer.wrap(buffer)
+        val isLeaf     = bufferView.get() == 0
 
-      val keyLen = bufferView.get(offset)
-      offset += 1
+        for i <- 0 until bufferView.getShort() do
+            if !isLeaf then childNodes.append(bufferView.getLong())
 
-      val valueLen = bufferView.get(offset)
-      offset += 1
+            var offset = bufferView.getShort().toInt
 
-      val key   = new Array[Byte](keyLen)
-      val value = new Array[Byte](valueLen)
-      items.append(
-        Item(
-          key = bufferView.get(offset, key).array(),
-          value = bufferView.get(offset + keyLen, key).array()
-        )
-      )
+            val keyLen = bufferView.get(offset)
+            offset += 1
 
-    if !isLeaf then childNodes.append(bufferView.getLong())
+            val valueLen = bufferView.get(offset)
+            offset += 1
+
+            val key   = new Array[Byte](keyLen)
+            val value = new Array[Byte](valueLen)
+            items.append(
+              Item(key = bufferView.get(offset, key).array(), value = bufferView.get(offset + keyLen, key).array())
+            )
+
+        if !isLeaf then childNodes.append(bufferView.getLong())

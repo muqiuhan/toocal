@@ -39,11 +39,10 @@ type PageNum = Long
   *   The data of Page
   *
   * @note
-  *   Normally, the size of data is SystemVirtualMemoryPageSize.SIZE. Through
-  *   the size of data, combined with num, the offset of page in the file can be
-  *   calculated.
+  *   Normally, the size of data is SystemVirtualMemoryPageSize.SIZE. Through the size of data, combined with num, the
+  *   offset of page in the file can be calculated.
   */
 case class Page(var num: PageNum, var data: Array[Byte])
 
 object Page:
-  val PAGE_NUM_SIZE: Int = 8
+    val PAGE_NUM_SIZE: Int = 8

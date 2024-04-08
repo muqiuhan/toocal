@@ -39,74 +39,74 @@ import scala.util.chaining.*
 import java.nio.ByteBuffer
 
 class TestDataAccessLayer extends munit.FunSuite:
-  test("openDataBaseFile") {
-    val randomFileName = Math.random().toString
-    com.muqiuhan.toocal.dal.DataAccessLayer.openDataBaseFile(randomFileName)
+    test("openDataBaseFile") {
+        val randomFileName = Math.random().toString
+        com.muqiuhan.toocal.dal.DataAccessLayer.openDataBaseFile(randomFileName)
 
-    assert(File(randomFileName).exists())
-    assert(File(randomFileName).canRead)
-    assert(File(randomFileName).canWrite)
+        assert(File(randomFileName).exists())
+        assert(File(randomFileName).canRead)
+        assert(File(randomFileName).canWrite)
 
-    File(randomFileName).delete()
-  }
+        File(randomFileName).delete()
+    }
 
-  test("initialize db") {
-    val dal =
-      try DataAccessLayer("db.db", SystemVirtualMemoryPageSize.SIZE)
-      catch
-        case e: Exception =>
-          File("db.db").delete()
-          throw e
+    test("initialize db") {
+        val dal =
+            try DataAccessLayer("db.db", SystemVirtualMemoryPageSize.SIZE)
+            catch
+                case e: Exception =>
+                    File("db.db").delete()
+                    throw e
 
-    val page = dal.allocateEmptyPage()
-    val data = "data".getBytes(StandardCharsets.UTF_8)
+        val page = dal.allocateEmptyPage()
+        val data = "data".getBytes(StandardCharsets.UTF_8)
 
-    page.num = dal.nextPage
-    Array.copy(data, 0, page.data, 0, data.length)
+        page.num = dal.nextPage
+        Array.copy(data, 0, page.data, 0, data.length)
 
-    try dal.writePage(page)
-    catch
-      case e: Exception =>
-        File("db.db").delete()
+        try dal.writePage(page)
+        catch
+            case e: Exception =>
+                File("db.db").delete()
+                dal.close()
+                throw e
+
+        dal.writeFreelist()
         dal.close()
-        throw e
+    }
 
-    dal.writeFreelist()
-    dal.close()
-  }
+    test("load db") {
+        val dal =
+            try DataAccessLayer("db.db", SystemVirtualMemoryPageSize.SIZE)
+            catch
+                case e: Exception =>
+                    File("db.db").delete()
+                    throw e
 
-  test("load db") {
-    val dal =
-      try DataAccessLayer("db.db", SystemVirtualMemoryPageSize.SIZE)
-      catch
-        case e: Exception =>
-          File("db.db").delete()
-          throw e
-
-    dal.close()
-  }
-
-  test("write a new page") {
-    val dal =
-      try DataAccessLayer("db.db", SystemVirtualMemoryPageSize.SIZE)
-      catch
-        case e: Exception =>
-          File("db.db").delete()
-          throw e
-
-    val page = dal.allocateEmptyPage()
-    val data = "data2".getBytes(StandardCharsets.UTF_8)
-
-    page.num = dal.nextPage
-    Array.copy(data, 0, page.data, 0, data.length)
-
-    try dal.writePage(page)
-    catch
-      case e: Exception =>
-        File("db.db").delete()
         dal.close()
-        throw e
+    }
 
-    dal.writeFreelist()
-    dal.close()
-  }
+    test("write a new page") {
+        val dal =
+            try DataAccessLayer("db.db", SystemVirtualMemoryPageSize.SIZE)
+            catch
+                case e: Exception =>
+                    File("db.db").delete()
+                    throw e
+
+        val page = dal.allocateEmptyPage()
+        val data = "data2".getBytes(StandardCharsets.UTF_8)
+
+        page.num = dal.nextPage
+        Array.copy(data, 0, page.data, 0, data.length)
+
+        try dal.writePage(page)
+        catch
+            case e: Exception =>
+                File("db.db").delete()
+                dal.close()
+                throw e
+
+        dal.writeFreelist()
+        dal.close()
+    }

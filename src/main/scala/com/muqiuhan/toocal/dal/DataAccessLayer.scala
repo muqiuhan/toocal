@@ -32,128 +32,114 @@ package com.muqiuhan.toocal.dal
 import java.io.{File, RandomAccessFile}
 import com.muqiuhan.toocal.log.ToocalLogger.log
 
-/** Data Access Layer (DAL) handles all disk operations and how data is
-  * organized on the disk. It’s responsible for managing the underlying data
-  * structure, writing the database pages to the disk, and reclaiming free pages
-  * to avoid fragmentation.
+/** Data Access Layer (DAL) handles all disk operations and how data is organized on the disk. It’s responsible for
+  * managing the underlying data structure, writing the database pages to the disk, and reclaiming free pages to avoid
+  * fragmentation.
   */
 class DataAccessLayer(path: String, pageSize: Int):
-  private val (file, databaseFileStatus) =
-    DataAccessLayer.openDataBaseFile(path)
+    private val (file, databaseFileStatus) = DataAccessLayer.openDataBaseFile(path)
 
-  private var freeList = FreeList()
-  private var meta     = Meta()
+    private var freeList = FreeList()
+    private var meta     = Meta()
 
-  /* Initialization logic,
-   * if the database file exists, load it,
-   * otherwise create a new database file and write freelist and meta */
-  databaseFileStatus match
-    case DataBaseFileStatus.Exist =>
-      log.info(s"Loading the database $path...")
-      meta = readMeta()
-      freeList = readFreeList()
-    case DataBaseFileStatus.NotExist =>
-      log.info(s"Initialize the database $path...")
-      meta.freeListPage = nextPage
-      writeFreelist()
-      writeMeta(meta)
+    /* Initialization logic,
+     * if the database file exists, load it,
+     * otherwise create a new database file and write freelist and meta */
+    databaseFileStatus match
+        case DataBaseFileStatus.Exist =>
+            log.info(s"Loading the database $path...")
+            meta = readMeta()
+            freeList = readFreeList()
+        case DataBaseFileStatus.NotExist =>
+            log.info(s"Initialize the database $path...")
+            meta.freeListPage = nextPage
+            writeFreelist()
+            writeMeta(meta)
 
-  inline def nextPage    = freeList.getNextPage
-  inline def releasePage = freeList.releasePage
+    inline def nextPage    = freeList.getNextPage
+    inline def releasePage = freeList.releasePage
 
-  def close(): Unit = file.close()
+    def close(): Unit = file.close()
 
-  def allocateEmptyPage(): Page =
-    Page(num = pageSize, data = new Array[Byte](pageSize))
+    def allocateEmptyPage(): Page = Page(num = pageSize, data = new Array[Byte](pageSize))
 
-  def readPage(pageNum: PageNum): Page =
-    val page = allocateEmptyPage()
+    def readPage(pageNum: PageNum): Page =
+        val page = allocateEmptyPage()
 
-    file.seek(pageNum.toInt * pageSize)
-    file.read(page.data) match
-      case -1 =>
-        throw ReadPageException(
-          "There is no more data because the end of the database file has been reached."
-        )
-      case bytes: Int if bytes != page.num =>
-        throw ReadPageException(
-          s"Incomplete read, successfully read $bytes bytes"
-        )
-      case _ =>
+        file.seek(pageNum.toInt * pageSize)
+        file.read(page.data) match
+            case -1 =>
+                throw ReadPageException("There is no more data because the end of the database file has been reached.")
+            case bytes: Int if bytes != page.num =>
+                throw ReadPageException(s"Incomplete read, successfully read $bytes bytes")
+            case _ => page
+
+    def writePage(page: Page): Unit =
+        file.seek(page.num.toInt * pageSize)
+        file.write(page.data)
+
+    def writeMeta(meta: Meta): Page =
+        val page = allocateEmptyPage()
+        page.num = Meta.PAGE_NUM
+        meta.serialize(page.data)
+        writePage(page)
         page
 
-  def writePage(page: Page): Unit =
-    file.seek(page.num.toInt * pageSize)
-    file.write(page.data)
+    def readMeta(): Meta =
+        val meta = Meta()
+        meta.deserialize(readPage(Meta.PAGE_NUM).data)
+        meta
 
-  def writeMeta(meta: Meta): Page =
-    val page = allocateEmptyPage()
-    page.num = Meta.PAGE_NUM
-    meta.serialize(page.data)
-    writePage(page)
-    page
+    def writeFreelist(): Unit =
+        val page = allocateEmptyPage()
+        page.num = meta.freeListPage
+        freeList.serialize(page.data)
+        writePage(page)
+        meta.freeListPage = page.num
 
-  def readMeta(): Meta =
-    val meta = Meta()
-    meta.deserialize(readPage(Meta.PAGE_NUM).data)
-    meta
+    def readFreeList(): FreeList =
+        val freeList = FreeList()
+        freeList.deserialize(readPage(meta.freeListPage).data)
+        freeList
 
-  def writeFreelist(): Unit =
-    val page = allocateEmptyPage()
-    page.num = meta.freeListPage
-    freeList.serialize(page.data)
-    writePage(page)
-    meta.freeListPage = page.num
+    def getNode(pageNum: PageNum): Node =
+        val page = readPage(pageNum)
+        val node = Node(this)
 
-  def readFreeList(): FreeList =
-    val freeList = FreeList()
-    freeList.deserialize(readPage(meta.freeListPage).data)
-    freeList
+        node.deserialize(page.data)
+        node.pageNum = page.num
 
-  def getNode(pageNum: PageNum): Node =
-    val page = readPage(pageNum)
-    val node = Node(this)
+        node
 
-    node.deserialize(page.data)
-    node.pageNum = page.num
+    def writeNode(node: Node): Node =
+        val page = allocateEmptyPage()
+        if node.pageNum == 0 then
+            page.num = nextPage
+            node.pageNum = page.num
+        else page.num = node.pageNum
 
-    node
+        node.serialize(page.data)
+        writePage(page)
 
-  def writeNode(node: Node): Node =
-    val page = allocateEmptyPage()
-    if node.pageNum == 0 then
-      page.num = nextPage
-      node.pageNum = page.num
-    else page.num = node.pageNum
+        node
 
-    node.serialize(page.data)
-    writePage(page)
-
-    node
-
-  inline def deleteNode(pageNum: PageNum): Unit = releasePage(pageNum)
+    inline def deleteNode(pageNum: PageNum): Unit = releasePage(pageNum)
 
 private object DataAccessLayer:
-  def openDataBaseFile(path: String): (RandomAccessFile, DataBaseFileStatus) =
-    val file = File(path)
+    def openDataBaseFile(path: String): (RandomAccessFile, DataBaseFileStatus) =
+        val file = File(path)
 
-    if !file.exists() then
-      file.createNewFile()
-      (RandomAccessFile(path, "rw"), DataBaseFileStatus.NotExist)
-    else
-      if !file.canRead then
-        DataBaseFileException(
-          "The database file does not have read permission!"
-        )
-      if !file.canWrite then
-        DataBaseFileException(
-          "The database file does not have write permission!"
-        )
-      (RandomAccessFile(path, "rw"), DataBaseFileStatus.Exist)
+        if !file.exists() then
+            file.createNewFile()
+            (RandomAccessFile(path, "rw"), DataBaseFileStatus.NotExist)
+        else
+            if !file.canRead then DataBaseFileException("The database file does not have read permission!")
+            if !file.canWrite then DataBaseFileException("The database file does not have write permission!")
+            (RandomAccessFile(path, "rw"), DataBaseFileStatus.Exist)
 
 private enum DataBaseFileStatus:
-  case Exist
-  case NotExist
+    case Exist
+    case NotExist
 
 class DataBaseFileException(msg: String) extends RuntimeException(msg)
 class ReadPageException(msg: String)     extends RuntimeException(msg)

@@ -32,64 +32,50 @@ package com.muqiuhan.toocal.dal
 import java.nio.ByteBuffer
 import scala.collection.mutable
 
-/** FreeList is used to manage Pages available in the database. Through
-  * FreeList, you can find pages that are occupied or free in the database.
+/** FreeList is used to manage Pages available in the database. Through FreeList, you can find pages that are occupied
+  * or free in the database.
   *
   * @note
-  *   Pages can also be freed if they become empty, so we need to reclaim them
-  *   for future use to avoid Fragmentation.
+  *   Pages can also be freed if they become empty, so we need to reclaim them for future use to avoid Fragmentation.
   */
 class FreeList:
 
-  /** The highest page number allocated so far */
-  private var maxPage: PageNum = FreeList.META_PAGE
+    /** The highest page number allocated so far */
+    private var maxPage: PageNum = FreeList.META_PAGE
 
-  /** Tracking released pages. */
-  private val releasePages: mutable.Stack[PageNum] = mutable.Stack()
+    /** Tracking released pages. */
+    private val releasePages: mutable.Stack[PageNum] = mutable.Stack()
 
-  def getNextPage: PageNum =
-    if releasePages.nonEmpty then releasePages.pop()
-    else
-      maxPage = maxPage + 1
-      maxPage
+    def getNextPage: PageNum =
+        if releasePages.nonEmpty then releasePages.pop()
+        else
+            maxPage = maxPage + 1
+            maxPage
 
-  def releasePage(page: PageNum): Unit = releasePages.push(page)
+    def releasePage(page: PageNum): Unit = releasePages.push(page)
 
-  def serialize(buffer: Array[Byte]): Array[Byte] =
-    var pos = 0
+    def serialize(buffer: Array[Byte]): Array[Byte] =
+        var pos = 0
 
-    ByteBuffer
-      .allocate(2)
-      .putShort(maxPage.toShort)
-      .array()
-      .copyToArray(buffer, pos)
-    pos += 2
+        ByteBuffer.allocate(2).putShort(maxPage.toShort).array().copyToArray(buffer, pos)
+        pos += 2
 
-    // Write the length of releasePages so that releasePages can be read during serialization.
-    ByteBuffer
-      .allocate(2)
-      .putShort(releasePages.length.toShort)
-      .array()
-      .copyToArray(buffer, pos)
-    pos += 2
+        // Write the length of releasePages so that releasePages can be read during serialization.
+        ByteBuffer.allocate(2).putShort(releasePages.length.toShort).array().copyToArray(buffer, pos)
+        pos += 2
 
-    releasePages.foreach(page =>
-      ByteBuffer
-        .allocate(Page.PAGE_NUM_SIZE)
-        .putLong(page)
-        .array()
-        .copyToArray(buffer, pos)
-      pos = pos + Page.PAGE_NUM_SIZE
-    )
+        releasePages.foreach(page =>
+            ByteBuffer.allocate(Page.PAGE_NUM_SIZE).putLong(page).array().copyToArray(buffer, pos)
+            pos = pos + Page.PAGE_NUM_SIZE
+        )
 
-    buffer
+        buffer
 
-  def deserialize(buffer: Array[Byte]): Unit =
-    val bufferView = ByteBuffer.wrap(buffer)
-    maxPage = bufferView.getShort()
+    def deserialize(buffer: Array[Byte]): Unit =
+        val bufferView = ByteBuffer.wrap(buffer)
+        maxPage = bufferView.getShort()
 
-    for i <- 0 until bufferView.getShort() do
-      releasePages.push(bufferView.getLong())
+        for i <- 0 until bufferView.getShort() do releasePages.push(bufferView.getLong())
 
 private object FreeList:
-  private val META_PAGE: PageNum = 0L
+    private val META_PAGE: PageNum = 0L
