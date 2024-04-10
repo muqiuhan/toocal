@@ -8,16 +8,13 @@
 
 --------------------------------------------------------------------------
 
-o- Test: sbt test
-o- Build: sbt build
-o- Package: sbt assembly
+o- Test: dotnet test
+o- Build: dotnet build
+o- Package: dotnet publish
 
 --------------------------------------------------------------------------
 
 Dependencies:
-
-o- Munit: https://github.com/scalameta/munit
-o- Scribe: https://github.com/outr/scribe
 
 --------------------------------------------------------------------------
 

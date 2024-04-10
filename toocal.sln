@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Toocal.Core", "Toocal.Core\Toocal.Core.fsproj", "{73B41CAF-8945-4829-B7CE-E44D93C74B25}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Toocal.Program", "Toocal.Program\Toocal.Program.fsproj", "{5A0C94E8-6844-4F0A-A384-13DCCB064DDC}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Toocal.Tests", "Toocal.Tests\Toocal.Tests.fsproj", "{AD8D285B-EA20-4A02-BD31-0A3F4079CA7E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{73B41CAF-8945-4829-B7CE-E44D93C74B25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73B41CAF-8945-4829-B7CE-E44D93C74B25}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73B41CAF-8945-4829-B7CE-E44D93C74B25}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73B41CAF-8945-4829-B7CE-E44D93C74B25}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A0C94E8-6844-4F0A-A384-13DCCB064DDC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A0C94E8-6844-4F0A-A384-13DCCB064DDC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A0C94E8-6844-4F0A-A384-13DCCB064DDC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A0C94E8-6844-4F0A-A384-13DCCB064DDC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD8D285B-EA20-4A02-BD31-0A3F4079CA7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD8D285B-EA20-4A02-BD31-0A3F4079CA7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD8D285B-EA20-4A02-BD31-0A3F4079CA7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD8D285B-EA20-4A02-BD31-0A3F4079CA7E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
