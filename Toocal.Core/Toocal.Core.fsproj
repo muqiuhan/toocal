@@ -1,12 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-  </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="Library.fs" />
-    <Compile Include="Page.fs" />
-    <Compile Include="FreeList.fs" />
-    <Compile Include="DataAccessLayer.fs" />
-  </ItemGroup>
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Include="Library.fs"/>
+        <Compile Include="Page.fs"/>
+        <Compile Include="Meta.fs"/>
+        <Compile Include="FreeList.fs"/>
+        <Compile Include="DataAccessLayer.fs"/>
+    </ItemGroup>
 </Project>

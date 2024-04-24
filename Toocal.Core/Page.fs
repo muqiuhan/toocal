@@ -1,6 +1,5 @@
 module Toocal.Core.Page
 
-open System
 open System.Text
 
 type PageNum = uint64
@@ -11,6 +10,8 @@ type Page (data : array<byte>) =
   member public this.Num
     with get () = num
     and set (newNum : PageNum) = num <- newNum
+
+  static member public SIZE : int = 8
 
   member public this.Data = data
 
