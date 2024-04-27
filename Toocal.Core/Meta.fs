@@ -21,12 +21,7 @@ type Meta () =
     let (buffer, pos) = this.DeserializeFreeListPage (buffer, 0)
     ()
 
-  member private this.SerializeFreeListPage
-    (
-      buffer : array<byte>,
-      pos : int
-    )
-    =
+  member private this.SerializeFreeListPage (buffer : array<byte>, pos : int) =
     let freeListPage = BitConverter.GetBytes (freeListPage)
     Array.blit freeListPage 0 buffer pos freeListPage.Length
     (buffer, pos + Page.SIZE)

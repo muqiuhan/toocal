@@ -22,9 +22,7 @@ type FreeList () =
     releasedPages.Push (pageNum)
 
   member public this.Serialize (buffer : array<byte>) =
-    this.SerializeMaxPage (buffer, 0)
-    |> this.SerializeReleasedPages
-    |> fun (buffer, _) -> buffer
+    this.SerializeMaxPage (buffer, 0) |> this.SerializeReleasedPages |> fst
 
   member public this.Deserialize (buffer : array<byte>) =
     this.DeserializeMaxPage (buffer, 0)
