@@ -19,8 +19,6 @@ type DataAccessLayer (path : string, pageSize : int) =
 
   member public this.Close () = file.Close ()
 
-  member inline public this.NextPage = this.FreeList.NextPage
-
   member public this.AllocateEmptyPage () =
     Page (Array.zeroCreate<byte> pageSize)
 

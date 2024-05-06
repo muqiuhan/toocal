@@ -39,7 +39,7 @@ type DataAccessLayerTests () =
     let page = dal.AllocateEmptyPage ()
     let buffer = Array.zeroCreate<byte> (4096)
 
-    page.SetNum (dal.NextPage ())
+    page.SetNum (dal.FreeList.NextPage ())
     page.AddString ("data")
 
     task { do! dal.WritePage (page) }
@@ -55,7 +55,7 @@ type DataAccessLayerTests () =
     let dal = new DataAccessLayer (dbFileName, 4096)
     let page = dal.AllocateEmptyPage ()
 
-    page.SetNum (dal.NextPage ())
+    page.SetNum (dal.FreeList.NextPage ())
     page.AddString ("data")
 
     task {

@@ -8,5 +8,6 @@
         <Compile Include="Meta.fs"/>
         <Compile Include="FreeList.fs"/>
         <Compile Include="DataAccessLayer.fs"/>
+        <Compile Include="Node.fs"/>
     </ItemGroup>
 </Project>
