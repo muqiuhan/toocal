@@ -41,7 +41,7 @@ type DataAccessLayer with
     }
 
   member inline public this.DeleteNode (pageNum : PageNum) =
-    this.FreeList.ReleasePage (pageNum)
+    this.FreeList.ReleasePage pageNum
 
 and Node =
   struct
@@ -65,7 +65,7 @@ and Node =
         this.Items.FindIndex (fun item ->
           match
             Array.compareWith
-              (fun (k1 : Byte) k2 -> k1.CompareTo (k2))
+              (fun (k1 : Byte) k2 -> k1.CompareTo k2)
               item.Key
               key
           with
@@ -85,7 +85,7 @@ and Node =
       task { return! Node.FindKeyHelper (this, key) }
 
     static member private FindKeyHelper (node : Node, key : Byte[]) =
-      let wasFound, index = node.FindWithKey (key)
+      let wasFound, index = node.FindWithKey key
 
       if wasFound then
         task { return index, Some node }
