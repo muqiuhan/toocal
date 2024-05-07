@@ -15,12 +15,12 @@ type Item =
 type DataAccessLayer with
 
   member public this.GetNode (pageNum : PageNum) =
-    let node = Node (this)
+    let node = Node this
 
     task {
-      let! page = this.ReadPage (pageNum)
-      node.Deserialize (page.Data)
-      node.SetPageNum (page.Num)
+      let! page = this.ReadPage pageNum
+      node.Deserialize page.Data
+      node.SetPageNum page.Num
       return node
     }
 
@@ -29,14 +29,14 @@ type DataAccessLayer with
 
     if node.PageNum = 0UL then
       page.SetNum (this.FreeList.NextPage ())
-      node.SetPageNum (page.Num)
+      node.SetPageNum page.Num
     else
-      page.SetNum (node.PageNum)
+      page.SetNum node.PageNum
 
-    node.Serialize (page.Data)
+    node.Serialize page.Data
 
     task {
-      do! this.WritePage (page)
+      do! this.WritePage page
       return node
     }
 
@@ -58,19 +58,57 @@ and Node =
         Dal = dal
       }
 
+    member public this.FindWithKey (key : Byte[]) =
+      let mutable compare = false
+
+      let index =
+        this.Items.FindIndex (fun item ->
+          match
+            Array.compareWith
+              (fun (k1 : Byte) k2 -> k1.CompareTo (k2))
+              item.Key
+              key
+          with
+          | 0 ->
+            compare <- true
+            true
+          | 1 ->
+            compare <- false
+            true
+          | _ -> false)
+
+      if index = -1 then false, this.Items.Count else compare, index
+
+    member public this.FindKey (key : Byte[]) =
+      // Byrefs cannot be captured by closures or passed to inner functions.
+      let this = this
+      task { return! Node.FindKeyHelper (this, key) }
+
+    static member private FindKeyHelper (node : Node, key : Byte[]) =
+      let wasFound, index = node.FindWithKey (key)
+
+      if wasFound then
+        task { return index, Some node }
+      elif node.IsLeaf () then
+        task { return -1, None }
+      else
+        task {
+          let! node = node.Dal.GetNode (node.Children[index])
+          return! Node.FindKeyHelper (node, key)
+        }
+
     member inline public this.WriteNodes (nodes : Node[]) =
       let resultArray =
-        Array.zeroCreate<Threading.Tasks.Task<Node>> (nodes.Length)
+        Array.zeroCreate<Threading.Tasks.Task<Node>> nodes.Length
 
       for index = 0 to (resultArray.Length - 1) do
         resultArray[index] <- this.Dal.WriteNode (nodes[index])
 
       resultArray
-      
-    member inline public this.SetPageNum (pageNum : PageNum) =
-      this.PageNum <- pageNum
 
-    member inline private this.IsLeaf () = this.Children.Count = 0
+    member public this.SetPageNum (pageNum : PageNum) = this.PageNum <- pageNum
+
+    member private this.IsLeaf () = this.Children.Count = 0
 
     member public this.Serialize (buffer : Byte[]) =
       this.SerializeHeader (buffer, this.IsLeaf (), 0, buffer.Length - 1)
@@ -104,14 +142,14 @@ and Node =
         let mutable offset = buffer[left..] |> BitConverter.ToUInt16
         left <- left + 2
 
-        let keyLen = buffer[int (offset)] |> uint16
+        let keyLen = buffer[int offset] |> uint16
         offset <- offset + 1us
-        let key = buffer[int (offset) .. int (offset + keyLen - 1us)]
+        let key = buffer[int offset .. int (offset + keyLen - 1us)]
         offset <- offset + keyLen
 
-        let valueLen = buffer[int (offset)] |> uint16
+        let valueLen = buffer[int offset] |> uint16
         offset <- offset + 1us
-        let value = buffer[int (offset) .. int (offset + valueLen - 1us)]
+        let value = buffer[int offset .. int (offset + valueLen - 1us)]
         offset <- offset + valueLen
 
         this.Items.Add (Item (key, value))

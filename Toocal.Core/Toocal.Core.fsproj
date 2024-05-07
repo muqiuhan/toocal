@@ -4,6 +4,7 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
     <ItemGroup>
+        <Compile Include="Helper.fs"/>
         <Compile Include="Page.fs"/>
         <Compile Include="Meta.fs"/>
         <Compile Include="FreeList.fs"/>
