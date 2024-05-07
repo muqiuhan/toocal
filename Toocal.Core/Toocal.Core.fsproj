@@ -4,10 +4,11 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
     <ItemGroup>
-        <Compile Include="Library.fs"/>
+        <Compile Include="Helper.fs"/>
         <Compile Include="Page.fs"/>
         <Compile Include="Meta.fs"/>
         <Compile Include="FreeList.fs"/>
         <Compile Include="DataAccessLayer.fs"/>
+        <Compile Include="Node.fs"/>
     </ItemGroup>
 </Project>
