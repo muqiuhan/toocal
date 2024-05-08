@@ -6,8 +6,7 @@ open FreeList
 open Meta
 
 type DataAccessLayer (path : string, pageSize : int) =
-  let file : FileStream =
-    File.Open (path, FileMode.OpenOrCreate, FileAccess.ReadWrite)
+  let file : FileStream = File.Open (path, FileMode.OpenOrCreate, FileAccess.ReadWrite)
 
   let freeList : FreeList = FreeList ()
   let meta : Meta = Meta ()
@@ -19,8 +18,7 @@ type DataAccessLayer (path : string, pageSize : int) =
 
   member public this.Close () = file.Close ()
 
-  member public this.AllocateEmptyPage () =
-    Page (Array.zeroCreate<byte> pageSize)
+  member public this.AllocateEmptyPage () = Page (Array.zeroCreate<byte> pageSize)
 
   member public this.ReadPage (pageNum : PageNum) =
     let page = this.AllocateEmptyPage ()

@@ -21,5 +21,4 @@ type Page (data : array<byte>) =
     let obj : array<byte> = toBytes (obj)
     Array.blit obj 0 data 0 obj.Length
 
-  member inline public this.AddString (str : string) =
-    this.AddObject (str, Encoding.Default.GetBytes)
+  member inline public this.AddString (str : string) = this.AddObject (str, Encoding.Default.GetBytes)

@@ -40,8 +40,7 @@ type DataAccessLayer with
       return node
     }
 
-  member inline public this.DeleteNode (pageNum : PageNum) =
-    this.FreeList.ReleasePage pageNum
+  member inline public this.DeleteNode (pageNum : PageNum) = this.FreeList.ReleasePage pageNum
 
 and Node =
   struct
@@ -63,12 +62,7 @@ and Node =
 
       let index =
         this.Items.FindIndex (fun item ->
-          match
-            Array.compareWith
-              (fun (k1 : Byte) k2 -> k1.CompareTo k2)
-              item.Key
-              key
-          with
+          match Array.compareWith (fun (k1 : Byte) k2 -> k1.CompareTo k2) item.Key key with
           | 0 ->
             compare <- true
             true
@@ -98,8 +92,7 @@ and Node =
         }
 
     member inline public this.WriteNodes (nodes : Node[]) =
-      let resultArray =
-        Array.zeroCreate<Threading.Tasks.Task<Node>> nodes.Length
+      let resultArray = Array.zeroCreate<Threading.Tasks.Task<Node>> nodes.Length
 
       for index = 0 to (resultArray.Length - 1) do
         resultArray[index] <- this.Dal.WriteNode (nodes[index])
@@ -111,11 +104,9 @@ and Node =
     member private this.IsLeaf () = this.Children.Count = 0
 
     member public this.Serialize (buffer : Byte[]) =
-      this.SerializeHeader (buffer, this.IsLeaf (), 0, buffer.Length - 1)
-      |> this.SerializeItems
+      this.SerializeHeader (buffer, this.IsLeaf (), 0, buffer.Length - 1) |> this.SerializeItems
 
-    member public this.Deserialize (buffer : Byte[]) =
-      this.DeserializeHeader (buffer, 0) |> this.DeserializeItems
+    member public this.Deserialize (buffer : Byte[]) = this.DeserializeHeader (buffer, 0) |> this.DeserializeItems
 
     member private this.DeserializeHeader (buffer : Byte[], left : int) =
       let mutable left = left
@@ -124,14 +115,7 @@ and Node =
       left <- left + 3
       (buffer, isLeaf, itemsCount, left)
 
-    member private this.DeserializeItems
-      (
-        buffer : Byte[],
-        isLeaf : uint16,
-        itemsCount : int,
-        left : int
-      )
-      =
+    member private this.DeserializeItems (buffer : Byte[], isLeaf : uint16, itemsCount : int, left : int) =
       let mutable left = left
 
       for i = 0 to itemsCount - 1 do
@@ -154,17 +138,9 @@ and Node =
 
         this.Items.Add (Item (key, value))
 
-      if isLeaf = 0us then
-        this.Children.Add (buffer[left..] |> BitConverter.ToUInt64)
+      if isLeaf = 0us then this.Children.Add (buffer[left..] |> BitConverter.ToUInt64)
 
-    member private this.SerializeItems
-      (
-        buffer : Byte[],
-        isLeaf : bool,
-        left : int,
-        right : int
-      )
-      =
+    member private this.SerializeItems (buffer : Byte[], isLeaf : bool, left : int, right : int) =
       let mutable left = left
       let mutable right = right
 
@@ -176,10 +152,7 @@ and Node =
           Array.blit child 0 buffer left child.Length
           left <- Page.SIZE
 
-        let offset =
-          (right - item.Key.Length - item.Value.Length - 2)
-          |> uint16
-          |> BitConverter.GetBytes
+        let offset = (right - item.Key.Length - item.Value.Length - 2) |> uint16 |> BitConverter.GetBytes
 
         Array.blit offset 0 buffer left offset.Length
         left <- left + 2
@@ -194,14 +167,7 @@ and Node =
         right <- right - 1
         buffer[right] <- item.Key.Length |> Convert.ToByte
 
-    member private this.SerializeHeader
-      (
-        buffer : Byte[],
-        isLeaf : bool,
-        left : int,
-        right : int
-      )
-      =
+    member private this.SerializeHeader (buffer : Byte[], isLeaf : bool, left : int, right : int) =
       let mutable left = left
       let mutable right = right
 
@@ -209,8 +175,7 @@ and Node =
       left <- left + 1
 
       // Add the Key-Value pair count
-      let keyValuePairCount =
-        this.Items.Count |> uint16 |> BitConverter.GetBytes
+      let keyValuePairCount = this.Items.Count |> uint16 |> BitConverter.GetBytes
 
       Array.blit keyValuePairCount 0 buffer left keyValuePairCount.Length
       left <- left + 2

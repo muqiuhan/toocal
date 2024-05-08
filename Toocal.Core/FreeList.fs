@@ -18,16 +18,13 @@ type FreeList () =
       maxPage <- maxPage + 1UL
       maxPage
 
-  member public this.ReleasePage (pageNum : PageNum) =
-    releasedPages.Push (pageNum)
+  member public this.ReleasePage (pageNum : PageNum) = releasedPages.Push (pageNum)
 
   member public this.Serialize (buffer : array<byte>) =
     this.SerializeMaxPage (buffer, 0) |> this.SerializeReleasedPages |> fst
 
   member public this.Deserialize (buffer : array<byte>) =
-    this.DeserializeMaxPage (buffer, 0)
-    |> this.DeserializeReleasedPages
-    |> ignore
+    this.DeserializeMaxPage (buffer, 0) |> this.DeserializeReleasedPages |> ignore
 
   member private this.SerializeMaxPage (buffer : array<byte>, pos : int) =
     let maxPage = BitConverter.GetBytes (maxPage)
@@ -53,12 +50,7 @@ type FreeList () =
     maxPage <- BitConverter.ToUInt64 (buffer[pos..])
     (buffer, pos + Page.SIZE)
 
-  member private this.DeserializeReleasedPages
-    (
-      buffer : array<byte>,
-      pos : int
-    )
-    =
+  member private this.DeserializeReleasedPages (buffer : array<byte>, pos : int) =
     let mutable releasePagesCount = BitConverter.ToInt32 (buffer[pos..])
     let mutable pos = pos + 4
 

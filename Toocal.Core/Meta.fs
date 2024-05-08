@@ -13,13 +13,11 @@ type Meta () =
   member public this.Root = root
   member public this.FreeListPage = freeListPage
 
-  member public this.SetFreeListPage (newFreeListPage : PageNum) =
-    freeListPage <- newFreeListPage
+  member public this.SetFreeListPage (newFreeListPage : PageNum) = freeListPage <- newFreeListPage
 
   member public this.SetRoot (newRoot : PageNum) = root <- newRoot
 
-  member public this.Serialize (buffer : array<byte>) =
-    this.SerializeFreeListPage (buffer, 0) |> this.SerializeRoot
+  member public this.Serialize (buffer : array<byte>) = this.SerializeFreeListPage (buffer, 0) |> this.SerializeRoot
 
   member public this.Deserialize (buffer : array<byte>) =
     this.DeserializeFreeListPage (buffer, 0) |> this.DeserializeRoot
@@ -34,12 +32,7 @@ type Meta () =
     Array.blit root 0 buffer pos root.Length
     (buffer, pos + Page.SIZE)
 
-  member private this.DeserializeFreeListPage
-    (
-      buffer : array<byte>,
-      pos : int
-    )
-    =
+  member private this.DeserializeFreeListPage (buffer : array<byte>, pos : int) =
     freeListPage <- BitConverter.ToUInt64 buffer
     (buffer, pos + Page.SIZE)
 

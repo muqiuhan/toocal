@@ -15,7 +15,7 @@ type IEnumerable<'T> with
 
 type Result<'Ok, 'Error> with
 
-  static member inline public RaiseIfErrorIsExn (result : Result<'Ok, exn>) =
+  static member inline public Unwrap (result : Result<'Ok, exn>) =
     match result with
     | Error (e : exn) ->
       printfn $"{e.ToString ()}"

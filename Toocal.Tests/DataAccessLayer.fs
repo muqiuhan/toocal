@@ -14,9 +14,7 @@ type DataAccessLayerTests () =
     let dal = new DataAccessLayer (dbFileName, 4096)
 
     if not (File.Exists (dbFileName)) then
-      Assert.Fail (
-        "Failed to initialize the database: did not successfully create the database file."
-      )
+      Assert.Fail ("Failed to initialize the database: did not successfully create the database file.")
     else
       dal.Close ()
       File.Delete (dbFileName)
@@ -42,9 +40,7 @@ type DataAccessLayerTests () =
     page.SetNum (dal.FreeList.NextPage ())
     page.AddString ("data")
 
-    task { do! dal.WritePage (page) }
-    |> Async.AwaitTask
-    |> Async.RunSynchronously
+    task { do! dal.WritePage (page) } |> Async.AwaitTask |> Async.RunSynchronously
 
     dal.Close ()
     File.Delete (dbFileName)
