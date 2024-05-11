@@ -45,9 +45,9 @@ type DataAccessLayer with
 and Node =
   struct
     val mutable PageNum : PageNum
+    val mutable Dal : DataAccessLayer
     val Items : Collections.Generic.List<Item>
     val Children : Collections.Generic.List<PageNum>
-    val Dal : DataAccessLayer
 
     new (dal : DataAccessLayer) =
       {
@@ -57,7 +57,11 @@ and Node =
         Dal = dal
       }
 
-    member public this.FindWithKey (key : Byte[]) =
+    member public this.GetItem (index : int) = this.Items[index]
+
+    member public this.UpdateDal (dal : DataAccessLayer) = this.Dal <- dal
+
+    member private this.FindWithKey (key : Byte[]) =
       let mutable compare = false
 
       let index =

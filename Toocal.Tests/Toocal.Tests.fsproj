@@ -8,6 +8,8 @@
     <ItemGroup>
         <Compile Include="FreeList.fs"/>
         <Compile Include="DataAccessLayer.fs"/>
+        <Compile Include="Meta.fs"/>
+        <Compile Include="Node.fs"/>
         <Compile Include="Program.fs"/>
     </ItemGroup>
     <ItemGroup>
