@@ -6,3 +6,4 @@ class MySuite extends munit.FunSuite:
         val expected = 42
         assertEquals(obtained, expected)
     }
+end MySuite
