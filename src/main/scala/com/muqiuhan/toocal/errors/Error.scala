@@ -1,11 +1,18 @@
 package com.muqiuhan.toocal.errors
 
-trait Error:
-    override def toString: String = s"$this: "
+import com.muqiuhan.toocal.core.PageNumber
 
-    inline def throwWithMessage(message: String): Nothing =
-        throw new Exception(s"${this.toString}: message")
+enum Error(exception: Throwable = new Exception(this.toString), message: String = this.toString):
+    case DataBaseFileNotFound(databaseFilePath: String)            extends Error(message = databaseFilePath)
+    case DataAccessLayerCannotSeekPage(pageNumber: PageNumber)     extends Error(message = pageNumber.toString)
+    case DataAccessLayerCannotAllocatePage(pageNumber: PageNumber) extends Error(message = pageNumber.toString)
+    case DataAccessLayerCannotReadPage
+    case DataAccessLayerCannotWritePage
+    case DataAccessLayerCannotWriteMeta
+    case DataAccessLayerCannotReadMeta
+    case InvalidPageNumber
+    case Unknown
 
-    inline def throwWithException(e: Throwable): Nothing =
-        throwWithMessage(s"${e.getMessage}")
+    override def toString: String = s"${exception.getMessage()}: $message"
+    inline def raise(): Nothing   = throw exception
 end Error

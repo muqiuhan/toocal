@@ -8,3 +8,6 @@ case class Page(
     var number: PageNumber = -1,
     data: ByteBuffer
 )
+
+object Page:
+    val SIZE: Int = 8
