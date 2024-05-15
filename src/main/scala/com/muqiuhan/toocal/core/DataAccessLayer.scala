@@ -17,18 +17,13 @@ class DataAccessLayer(databaseFilePath: String, pageSize: Int) extends FreeList:
       * 
       * @see DataAccessLayer.writePage
       * @param pageNumber The target page number that needs to be operated
-      * @param args
-      * @param operating
+      * @param operating Detailed operations
       * @return
       */
-    inline private def operatingAtPage[Return, Args](
-        pageNumber: PageNumber,
-        args: Args,
-        operating: (Args => Return)
-    ): Return =
+    inline private def operatingAtPage[Return](pageNumber: PageNumber, operating: () => Return): Return =
         Try[Unit](file.seek(pageNumber * pageSize)) match
             case Failure(e) => Error.DataAccessLayerCannotSeekPage(pageNumber).raise()
-            case _          => operating(args)
+            case _          => operating()
     end operatingAtPage
 
     inline def close(): Unit = file.close()
@@ -48,11 +43,15 @@ class DataAccessLayer(databaseFilePath: String, pageSize: Int) extends FreeList:
             case Failure(e)    => Error.DataAccessLayerCannotAllocatePage(pageNumber).raise()
     end allocateEmptyPage
 
+    /** Read and return a page.
+      *
+      * @param pageNumber The target page number to be read
+      * @return If the read fails, Error.DataAccessLayerCannotReadPage is returned.
+      */
     def readPage(pageNumber: PageNumber): Either[Error, Page] =
         operatingAtPage(
             pageNumber,
-            (),
-            Unit =>
+            () =>
                 val page = allocateEmptyPage(pageNumber)
                 Try[Unit](file.read(page.data.array())) match
                     case Failure(e) => Left(Error.DataAccessLayerCannotReadPage)
@@ -60,33 +59,46 @@ class DataAccessLayer(databaseFilePath: String, pageSize: Int) extends FreeList:
         )
     end readPage
 
+    /** Write a page.
+      *
+      * @param pageNumber The target page number to be read
+      * @return If the read fails, Error.DataAccessLayerCannotWritePage is returned.
+      */
     def writePage(page: Page): Either[Error, Unit] =
         operatingAtPage(
             page.number,
-            (),
-            Unit =>
+            () =>
                 Try[Unit](file.write(page.data.array())) match
                     case Failure(e) => Left(Error.DataAccessLayerCannotWritePage)
                     case _          => Right(())
         )
     end writePage
 
+    /** Serialize and write the meta to the corresponding page.
+      * 
+      * @see Meta.PAGE_NUMBER
+      * @param meta The meta that needs to be written
+      * @return If failure returns Error.DataAccessLayerCannotWriteMeta
+      */
     def writeMeta(meta: Meta): Either[Error, Unit] =
         operatingAtPage(
             Meta.PAGE_NUMBER,
-            (),
-            Unit =>
+            () =>
                 val page = allocateEmptyPage(pageNumber = Meta.PAGE_NUMBER)
                 meta.serialize(page.data)
                 writePage(page).orElse(Left(Error.DataAccessLayerCannotWriteMeta))
         )
     end writeMeta
 
+    /** Read the meta from the corresponding page and deserialize it.
+      * 
+      * @see Meta.PAGE_NUMBER
+      * @return If failure returns Error.DataAccessLayerCannotReadMeta
+      */
     def readMeta(): Either[Error, Meta] =
         operatingAtPage(
             Meta.PAGE_NUMBER,
-            (),
-            Unit =>
+            () =>
                 readPage(Meta.PAGE_NUMBER).flatMap(page =>
                     val meta = new Meta()
                     meta.deserialize(page.data)
