@@ -5,9 +5,18 @@ import java.nio.charset.StandardCharsets
 
 @main
 def main(): Unit =
-    val dal  = new DataAccessLayer("db.db", 4096)
-    val page = dal.allocateEmptyPage(dal.getNextPage)
+    var dal  = new DataAccessLayer("db.db", 4096)
+    var page = dal.allocateEmptyPage(dal.freelist.getNextPage)
     page.data.put("data".getBytes(StandardCharsets.UTF_8))
     dal.writePage(page)
+    dal.writeFreeList()
+    dal.close()
+
+    dal = new DataAccessLayer("db.db", 4096)
+    page = dal.allocateEmptyPage(dal.freelist.getNextPage)
+    page.data.put("data2".getBytes(StandardCharsets.UTF_8))
+    dal.writePage(page)
+    dal.freelist.releasePage(pageNumber = dal.freelist.getNextPage)
+    dal.writeFreeList()
     dal.close()
 end main

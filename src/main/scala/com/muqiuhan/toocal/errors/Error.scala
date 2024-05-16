@@ -6,6 +6,7 @@ enum Error(exception: Throwable = new Exception(this.toString), message: String 
     case DataBaseFileNotFound(databaseFilePath: String)            extends Error(message = databaseFilePath)
     case DataAccessLayerCannotSeekPage(pageNumber: PageNumber)     extends Error(message = pageNumber.toString)
     case DataAccessLayerCannotAllocatePage(pageNumber: PageNumber) extends Error(message = pageNumber.toString)
+    case DataAccessLayerCannotInitializeDatabase
     case DataAccessLayerCannotReadPage
     case DataAccessLayerCannotWritePage
     case DataAccessLayerCannotWriteMeta

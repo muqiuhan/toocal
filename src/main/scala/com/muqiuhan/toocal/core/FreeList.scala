@@ -3,10 +3,17 @@ package com.muqiuhan.toocal.core
 import scala.collection
 import java.nio.ByteBuffer
 
-case class FreeList(
-    var maxPage: PageNumber = 0,
-    val releasedPages: collection.mutable.Stack[PageNumber] = collection.mutable.Stack[PageNumber]()
-):
+/** FreeList is used to manage pages. It indicates which pages are occupied or free.
+  * FreeList can reclaim free pages to prevent fragmentation.
+  */
+class FreeList():
+    private var maxPage: PageNumber                                 = 0
+    private val releasedPages: collection.mutable.Stack[PageNumber] = collection.mutable.Stack[PageNumber]()
+
+    /** Get the next page number.
+      * 
+      * @return If there is a free page number, return it, otherwise return maxPage + 1.
+      */
     inline def getNextPage: PageNumber =
         if !releasedPages.isEmpty then
             releasedPages.pop()
@@ -14,8 +21,11 @@ case class FreeList(
             maxPage += 1
             maxPage
 
-    inline def releasePage(pageNumber: PageNumber): Unit =
-        releasedPages.push(pageNumber)
+    /** Release a page, here the instructions are to simply push it into releasedPages
+      *
+      * @param pageNumber Page number to be released
+      */
+    inline def releasePage(pageNumber: PageNumber): Unit = releasedPages.push(pageNumber)
 
     def serialize(buffer: ByteBuffer) =
         buffer.putLong(maxPage)

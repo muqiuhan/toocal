@@ -4,17 +4,42 @@ import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 import scala.util.{Failure, Success, Try}
 import com.muqiuhan.toocal.errors.Error
+import java.io.File
+import java.io.FileNotFoundException
 
-class DataAccessLayer(databaseFilePath: String, pageSize: Int) extends FreeList:
+/** Data Access Layer (DAL) handles all disk operations and how data is organized on the disk.
+  * It’s responsible for:
+  *     1. managing the underlying data structure,
+  *     2. writing the database pages to the disk, 
+  *     3. and reclaiming free pages to avoid fragmentation.
+  *
+  * @param databaseFilePath The path to the target database file
+  * @param pageSize Operating system memory page size
+  */
+class DataAccessLayer(databaseFilePath: String, pageSize: Int):
+    var meta                  = new Meta()
+    var freelist              = new FreeList()
+    private val isNewDatabase = !File(databaseFilePath).exists()
+
     private val file: RandomAccessFile =
+        if isNewDatabase then File(databaseFilePath).createNewFile()
+
         Try[RandomAccessFile](
             new RandomAccessFile(databaseFilePath, "rw")
         ) match
             case Success(file) => file
-            case Failure(e)    => Error.DataBaseFileNotFound(databaseFilePath).raise()
+            case Failure(e)    => Error.DataAccessLayerCannotInitializeDatabase.raise()
+        end match
+    end file
 
-    private var meta     = new Meta()
-    private var freelist = new FreeList()
+    if isNewDatabase then
+        meta.freelistPage = freelist.getNextPage
+        writeFreeList().fold(_.raise(), identity)
+        writeMeta(meta).fold(_.raise(), identity)
+    else
+        meta = readMeta().fold(_.raise(), identity)
+        freelist = readFreeList().fold(_.raise(), identity)
+    end if
 
     /** Helper functions for reading and writing pages.
       * 
