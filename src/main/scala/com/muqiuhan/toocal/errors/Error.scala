@@ -10,6 +10,8 @@ enum Error(exception: Throwable = new Exception(this.toString), message: String 
     case DataAccessLayerCannotWritePage
     case DataAccessLayerCannotWriteMeta
     case DataAccessLayerCannotReadMeta
+    case DataAccessLayerCannotReadFreeList
+    case DataAccessLayerCannotWriteFreeList
     case InvalidPageNumber
     case Unknown
 

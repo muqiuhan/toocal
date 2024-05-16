@@ -13,6 +13,9 @@ class DataAccessLayer(databaseFilePath: String, pageSize: Int) extends FreeList:
             case Success(file) => file
             case Failure(e)    => Error.DataBaseFileNotFound(databaseFilePath).raise()
 
+    private var meta     = new Meta()
+    private var freelist = new FreeList()
+
     /** Helper functions for reading and writing pages.
       * 
       * @see DataAccessLayer.writePage
@@ -78,15 +81,18 @@ class DataAccessLayer(databaseFilePath: String, pageSize: Int) extends FreeList:
       * 
       * @see Meta.PAGE_NUMBER
       * @param meta The meta that needs to be written
-      * @return If failure returns Error.DataAccessLayerCannotWriteMeta
+      * @return If successful, return the written page, otherwise return Error.DataAccessLayerCannotWriteMeta
       */
-    def writeMeta(meta: Meta): Either[Error, Unit] =
+    def writeMeta(meta: Meta): Either[Error, Page] =
+        val page = allocateEmptyPage(pageNumber = Meta.PAGE_NUMBER)
+        meta.serialize(page.data)
+
         operatingAtPage(
             Meta.PAGE_NUMBER,
             () =>
-                val page = allocateEmptyPage(pageNumber = Meta.PAGE_NUMBER)
-                meta.serialize(page.data)
-                writePage(page).orElse(Left(Error.DataAccessLayerCannotWriteMeta))
+                writePage(page) match
+                    case Left(_)   => Left(Error.DataAccessLayerCannotWriteMeta)
+                    case Right(()) => Right(page)
         )
     end writeMeta
 
@@ -106,5 +112,40 @@ class DataAccessLayer(databaseFilePath: String, pageSize: Int) extends FreeList:
                 ).orElse(Left(Error.DataAccessLayerCannotReadMeta))
         )
     end readMeta
+
+    /** Serialize and write the freelist to the corresponding page.
+      * 
+      * @see Meta.freelistPage
+      * @return If successful, return the written page, otherwise return Error.DataAccessLayerCannotWriteFreelist
+      */
+    def writeFreeList(): Either[Error, Page] =
+        val page = allocateEmptyPage(pageNumber = meta.freelistPage)
+        freelist.serialize(page.data)
+
+        operatingAtPage(
+            meta.freelistPage,
+            () =>
+                writePage(page) match
+                    case Left(_)      => Left(Error.DataAccessLayerCannotWriteFreeList)
+                    case Right(value) => Right(page)
+        )
+    end writeFreeList
+
+    /** Read the meta from the corresponding page and deserialize it.
+      * 
+      * @see Meta.PAGE_NUMBER
+      * @return If failure returns Error.DataAccessLayerCannotReadMeta
+      */
+    def readFreeList(): Either[Error, FreeList] =
+        operatingAtPage(
+            Meta.PAGE_NUMBER,
+            () =>
+                readPage(meta.freelistPage).flatMap(page =>
+                    val freelist = new FreeList()
+                    freelist.deserialize(page.data)
+                    Right(freelist)
+                ).orElse(Left(Error.DataAccessLayerCannotReadFreeList))
+        )
+    end readFreeList
 
 end DataAccessLayer

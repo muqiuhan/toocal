@@ -2,16 +2,10 @@ package com.muqiuhan.toocal.core
 
 import java.nio.ByteBuffer
 
-class Meta extends Serializable:
-    private var _freelistPage: PageNumber = 1
+case class Meta(var freelistPage: PageNumber = 1) extends Serializable:
 
-    def freelistPage = _freelistPage
-
-    def serialize(buffer: ByteBuffer) =
-        buffer.putLong(freelistPage)
-
-    def deserialize(buffer: ByteBuffer) =
-        _freelistPage = buffer.getLong()
+    def serialize(buffer: ByteBuffer)   = buffer.putLong(freelistPage)
+    def deserialize(buffer: ByteBuffer) = freelistPage = buffer.getLong()
 
 end Meta
 
