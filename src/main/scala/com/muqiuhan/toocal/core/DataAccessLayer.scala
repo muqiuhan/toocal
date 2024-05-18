@@ -109,7 +109,7 @@ class DataAccessLayer(databaseFilePath: String, pageSize: Int):
       * @return If successful, return the written page, otherwise return Error.DataAccessLayerCannotWriteMeta
       */
     def writeMeta(meta: Meta): Either[Error, Page] =
-        val page = allocateEmptyPage(pageNumber = Meta.PAGE_NUMBER)
+        val page = allocateEmptyPage(Meta.PAGE_NUMBER)
         meta.serialize(page.data)
 
         operatingAtPage(
@@ -144,7 +144,7 @@ class DataAccessLayer(databaseFilePath: String, pageSize: Int):
       * @return If successful, return the written page, otherwise return Error.DataAccessLayerCannotWriteFreelist
       */
     def writeFreeList(): Either[Error, Page] =
-        val page = allocateEmptyPage(pageNumber = meta.freelistPage)
+        val page = allocateEmptyPage(meta.freelistPage)
         freelist.serialize(page.data)
 
         operatingAtPage(
@@ -172,5 +172,50 @@ class DataAccessLayer(databaseFilePath: String, pageSize: Int):
                 ).orElse(Left(Error.DataAccessLayerCannotReadFreeList))
         )
     end readFreeList
+
+    /** Get the corresponding page and deserialize it to node.
+      * 
+      * @pageNumber The page number corresponding to Node.
+      * @return If failure returns Error.DataAccessLayerCannotGetNode
+      */
+    def getNode(pageNumber: PageNumber): Either[Error, Node] =
+        operatingAtPage(
+            pageNumber,
+            () =>
+                readPage(pageNumber).flatMap(page =>
+                    val node = new Node()
+                    node.deserialize(page.data)
+                    node.pageNumber = pageNumber
+                    Right(node)
+                ).orElse(Left(Error.DataAccessLayerCannotGetNode))
+        )
+    end getNode
+
+    /** Serialize and write the node to the corresponding page.
+      * 
+      * @pageNumber The page number corresponding to Node.
+      * @return If failure returns Error.DataAccessLayerCannotWriteNode
+      */
+    def writeNode(node: Node): Either[Error, Node] =
+        if node.pageNumber == 0 then
+            node.pageNumber = freelist.getNextPage
+
+        val page = allocateEmptyPage(node.pageNumber)
+        node.serialize(page.data)
+
+        operatingAtPage(
+            meta.freelistPage,
+            () =>
+                writePage(page) match
+                    case Left(_)      => Left(Error.DataAccessLayerCannotWriteNode)
+                    case Right(value) => Right(node)
+        )
+    end writeNode
+
+    /** Delete a Node and release the page where it is located directly from the freelist.
+      * 
+      * @param pageNumber The page number of node.
+      */
+    inline def deleteNode(pageNumber: PageNumber): Unit = freelist.releasePage(pageNumber)
 
 end DataAccessLayer
