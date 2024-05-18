@@ -7,9 +7,16 @@ import java.nio.ByteBuffer
   */
 class Meta() extends Serializable:
     var freelistPage: PageNumber = -1
+    var root: PageNumber         = -1
 
-    def serialize(buffer: ByteBuffer)   = buffer.putLong(freelistPage)
-    def deserialize(buffer: ByteBuffer) = freelistPage = buffer.getLong()
+    def serialize(buffer: ByteBuffer) =
+        buffer.putLong(freelistPage)
+        buffer.putLong(root)
+
+    def deserialize(buffer: ByteBuffer) =
+        freelistPage = buffer.getLong()
+        root = buffer.getLong()
+
 end Meta
 
 object Meta:

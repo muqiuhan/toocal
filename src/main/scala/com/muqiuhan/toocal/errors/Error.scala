@@ -15,6 +15,7 @@ enum Error(exception: Throwable = new Exception(this.toString), message: String 
     case DataAccessLayerCannotWriteFreeList
     case DataAccessLayerCannotGetNode
     case DataAccessLayerCannotWriteNode
+    case FindNodeWithKeyError(key: Array[Byte]) extends Error(message = key.toString())
     case InvalidPageNumber
     case Unknown
 
