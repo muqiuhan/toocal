@@ -48,7 +48,7 @@ class DataAccessLayer(databaseFilePath: String, pageSize: Int):
       * @param operating Detailed operations
       * @return
       */
-    inline private def operatingAtPage[Return](pageNumber: PageNumber, operating: () => Return): Return =
+    inline private[core] def operatingAtPage[Return](pageNumber: PageNumber, operating: () => Return): Return =
         Try[Unit](file.seek(pageNumber * pageSize)) match
             case Failure(e) => Error.DataAccessLayerCannotSeekPage(pageNumber).raise()
             case _          => operating()
@@ -172,50 +172,5 @@ class DataAccessLayer(databaseFilePath: String, pageSize: Int):
                 ).orElse(Left(Error.DataAccessLayerCannotReadFreeList))
         )
     end readFreeList
-
-    /** Get the corresponding page and deserialize it to node.
-      * 
-      * @pageNumber The page number corresponding to Node.
-      * @return If failure returns Error.DataAccessLayerCannotGetNode
-      */
-    def getNode(pageNumber: PageNumber): Either[Error, Node] =
-        operatingAtPage(
-            pageNumber,
-            () =>
-                readPage(pageNumber).flatMap(page =>
-                    val node = new Node()
-                    node.deserialize(page.data)
-                    node.pageNumber = pageNumber
-                    Right(node)
-                ).orElse(Left(Error.DataAccessLayerCannotGetNode))
-        )
-    end getNode
-
-    /** Serialize and write the node to the corresponding page.
-      * 
-      * @pageNumber The page number corresponding to Node.
-      * @return If failure returns Error.DataAccessLayerCannotWriteNode
-      */
-    def writeNode(node: Node): Either[Error, Node] =
-        if node.pageNumber == 0 then
-            node.pageNumber = freelist.getNextPage
-
-        val page = allocateEmptyPage(node.pageNumber)
-        node.serialize(page.data)
-
-        operatingAtPage(
-            meta.freelistPage,
-            () =>
-                writePage(page) match
-                    case Left(_)      => Left(Error.DataAccessLayerCannotWriteNode)
-                    case Right(value) => Right(node)
-        )
-    end writeNode
-
-    /** Delete a Node and release the page where it is located directly from the freelist.
-      * 
-      * @param pageNumber The page number of node.
-      */
-    inline def deleteNode(pageNumber: PageNumber): Unit = freelist.releasePage(pageNumber)
 
 end DataAccessLayer

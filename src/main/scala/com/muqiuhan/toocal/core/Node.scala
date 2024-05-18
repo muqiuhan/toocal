@@ -1,18 +1,23 @@
 package com.muqiuhan.toocal.core
 
 import java.nio.ByteBuffer
+import com.muqiuhan.toocal.errors.Error
 
 sealed case class Item(
     key: Array[Byte],
     value: Array[Byte]
 )
 
-class Node():
+class Node(dal: DataAccessLayer):
     var pageNumber: PageNumber = -1
     var items                  = new collection.mutable.ArrayBuffer[Item]()
     var children               = new collection.mutable.ArrayBuffer[PageNumber]()
 
     inline def isLeaf(): Boolean = children.length == 0
+
+    inline def getNode(pageNumber: PageNumber): Node = dal.getNode(pageNumber).fold(_.raise(), identity)
+    inline def writeNode(node: Node): Node           = dal.writeNode(node).fold(_.raise(), identity)
+    inline def writeNodes(nodes: Node*): Unit        = nodes.foreach(writeNode)
 
     def serialize(buffer: ByteBuffer): Unit =
         val isLeafFlag = isLeaf()
@@ -48,3 +53,50 @@ class Node():
         end for
     end deserialize
 end Node
+
+extension (self: DataAccessLayer)
+    /** Get the corresponding page and deserialize it to node.
+      * 
+      * @pageNumber The page number corresponding to Node.
+      * @return If failure returns Error.DataAccessLayerCannotGetNode
+      */
+    def getNode(pageNumber: PageNumber): Either[Error, Node] =
+        self.operatingAtPage(
+            pageNumber,
+            () =>
+                self.readPage(pageNumber).flatMap(page =>
+                    val node = new Node(self)
+                    node.deserialize(page.data)
+                    node.pageNumber = pageNumber
+                    Right(node)
+                ).orElse(Left(Error.DataAccessLayerCannotGetNode))
+        )
+    end getNode
+
+    /** Serialize and write the node to the corresponding page.
+      * 
+      * @pageNumber The page number corresponding to Node.
+      * @return If failure returns Error.DataAccessLayerCannotWriteNode
+      */
+    def writeNode(node: Node): Either[Error, Node] =
+        if node.pageNumber == 0 then
+            node.pageNumber = self.freelist.getNextPage
+
+        val page = self.allocateEmptyPage(node.pageNumber)
+        node.serialize(page.data)
+
+        self.operatingAtPage(
+            self.meta.freelistPage,
+            () =>
+                self.writePage(page) match
+                    case Left(_)      => Left(Error.DataAccessLayerCannotWriteNode)
+                    case Right(value) => Right(node)
+        )
+    end writeNode
+
+    /** Delete a Node and release the page where it is located directly from the freelist.
+      * 
+      * @param pageNumber The page number of node.
+      */
+    inline def deleteNode(pageNumber: PageNumber): Unit = self.freelist.releasePage(pageNumber)
+end extension
