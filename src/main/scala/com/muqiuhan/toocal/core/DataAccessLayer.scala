@@ -34,6 +34,7 @@ class DataAccessLayer(databaseFilePath: String, pageSize: Int):
 
     if isNewDatabase then
         meta.freelistPage = freelist.getNextPage
+        meta.root = freelist.getNextPage
         writeFreeList().fold(_.raise(), identity)
         writeMeta(meta).fold(_.raise(), identity)
     else

@@ -2,6 +2,8 @@ import com.muqiuhan.toocal.*
 import com.muqiuhan.toocal.core.DataAccessLayer
 
 import java.nio.charset.StandardCharsets
+import com.muqiuhan.toocal.core.writeNode
+import com.muqiuhan.toocal.core.Node
 
 @main
 def main(): Unit =

@@ -2,6 +2,7 @@ package com.muqiuhan.toocal.core
 
 import java.nio.ByteBuffer
 import com.muqiuhan.toocal.errors.Error
+import java.util.Arrays
 
 sealed case class Item(
     key: Array[Byte],
@@ -18,6 +19,26 @@ class Node(dal: DataAccessLayer):
     inline def getNode(pageNumber: PageNumber): Node = dal.getNode(pageNumber).fold(_.raise(), identity)
     inline def writeNode(node: Node): Node           = dal.writeNode(node).fold(_.raise(), identity)
     inline def writeNodes(nodes: Node*): Unit        = nodes.foreach(writeNode)
+
+    private def _findWithKey(key: Array[Byte]): (Boolean, Int) =
+        import scala.util.boundary, boundary.break
+
+        boundary[(Boolean, Int)]:
+            for i <- 0 until items.length do
+                Arrays.compare(items(i).key, key) match
+                    case 0 => break((true, i))
+                    case 1 => break((false, i))
+                    case _ => ()
+            end for
+            (false, items.length)
+    end _findWithKey
+
+    inline def findWithKey(key: Array[Byte]): Either[Error, (Int, Node)] =
+        Node.findKey(this, key) match
+            case (_, None)           => Left(Error.FindNodeWithKeyError(key))
+            case (index, Some(node)) => Right((index, node))
+        end match
+    end findWithKey
 
     def serialize(buffer: ByteBuffer): Unit =
         val isLeafFlag = isLeaf()
@@ -52,6 +73,17 @@ class Node(dal: DataAccessLayer):
             items.addOne(Item(key, value))
         end for
     end deserialize
+end Node
+
+object Node:
+    def findKey(node: Node, key: Array[Byte]): (Int, Option[Node]) =
+        val (wasFound, index) = node._findWithKey(key)
+
+        if wasFound then return (index, Some(node))
+        if node.isLeaf() then return (-1, None)
+
+        findKey(node.getNode(node.children(index)), key)
+    end findKey
 end Node
 
 extension (self: DataAccessLayer)
