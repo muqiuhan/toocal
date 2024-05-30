@@ -17,9 +17,12 @@ import java.io.FileNotFoundException
   * @param pageSize Operating system memory page size
   */
 class DataAccessLayer(databaseFilePath: String, pageSize: Int):
-    var meta                  = new Meta()
-    var freelist              = new FreeList()
-    private val isNewDatabase = !File(databaseFilePath).exists()
+    var meta     = new Meta()
+    var freelist = new FreeList()
+
+    private val isNewDatabase         = !File(databaseFilePath).exists()
+    private val MinFillPercent: Float = 0.5
+    private val MaxFillPercent: Float = 0.95
 
     private val file: RandomAccessFile =
         if isNewDatabase then File(databaseFilePath).createNewFile()
@@ -41,6 +44,8 @@ class DataAccessLayer(databaseFilePath: String, pageSize: Int):
         meta = readMeta().fold(_.raise(), identity)
         freelist = readFreeList().fold(_.raise(), identity)
     end if
+
+    inline def getPageSize: Int = pageSize
 
     /** Helper functions for reading and writing pages.
       * 

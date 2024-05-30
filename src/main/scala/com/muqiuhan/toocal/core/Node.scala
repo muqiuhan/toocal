@@ -40,6 +40,13 @@ class Node(dal: DataAccessLayer):
         end match
     end findWithKey
 
+    inline def indexItemSize(index: Int): Int = items(index).key.length + items(index).value.length + dal.getPageSize
+    inline def itemSize(item: Item): Int      = item.key.length + item.value.length + dal.getPageSize
+
+    inline def nodeSize(): Int =
+        items.foldLeft(Node.HEADER_SIZE)((size: Int, item: Item) => size + itemSize(item))
+            + Page.SIZE
+
     def serialize(buffer: ByteBuffer): Unit =
         val isLeafFlag = isLeaf()
 
@@ -76,6 +83,8 @@ class Node(dal: DataAccessLayer):
 end Node
 
 object Node:
+    val HEADER_SIZE: Int = 3
+
     def findKey(node: Node, key: Array[Byte]): (Int, Option[Node]) =
         val (wasFound, index) = node._findWithKey(key)
 
