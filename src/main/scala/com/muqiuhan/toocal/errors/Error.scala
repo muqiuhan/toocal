@@ -17,6 +17,7 @@ enum Error(exception: Throwable = new Exception(this.toString), message: String 
     case DataAccessLayerCannotWriteNode
     case FindNodeWithKeyError(key: Array[Byte]) extends Error(message = key.toString())
     case InvalidPageNumber
+    case CannotGetSystemPageSize
     case Unknown
 
     override def toString: String = s"${exception.getMessage()}: $message"
