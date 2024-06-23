@@ -16,7 +16,7 @@ import java.io.FileNotFoundException
   * @param databaseFilePath The path to the target database file
   * @param pageSize Operating system memory page size
   */
-class DataAccessLayer(databaseFilePath: String, pageSize: Int):
+class DataAccessLayer(databaseFilePath: String, config: Config):
     var meta     = new Meta()
     var freelist = new FreeList()
 
@@ -45,7 +45,7 @@ class DataAccessLayer(databaseFilePath: String, pageSize: Int):
         freelist = readFreeList().fold(_.raise(), identity)
     end if
 
-    inline def getPageSize: Int = pageSize
+    inline def getPageSize: Int = config.pageSize
 
     /** Helper functions for reading and writing pages.
       * 
@@ -55,7 +55,7 @@ class DataAccessLayer(databaseFilePath: String, pageSize: Int):
       * @return
       */
     inline private[core] def operatingAtPage[Return](pageNumber: PageNumber, operating: () => Return): Return =
-        Try[Unit](file.seek(pageNumber * pageSize)) match
+        Try[Unit](file.seek(pageNumber * config.pageSize)) match
             case Failure(e) => Error.DataAccessLayerCannotSeekPage(pageNumber).raise()
             case _          => operating()
     end operatingAtPage
@@ -71,7 +71,7 @@ class DataAccessLayer(databaseFilePath: String, pageSize: Int):
     inline def allocateEmptyPage(pageNumber: PageNumber = -1): Page =
         Try[Page](Page(
                 number = pageNumber,
-                data = ByteBuffer.wrap(new Array[Byte](pageSize))
+                data = ByteBuffer.wrap(new Array[Byte](config.pageSize))
             )) match
             case Success(file) => file
             case Failure(e)    => Error.DataAccessLayerCannotAllocatePage(pageNumber).raise()
