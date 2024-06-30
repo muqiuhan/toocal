@@ -30,7 +30,7 @@ def main(): Unit =
     println("open and read a page in database ...")
     dal = new DataAccessLayer("db.db", Config.DEFAULT)
     dal.readPage(3) match
-        case Left(value) => value.raise()
+        case Left(value)  => value.raise()
         case Right(value) => println(value.data.array().toList.slice(0, 4))
     dal.close()
     println("close it ...")

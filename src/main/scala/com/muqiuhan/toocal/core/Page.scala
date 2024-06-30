@@ -19,12 +19,12 @@ object Page:
     val SIZE: Int = 8
     val DATA_SIZE: Int =
         Try[Int](
-            Page.getSystemPageSize()
+            Page.getSystemPageSize
         ) match
             case Failure(e)     => Error.CannotGetSystemPageSize.raise()
             case Success(value) => value
 
-    private def getSystemPageSize() =
+    def getSystemPageSize: Int =
         val field = classOf[Unsafe].getDeclaredField("theUnsafe")
         field.setAccessible(true)
         field.get(null).asInstanceOf[Unsafe].pageSize()

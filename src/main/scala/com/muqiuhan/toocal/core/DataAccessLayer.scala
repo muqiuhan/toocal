@@ -14,8 +14,7 @@ import java.io.FileNotFoundException
   *     3. and reclaiming free pages to avoid fragmentation.
   *
   * @param databaseFilePath The path to the target database file
-  * @param pageSize Operating system memory page size
-  */
+  * */
 class DataAccessLayer(databaseFilePath: String, config: Config):
     var meta     = new Meta()
     var freelist = new FreeList()
@@ -45,7 +44,9 @@ class DataAccessLayer(databaseFilePath: String, config: Config):
         freelist = readFreeList().fold(_.raise(), identity)
     end if
 
-    inline def getPageSize: Int = config.pageSize
+    inline def getPageSize: Int    = config.pageSize
+    inline def maxThreshold: Float = config.maxFillPercent * config.pageSize
+    inline def minThreshold: Float = config.minFillPercent * config.pageSize
 
     /** Helper functions for reading and writing pages.
       * 
@@ -95,7 +96,7 @@ class DataAccessLayer(databaseFilePath: String, config: Config):
 
     /** Write a page.
       *
-      * @param pageNumber The target page number to be read
+      * @param page The target page to be write
       * @return If the read fails, Error.DataAccessLayerCannotWritePage is returned.
       */
     def writePage(page: Page): Either[Error, Unit] =
