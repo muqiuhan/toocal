@@ -15,7 +15,7 @@ class FreeList():
       * @return If there is a free page number, return it, otherwise return maxPage + 1.
       */
     inline def getNextPage: PageNumber =
-        if !releasedPages.isEmpty then
+        if releasedPages.nonEmpty then
             releasedPages.pop()
         else
             maxPage += 1
@@ -27,10 +27,10 @@ class FreeList():
       */
     inline def releasePage(pageNumber: PageNumber): Unit = releasedPages.push(pageNumber)
 
-    def serialize(buffer: ByteBuffer) =
+    def serialize(buffer: ByteBuffer): Unit =
         buffer.putLong(maxPage)
         buffer.putInt(releasedPages.length)
-        releasedPages.foreach(buffer.putLong(_))
+        releasedPages.foreach(buffer.putLong)
     end serialize
 
     def deserialize(buffer: ByteBuffer): Unit =

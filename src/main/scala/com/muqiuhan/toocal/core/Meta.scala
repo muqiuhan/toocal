@@ -9,11 +9,11 @@ class Meta() extends Serializable:
     var freelistPage: PageNumber = -1
     var root: PageNumber         = -1
 
-    def serialize(buffer: ByteBuffer) =
+    def serialize(buffer: ByteBuffer): ByteBuffer =
         buffer.putLong(freelistPage)
         buffer.putLong(root)
 
-    def deserialize(buffer: ByteBuffer) =
+    def deserialize(buffer: ByteBuffer): Unit =
         freelistPage = buffer.getLong()
         root = buffer.getLong()
 
