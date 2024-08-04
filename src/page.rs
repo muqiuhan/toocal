@@ -1,11 +1,12 @@
 use std::iter;
 
 pub type PageNum = u64;
+pub const PAGE_NUM_SIZE: usize = size_of::<PageNum>();
 
 #[derive(Clone)]
 pub struct Page {
     pub num: PageNum,
-    data: Vec<u8>,
+    pub data: Vec<u8>,
     cursor: usize,
 }
 
@@ -25,10 +26,6 @@ impl Page {
 
     pub fn initialize_raw_data(page_size: usize) -> Vec<u8> {
         iter::repeat(0u8).take(page_size).collect()
-    }
-
-    pub fn data(&self) -> &Vec<u8> {
-        &self.data
     }
 
     pub fn put_str(&mut self, str: &'static str) {
