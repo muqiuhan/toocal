@@ -1,8 +1,8 @@
 use std::{
     fs::{File, OpenOptions},
-    io::{Error, Read, Write},
-    os::{fd::AsFd, unix::fs::FileExt},
-    path::{Path, PathBuf},
+    io::{Error, Write},
+    os::unix::fs::FileExt,
+    path::PathBuf,
 };
 
 use crate::{
@@ -27,7 +27,7 @@ impl DataAccessLayer {
 
         let mut dal = Self {
             db_file: OpenOptions::new()
-                .append(true)
+                .write(true)
                 .read(true)
                 .create(!db_file_exsits)
                 .open(&db_file_path)?,
@@ -104,14 +104,15 @@ impl DataAccessLayer {
             .write_all_at(&page.data, &page.num * page_size)?)
     }
 
-    pub fn read_meta(&self) -> Result<Meta, Error> {
+    pub fn read_meta(&mut self) -> Result<(), Error> {
         info!(
             "read meta page(page {}) from database {}",
             META_PAGE_NUM, self.db_file_path
         );
 
         let page = self.read_page(META_PAGE_NUM)?;
-        Ok(Meta::deserialize(&page.data)?)
+        self.meta = Meta::deserialize(&page.data)?;
+        Ok(())
     }
 
     pub fn write_meta(&self, meta: &Meta) -> Result<Page, Error> {
@@ -126,14 +127,15 @@ impl DataAccessLayer {
         Ok(page)
     }
 
-    pub fn read_free_list(&self) -> Result<FreeList, Error> {
+    pub fn read_free_list(&mut self) -> Result<(), Error> {
         info!(
             "read free list(page {}) from database {}",
             self.meta.free_list_page_num, self.db_file_path
         );
 
         let page = self.read_page(self.meta.free_list_page_num)?;
-        Ok(FreeList::deserialize(&page.data))
+        self.free_list = FreeList::deserialize(&page.data);
+        Ok(())
     }
 
     pub fn write_free_list(&self) -> Result<Page, Error> {
