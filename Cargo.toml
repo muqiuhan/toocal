@@ -5,3 +5,5 @@ edition = "2021"
 
 [dependencies]
 libc = "0.2.155"
+colog = { git = "https://github.com/muqiuhan/rust-colog" }
+log = "0.4.22"

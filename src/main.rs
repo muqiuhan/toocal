@@ -1,3 +1,7 @@
+#[macro_use]
+extern crate log;
+extern crate colog;
+
 use data_access_layer::DataAccessLayer;
 
 mod data_access_layer;
@@ -7,6 +11,8 @@ mod page;
 mod utils;
 
 fn main() {
+    colog::init();
+    
     let db_file = String::from("db.db");
 
     {
