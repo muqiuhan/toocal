@@ -12,7 +12,7 @@ mod utils;
 
 fn main() {
     colog::init();
-    
+
     let db_file = String::from("db.db");
 
     {
@@ -30,8 +30,8 @@ fn main() {
         // commit it
         dal.write_page(&page)
             .expect("cannot write the page to database");
+        
         dal.write_free_list().expect("cannot write free_list page");
-
         dal.close().expect("cannot close the database");
     }
 

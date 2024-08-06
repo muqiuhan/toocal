@@ -1,4 +1,4 @@
-use crate::page::{PageNum, PAGE_NUM_SIZE};
+use crate::{meta::META_PAGE_NUM, page::{PageNum, PAGE_NUM_SIZE}};
 
 #[derive(Clone)]
 pub struct FreeList {
@@ -9,7 +9,7 @@ pub struct FreeList {
 impl FreeList {
     pub fn new() -> Self {
         Self {
-            max_page: 0,
+            max_page: META_PAGE_NUM,
             released_pages: Vec::new(),
         }
     }
