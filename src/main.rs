@@ -7,6 +7,7 @@ use data_access_layer::DataAccessLayer;
 mod data_access_layer;
 mod free_list;
 mod meta;
+mod node;
 mod page;
 mod utils;
 
@@ -30,7 +31,7 @@ fn main() {
         // commit it
         dal.write_page(&page)
             .expect("cannot write the page to database");
-        
+
         dal.write_free_list().expect("cannot write free_list page");
         dal.close().expect("cannot close the database");
     }
