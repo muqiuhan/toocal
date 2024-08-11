@@ -10,8 +10,8 @@ pub struct Item {
     pub value: Vec<u8>,
 }
 
-pub struct Node {
-    pub dal: DataAccessLayer,
+pub struct Node<'dal> {
+    pub dal: &'dal DataAccessLayer,
     pub page_num: PageNum,
     pub items: Vec<Item>,
     pub children: Vec<PageNum>,
@@ -23,8 +23,8 @@ impl Item {
     }
 }
 
-impl Node {
-    pub fn new(dal: DataAccessLayer) -> Self {
+impl<'dal> Node<'dal> {
+    pub fn new(dal: &'dal DataAccessLayer) -> Self {
         Self {
             dal,
             page_num: 0,
