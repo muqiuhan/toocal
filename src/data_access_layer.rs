@@ -8,6 +8,7 @@ use std::{
 use crate::{
     free_list::FreeList,
     meta::{Meta, META_PAGE_NUM},
+    node::Node,
     page::{Page, PageNum},
 };
 
@@ -148,5 +149,31 @@ impl DataAccessLayer {
         self.free_list.serialize(&mut page.data);
         self.write_page(&page)?;
         Ok(page)
+    }
+
+    pub fn get_node(&self, page_num: PageNum) -> Result<Node, Error> {
+        let page = self.read_page(page_num)?;
+        let mut node = Node::new(self);
+        node.deserialize(&page.data);
+        node.page_num = page.num;
+        Ok(node)
+    }
+
+    pub fn write_node(&mut self, node: &mut Node) -> Result<(), Error> {
+        let mut page = self.allocate_empty_page();
+        if node.page_num == 0 {
+            page.num = self.free_list.get_next_page();
+            node.page_num = page.num;
+        } else {
+            page.num = node.page_num;
+        }
+
+        node.serialize(&mut page.data)?;
+        self.write_page(&page)?;
+        Ok(())
+    }
+
+    pub fn delete_node(&mut self, page_num: PageNum) {
+        self.free_list.release_page(page_num);
     }
 }
