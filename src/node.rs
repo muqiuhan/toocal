@@ -1,8 +1,9 @@
-use std::io::Error;
+use std::{io::Error, ops::Deref};
 
 use crate::{
     data_access_layer::DataAccessLayer,
     page::{PageNum, PAGE_NUM_SIZE},
+    utils::{self, compare::Compare},
 };
 
 pub struct Item {
@@ -142,5 +143,40 @@ impl<'dal> Node<'dal> {
                     .expect("deserialize error: cannot read the last child"),
             ));
         }
+    }
+
+    fn __find_key_in_node(&self, key: &Vec<u8>) -> Result<(bool, usize), Error> {
+        for (index, item) in self.items.iter().enumerate() {
+            match item.key.cmp(key) {
+                std::cmp::Ordering::Less => continue,
+                std::cmp::Ordering::Equal => return Ok((true, index)),
+                std::cmp::Ordering::Greater => return Ok((false, index)),
+            }
+        }
+
+        Ok((false, self.items.len()))
+    }
+
+    /// TODO: &'dal Node<'dal>
+    fn __find_key_helper(
+        node: Node<'dal>,
+        key: &'dal Vec<u8>,
+    ) -> Result<(i32, Option<Node<'dal>>), Error> {
+        let (was_found, index) = node.__find_key_in_node(key)?;
+
+        if was_found {
+            return Ok((index as i32, Some(node)));
+        }
+
+        if node.is_leaf() {
+            return Ok((-1, None));
+        }
+
+        return Self::__find_key_helper(node.dal.get_node(node.children[index])?, key);
+    }
+
+    /// TODO: &self
+    pub fn find(self, key: &'dal Vec<u8>) -> Result<(i32, Option<Node>), Error> {
+        Self::__find_key_helper(self, key)
     }
 }
