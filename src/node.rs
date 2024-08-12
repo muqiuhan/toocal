@@ -1,3 +1,4 @@
+use core::str;
 use std::io::Error;
 
 use crate::{
@@ -98,7 +99,7 @@ impl<'dal> Node<'dal> {
                 .try_into()
                 .expect("deserialize error: cannot read the items count"),
         )) {
-            if is_leaf {
+            if !is_leaf {
                 self.children.push(PageNum::from_le_bytes(
                     buf[left..left + PAGE_NUM_SIZE]
                         .try_into()
