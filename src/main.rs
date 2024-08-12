@@ -2,6 +2,8 @@
 extern crate log;
 extern crate colog;
 
+use core::str;
+
 use data_access_layer::DataAccessLayer;
 
 mod data_access_layer;
@@ -21,39 +23,19 @@ fn main() {
         let mut dal = DataAccessLayer::new(db_file.clone(), utils::page_size::get())
             .expect(format!("cannot initialize the database from file: {}", &db_file).as_str());
 
-        // create a new page
-        let page = &mut dal.allocate_empty_page();
-        let page_num = &dal.free_list.get_next_page();
+        let mut node = dal.get_node(dal.meta.root).unwrap();
+        node.dal = &dal;
 
-        page.put_str("data");
-        page.num = *page_num;
+        let key = "Key1".as_bytes().to_vec();
+        let (index, containing_node) = node.find(&key).unwrap();
+        let res = &containing_node.unwrap().items[index];
 
-        // commit it
-        dal.write_page(&page)
-            .expect("cannot write the page to database");
+        println!(
+            "key is: {}, value is: {}",
+            str::from_utf8(&res.key).unwrap(),
+            str::from_utf8(&res.value).unwrap()
+        );
 
-        dal.write_free_list().expect("cannot write free_list page");
-        dal.close().expect("cannot close the database");
-    }
-
-    {
-        // reopen db
-        let mut dal = DataAccessLayer::new(db_file.clone(), utils::page_size::get())
-            .expect(format!("cannot initialize the database from file: {}", &db_file).as_str());
-
-        let page = &mut dal.allocate_empty_page();
-        let page_num = &dal.free_list.get_next_page();
-
-        page.put_str("data2");
-        page.num = *page_num;
-
-        let page_num = dal.free_list.get_next_page();
-        dal.free_list.release_page(page_num);
-
-        // commit it
-        dal.write_page(&page)
-            .expect("cannot write the page to database");
-        dal.write_free_list().expect("cannot write free_list page");
         dal.close().expect("cannot close the database");
     }
 }
