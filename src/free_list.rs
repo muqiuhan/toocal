@@ -1,4 +1,7 @@
-use crate::{meta::META_PAGE_NUM, page::{PageNum, PAGE_NUM_SIZE}};
+use crate::{
+    meta::META_PAGE_NUM,
+    page::{PageNum, PAGE_NUM_SIZE},
+};
 
 #[derive(Clone)]
 pub struct FreeList {
