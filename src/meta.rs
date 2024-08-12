@@ -21,7 +21,7 @@ impl Meta {
         let mut pos = 0;
         buf[pos..PAGE_NUM_SIZE].copy_from_slice(&self.root.to_le_bytes());
         pos += PAGE_NUM_SIZE;
-        buf[pos..PAGE_NUM_SIZE].copy_from_slice(&self.free_list_page_num.to_le_bytes());
+        buf[pos..pos + PAGE_NUM_SIZE].copy_from_slice(&self.free_list_page_num.to_le_bytes());
     }
 
     pub fn deserialize(buf: &Vec<u8>) -> Result<Self, Error> {
@@ -35,7 +35,7 @@ impl Meta {
         pos += PAGE_NUM_SIZE;
 
         let free_list_page_num = PageNum::from_le_bytes(
-            buf[pos..PAGE_NUM_SIZE]
+            buf[pos..pos + PAGE_NUM_SIZE]
                 .try_into()
                 .expect("deserialize error, cannot read free_list_page_num from buf"),
         );
