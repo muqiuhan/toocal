@@ -9,6 +9,7 @@ use crate::{
     free_list::FreeList,
     meta::{Meta, META_PAGE_NUM},
     node::Node,
+    options::DEFAULT_FILL_PERCENT,
     page::{Page, PageNum},
 };
 
@@ -16,6 +17,8 @@ pub struct DataAccessLayer {
     db_file_path: String,
     db_file: File,
     page_size: usize,
+    min_fill_percent: f32,
+    max_fill_percent: f32,
 
     pub free_list: FreeList,
     pub meta: Meta,
@@ -36,6 +39,8 @@ impl DataAccessLayer {
             page_size,
             free_list: FreeList::new(),
             meta: Meta::new(),
+            min_fill_percent: DEFAULT_FILL_PERCENT.min_fill_percent,
+            max_fill_percent: DEFAULT_FILL_PERCENT.max_fill_percent,
         };
 
         if db_file_exsits {
@@ -183,7 +188,28 @@ impl DataAccessLayer {
         Ok(())
     }
 
+    #[inline]
     pub fn delete_node(&mut self, page_num: PageNum) {
         self.free_list.release_page(page_num);
+    }
+
+    #[inline]
+    pub fn max_threshold(&self) -> f32 {
+        self.max_fill_percent * (self.page_size as f32)
+    }
+
+    #[inline]
+    pub fn is_over_populated(&self, node: &Node) -> bool {
+        (node.node_size() as f32) > self.max_threshold()
+    }
+
+    #[inline]
+    pub fn min_threshold(&self) -> f32 {
+        self.min_fill_percent * (self.page_size as f32)
+    }
+
+    #[inline]
+    pub fn is_under_populated(&self, node: &Node) -> bool {
+        (node.node_size() as f32) < self.min_threshold()
     }
 }
