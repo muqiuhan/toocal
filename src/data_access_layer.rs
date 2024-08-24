@@ -8,7 +8,7 @@ use std::{
 use crate::{
     free_list::FreeList,
     meta::{Meta, META_PAGE_NUM},
-    node::Node,
+    node::{Item, Node, NODE_HEADER_SIZE},
     options::DEFAULT_FILL_PERCENT,
     page::{Page, PageNum},
 };
@@ -156,7 +156,7 @@ impl DataAccessLayer {
         Ok(page)
     }
 
-    pub fn get_node(&self, page_num: PageNum) -> Result<Node, Error> {
+    pub fn get_node(&mut self, page_num: PageNum) -> Result<Node, Error> {
         info!(
             "database {}: get node from page {}",
             self.db_file_path, page_num
@@ -186,6 +186,43 @@ impl DataAccessLayer {
         node.serialize(&mut page.data)?;
         self.write_page(&page)?;
         Ok(())
+    }
+
+    pub fn write_node_directly(&self, node: &Node) -> Result<(), Error> {
+        info!(
+            "database {}: write node to page {}",
+            self.db_file_path, node.page_num
+        );
+
+        let mut page = self.allocate_empty_page();
+        page.num = node.page_num;
+
+        node.serialize(&mut page.data)?;
+        self.write_page(&page)?;
+        Ok(())
+    }
+
+    pub fn get_split_index(&self, node: &Node) -> Option<usize> {
+        let mut size = NODE_HEADER_SIZE;
+
+        for (index, item) in node.items.iter().enumerate() {
+            size += item.size();
+
+            if (size as f32) > self.min_threshold() && index < node.items.len() - 1 {
+                return Some(index + 1);
+            }
+        }
+
+        return None;
+    }
+
+    pub fn new_node(&mut self, items: Vec<Item>, children: Vec<PageNum>) -> Node {
+        Node {
+            page_num: self.free_list.get_next_page(),
+            dal: self,
+            items,
+            children,
+        }
     }
 
     #[inline]
