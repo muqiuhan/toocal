@@ -18,9 +18,16 @@ pub struct Node<'dal> {
     pub children: Vec<PageNum>,
 }
 
+const NODE_HEADER_SIZE: usize = 3;
+
 impl Item {
     pub fn new(key: Vec<u8>, value: Vec<u8>) -> Self {
         Self { key, value }
+    }
+
+    #[inline]
+    pub fn size(&self) -> usize {
+        self.key.len() + self.value.len() + PAGE_NUM_SIZE
     }
 }
 
@@ -34,8 +41,31 @@ impl<'dal> Node<'dal> {
         }
     }
 
+    #[inline]
+    pub fn item_size(&self, index: usize) -> usize {
+        self.items[index].size()
+    }
+
+    pub fn node_size(&self) -> usize {
+        self.items
+            .iter()
+            .fold(NODE_HEADER_SIZE, |size, item| size + item.size())
+            + PAGE_NUM_SIZE
+    }
+
+    #[inline]
     pub fn is_leaf(&self) -> bool {
         self.children.len() == 0
+    }
+
+    pub fn add_item(&mut self, item: Item, index: usize) -> usize {
+        if index == self.items.len() {
+            self.items.push(item);
+            return index;
+        }
+
+        self.items.insert(index, item);
+        index
     }
 
     pub fn serialize(&self, buf: &mut Vec<u8>) -> Result<(), Error> {
@@ -178,5 +208,15 @@ impl<'dal> Node<'dal> {
     /// TODO: &self
     pub fn find(self, key: &'dal Vec<u8>) -> Result<(usize, Option<Node>), Error> {
         Self::__find_key_helper(self, key)
+    }
+
+    #[inline]
+    pub fn is_over_populated(&self) -> bool {
+        self.dal.is_over_populated(self)
+    }
+
+    #[inline]
+    pub fn is_under_populated(&self) -> bool {
+        self.dal.is_under_populated(self)
     }
 }

@@ -12,6 +12,7 @@ mod meta;
 mod node;
 mod page;
 mod utils;
+mod options;
 
 fn main() {
     colog::init();
