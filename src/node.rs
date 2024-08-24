@@ -1,24 +1,29 @@
 use core::str;
-use std::io::Error;
+use std::{
+    borrow::{Borrow, BorrowMut},
+    io::Error,
+    ops::Deref,
+};
 
 use crate::{
     data_access_layer::DataAccessLayer,
     page::{PageNum, PAGE_NUM_SIZE},
 };
 
+#[derive(Clone)]
 pub struct Item {
     pub key: Vec<u8>,
     pub value: Vec<u8>,
 }
 
 pub struct Node<'dal> {
-    pub dal: &'dal DataAccessLayer,
+    pub dal: &'dal mut DataAccessLayer,
     pub page_num: PageNum,
     pub items: Vec<Item>,
     pub children: Vec<PageNum>,
 }
 
-const NODE_HEADER_SIZE: usize = 3;
+pub const NODE_HEADER_SIZE: usize = 3;
 
 impl Item {
     pub fn new(key: Vec<u8>, value: Vec<u8>) -> Self {
@@ -31,8 +36,13 @@ impl Item {
     }
 }
 
+enum SplitMethod<'dal> {
+    LEAF(Node<'dal>),
+    ELSE(Node<'dal>),
+}
+
 impl<'dal> Node<'dal> {
-    pub fn new(dal: &'dal DataAccessLayer) -> Self {
+    pub fn new(dal: &'dal mut DataAccessLayer) -> Self {
         Self {
             dal,
             page_num: 0,
@@ -218,5 +228,38 @@ impl<'dal> Node<'dal> {
     #[inline]
     pub fn is_under_populated(&self) -> bool {
         self.dal.is_under_populated(self)
+    }
+
+    fn __split_new_node(&mut self, node_to_split: &mut Node, split_index: usize) -> SplitMethod {
+        if node_to_split.is_leaf() {
+            return SplitMethod::LEAF(
+                self.dal
+                    .new_node(node_to_split.items[split_index + 1..].to_vec(), vec![]),
+            );
+        } else {
+            return SplitMethod::ELSE(self.dal.new_node(
+                node_to_split.items[split_index + 1..].to_vec(),
+                node_to_split.children[split_index + 1..].to_vec(),
+            ));
+        }
+    }
+
+    fn __handle_split_new_node(&mut self, node_to_split: &mut Node, index: usize) -> Node {
+        let split_index = node_to_split
+            .dal
+            .get_split_index(node_to_split)
+            .expect("node split: cannot get the split index");
+
+        match self.__split_new_node(node_to_split, split_index) {
+            SplitMethod::LEAF(node) => {
+                node_to_split.items = node_to_split.items[..split_index].to_vec();
+                node
+            }
+            SplitMethod::ELSE(node) => {
+                node_to_split.items = node_to_split.items[..split_index].to_vec();
+                node_to_split.children = node_to_split.children[..split_index + 1].to_vec();
+                node
+            }
+        }
     }
 }

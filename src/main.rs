@@ -24,8 +24,7 @@ fn main() {
         let mut dal = DataAccessLayer::new(db_file.clone(), utils::page_size::get())
             .expect(format!("cannot initialize the database from file: {}", &db_file).as_str());
 
-        let mut node = dal.get_node(dal.meta.root).unwrap();
-        node.dal = &dal;
+        let node = dal.get_node(dal.meta.root).unwrap();
 
         let key = "Key1".as_bytes().to_vec();
         let (index, containing_node) = node.find(&key).unwrap();
