@@ -49,19 +49,21 @@ namespace toocal::core::types
     [[nodiscard]] static auto serialize(const freelist::Freelist &self) noexcept
       -> tl::expected<std::vector<std::uint8_t>, errors::Error>
     {
+      const auto max_page = static_cast<uint16_t>(self.max_page),
+                 released_pages_count = static_cast<uint16_t>(self.released_pages.size());
+
       auto buffer = std::vector<uint8_t>(
         /* max_page */
-        sizeof(uint16_t) +
+        sizeof(max_page) +
         /* released pages count */
-        sizeof(uint16_t) +
+        sizeof(released_pages_count) +
         /* released pages */
         (sizeof(page::Page_num) * self.released_pages.size()));
 
-      endian::stream_writer<endian::little_endian> serializer(
-        buffer.data(), buffer.size());
+      auto serializer =
+        endian::stream_writer<endian::little_endian>(buffer.data(), buffer.size());
 
-      serializer << static_cast<uint16_t>(self.max_page)
-                 << static_cast<uint16_t>(self.released_pages.size());
+      serializer << max_page << released_pages_count;
 
       std::ranges::for_each(self.released_pages, [&](const auto &released_page) {
         serializer << released_page;
@@ -73,8 +75,8 @@ namespace toocal::core::types
     [[nodiscard]] static auto deserialize(const std::vector<std::uint8_t> &buffer) noexcept
       -> tl::expected<freelist::Freelist, errors::Error>
     {
-      endian::stream_reader<endian::little_endian> deserializer(
-        buffer.data(), buffer.size());
+      auto deserializer =
+        endian::stream_reader<endian::little_endian>(buffer.data(), buffer.size());
 
       uint16_t max_page = 0;
       uint16_t released_pages_count = 0;
