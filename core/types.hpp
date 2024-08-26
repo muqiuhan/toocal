@@ -2,10 +2,8 @@
 #define TOOCAL_CORE_TYPES
 
 #include "errors.hpp"
-#include <cstddef>
 #include <fmt/core.h>
 #include <tl/expected.hpp>
-#include <vector>
 
 namespace toocal::core::types
 {
@@ -13,12 +11,12 @@ namespace toocal::core::types
   {
   public:
     [[nodiscard]] auto serialize(const _Tp_serialize_type &self) const noexcept
-      -> tl::expected<std::vector<std::byte>, errors::Error>
+      -> tl::expected<std::vector<std::uint8_t>, errors::Error>
     {
       unimplemented();
     }
 
-    [[nodiscard]] auto deserialize(const std::vector<std::byte> &bytes) const noexcept
+    [[nodiscard]] auto deserialize(const std::vector<std::uint8_t> &) const noexcept
       -> tl::expected<_Tp_serialize_type, errors::Error>
     {
       unimplemented();
