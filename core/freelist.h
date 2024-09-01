@@ -43,11 +43,14 @@ namespace toocal::core::freelist
 
 namespace toocal::core::types
 {
-  template <> class Serializer<freelist::Freelist>
+  using freelist::Freelist;
+  using errors::Error;
+
+  template <> class Serializer<Freelist>
   {
   public:
-    [[nodiscard]] static auto serialize(const freelist::Freelist &self) noexcept
-      -> tl::expected<std::vector<std::uint8_t>, errors::Error>
+    [[nodiscard]] static auto serialize(const Freelist &self) noexcept
+      -> tl::expected<std::vector<std::uint8_t>, Error>
     {
       const auto max_page = static_cast<uint16_t>(self.max_page),
                  released_pages_count = static_cast<uint16_t>(self.released_pages.size());
@@ -73,7 +76,7 @@ namespace toocal::core::types
     }
 
     [[nodiscard]] static auto deserialize(const std::vector<std::uint8_t> &buffer) noexcept
-      -> tl::expected<freelist::Freelist, errors::Error>
+      -> tl::expected<Freelist, Error>
     {
       auto deserializer =
         endian::stream_reader<endian::little_endian>(buffer.data(), buffer.size());
@@ -87,7 +90,7 @@ namespace toocal::core::types
       for (uint16_t i = 0; i < released_pages_count; i++)
         deserializer >> released_pages[i];
 
-      return freelist::Freelist{static_cast<page::Page_num>(max_page), released_pages};
+      return Freelist{static_cast<page::Page_num>(max_page), released_pages};
     }
   };
 } // namespace toocal::core::types
