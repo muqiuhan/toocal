@@ -7,17 +7,19 @@
 
 namespace toocal::core::types
 {
+  using errors::Error;
+  
   template <typename _Tp_serialize_type> class Serializer
   {
   public:
     [[nodiscard]] static auto serialize(const _Tp_serialize_type &self) noexcept
-      -> tl::expected<std::vector<std::uint8_t>, errors::Error>
+      -> tl::expected<std::vector<std::uint8_t>, Error>
     {
       unimplemented();
     }
 
     [[nodiscard]] static auto deserialize(const std::vector<std::uint8_t> &buffer) noexcept
-      -> tl::expected<_Tp_serialize_type, errors::Error>
+      -> tl::expected<_Tp_serialize_type, Error>
     {
       unimplemented();
     }

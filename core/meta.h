@@ -4,6 +4,7 @@
 #include "endian/little_endian.hpp"
 #include "endian/stream_reader.hpp"
 #include "endian/stream_writer.hpp"
+#include "errors.hpp"
 #include "page.h"
 #include "types.hpp"
 #include <cstdint>
@@ -27,11 +28,14 @@ namespace toocal::core::meta
 
 namespace toocal::core::types
 {
-  template <> class Serializer<meta::Meta>
+  using meta::Meta;
+  using errors::Error;
+
+  template <> class Serializer<Meta>
   {
   public:
-    [[nodiscard]] static auto serialize(const meta::Meta &self) noexcept
-      -> tl::expected<std::vector<std::uint8_t>, errors::Error>
+    [[nodiscard]] static auto serialize(const Meta &self) noexcept
+      -> tl::expected<std::vector<std::uint8_t>, Error>
     {
       auto buffer = std::vector<uint8_t>(
         /* root */
@@ -47,11 +51,11 @@ namespace toocal::core::types
     }
 
     [[nodiscard]] static auto deserialize(const std::vector<std::uint8_t> &buffer) noexcept
-      -> tl::expected<meta::Meta, errors::Error>
+      -> tl::expected<Meta, Error>
     {
       auto deserializer =
         endian::stream_reader<endian::little_endian>(buffer.data(), buffer.size());
-      auto meta = meta::Meta{};
+      auto meta = Meta{};
 
       deserializer >> meta.root >> meta.freelist_page;
       return meta;
