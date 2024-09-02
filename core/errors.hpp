@@ -17,19 +17,22 @@ namespace toocal::core::errors
   public:
     [[noreturn]] auto panic() const noexcept -> void
     {
-      spdlog::error("{} at ({}:{})", message, location.file_name(), location.line());
+      spdlog::error(
+        "{} at ({}:{})", message, location.file_name(), location.line());
       std::terminate();
     }
   };
 
-#define __error(message)                                                                 \
+#define __error(message)                                                       \
   toocal::core::errors::Error { message, std::source_location::current() }
 
-#define unimplemented()                                                                  \
-  __error(                                                                               \
-    fmt::format(                                                                         \
-      "unimplemented function: {}", std::source_location::current().function_name()))    \
+#define unimplemented()                                                        \
+  __error(fmt::format(                                                         \
+            "unimplemented function: {}",                                      \
+            std::source_location::current().function_name()))                  \
     .panic()
+
+#define Err(message) tl::make_unexpected(__error(message))
 }; // namespace toocal::core::errors
 
 #endif /* TOOCAL_CORE_ERRORS_HPP */

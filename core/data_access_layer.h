@@ -4,7 +4,9 @@
 #include "errors.hpp"
 #include "freelist.h"
 #include "meta.h"
+#include "page.h"
 #include "tl/expected.hpp"
+#include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <string>
@@ -23,6 +25,7 @@ namespace toocal::core::data_access_layer
   using errors::Error;
   using freelist::Freelist;
   using meta::Meta;
+  using page::Page;
 
   class Options
   {
@@ -72,6 +75,14 @@ namespace toocal::core::data_access_layer
      ** called after the scope of the Data access layer ends, and there is usually no need
      ** to call it manually. */
     auto close() noexcept -> void;
+
+    [[nodiscard]] auto allocate_empty_page(page::Page_num page_num) const noexcept -> Page;
+
+    [[nodiscard]] auto
+      write_page(const Page & page) noexcept -> tl::expected<std::nullptr_t, Error>;
+      
+    [[nodiscard]] auto
+      read_page(page::Page_num page_num) noexcept -> tl::expected<Page, Error>;
 
   private:
     inline static const auto DEFAULT_PAGE_SIZE =
