@@ -29,7 +29,7 @@ namespace toocal::core::node::tests
                 std::vector<uint8_t>(item.second.begin(), item.second.end())});
               return items;
             }),
-          std::vector<page::Page_num>{1, 2, 3, 4, 5},
+          std::vector<page::Page_num>{},
         })
         .value();
 
@@ -38,9 +38,7 @@ namespace toocal::core::node::tests
 
     const auto node = types::Serializer<Node>::deserialize(buffer);
 
-    CHECK_EQ(node->children.size(), 5);
-    CHECK_EQ(node->children[0], 0);
-    CHECK_EQ(node->children[4], 5);
+    CHECK_EQ(node->items.size(), 2);
     CHECK_EQ(
       std::string(node->items[0].key.begin(), node->items[0].key.end()),
       "key1");

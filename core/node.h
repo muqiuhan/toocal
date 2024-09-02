@@ -64,8 +64,8 @@ namespace toocal::core::types
           0,
           [&](const auto &items_size, const auto &item) {
             return items_size +
-                   /* fitem.key.size() + item.value.size() */
-                   (sizeof(uint8_t) * 2) +
+                   /* fitem.key.size() + item.value.size() + offset */
+                   (sizeof(uint8_t) * 3) +
                    /* offset */ sizeof(uint16_t) + item.size();
           }));
 
