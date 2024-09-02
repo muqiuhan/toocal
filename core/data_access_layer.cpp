@@ -10,7 +10,8 @@
 
 namespace toocal::core::data_access_layer
 {
-  [[nodiscard]] auto Data_access_layer::get_system_page_size() noexcept -> uint32_t
+  [[nodiscard]] auto
+    Data_access_layer::get_system_page_size() noexcept -> uint32_t
   {
 #ifdef __unix__
     return getpagesize();
@@ -28,16 +29,17 @@ namespace toocal::core::data_access_layer
     -> tl::expected<Data_access_layer, Error>
   {}
 
-  [[nodiscard]] auto
-    Data_access_layer::load_database() noexcept -> tl::expected<Data_access_layer, Error>
+  [[nodiscard]] auto Data_access_layer::load_database() noexcept
+    -> tl::expected<Data_access_layer, Error>
   {}
 
   auto Data_access_layer::close() noexcept -> void { this->file.close(); }
 
-  [[nodiscard]] auto
-    Data_access_layer::allocate_empty_page(page::Page_num page_num) const noexcept -> Page
+  [[nodiscard]] auto Data_access_layer::allocate_empty_page(
+    page::Page_num page_num) const noexcept -> Page
   {
-    return Page{page_num, std::vector<uint8_t>(Data_access_layer::DEFAULT_PAGE_SIZE)};
+    return Page{
+      page_num, std::vector<uint8_t>(Data_access_layer::DEFAULT_PAGE_SIZE)};
   }
 
   [[nodiscard]] auto Data_access_layer::write_page(const Page &page) noexcept
@@ -45,11 +47,15 @@ namespace toocal::core::data_access_layer
   {
     try
       {
-        if (this->file.seekp(page.page_num * Data_access_layer::DEFAULT_PAGE_SIZE).fail())
+        if (this->file
+              .seekp(page.page_num * Data_access_layer::DEFAULT_PAGE_SIZE)
+              .fail())
           return Err(std::strerror(errno));
 
         if (this->file
-              .write(reinterpret_cast<const char *>(page.data.data()), page.data.size())
+              .write(
+                reinterpret_cast<const char *>(page.data.data()),
+                page.data.size())
               .fail())
           return Err(std::strerror(errno));
 
@@ -61,16 +67,18 @@ namespace toocal::core::data_access_layer
       }
   }
 
-  [[nodiscard]] auto Data_access_layer::read_page(page::Page_num page_num) noexcept
-    -> tl::expected<Page, Error>
+  [[nodiscard]] auto Data_access_layer::read_page(
+    page::Page_num page_num) noexcept -> tl::expected<Page, Error>
   {
     try
       {
         auto page = this->allocate_empty_page(page_num);
-        if (this->file.seekg(page_num * Data_access_layer::DEFAULT_PAGE_SIZE).fail())
+        if (this->file.seekg(page_num * Data_access_layer::DEFAULT_PAGE_SIZE)
+              .fail())
           return Err(std::strerror(errno));
 
-        if (this->file.read(reinterpret_cast<char *>(page.data.data()), page.data.size())
+        if (this->file
+              .read(reinterpret_cast<char *>(page.data.data()), page.data.size())
               .fail())
           return Err(std::strerror(errno));
 

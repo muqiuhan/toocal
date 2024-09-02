@@ -50,7 +50,8 @@ namespace toocal::core::data_access_layer
 
   public:
     Data_access_layer(
-      const std::string path, const Options options = Data_access_layer::DEFAULT_OPTIONS)
+      const std::string path,
+      const Options     options = Data_access_layer::DEFAULT_OPTIONS)
       : path(std::move(path)), options(std::move(options))
     {}
 
@@ -71,17 +72,19 @@ namespace toocal::core::data_access_layer
 
     /** During the process of creating the Data access layer, If the database file exists
      ** at the target path, load it. */
-    [[nodiscard]] auto load_database() noexcept -> tl::expected<Data_access_layer, Error>;
+    [[nodiscard]] auto
+      load_database() noexcept -> tl::expected<Data_access_layer, Error>;
 
     /** Manually close the Data access layer. Note: This function will be automatically
      ** called after the scope of the Data access layer ends, and there is usually no need
      ** to call it manually. */
     auto close() noexcept -> void;
 
-    [[nodiscard]] auto allocate_empty_page(page::Page_num page_num) const noexcept -> Page;
-
     [[nodiscard]] auto
-      write_page(const Page & page) noexcept -> tl::expected<std::nullptr_t, Error>;
+      allocate_empty_page(page::Page_num page_num) const noexcept -> Page;
+
+    [[nodiscard]] auto write_page(const Page & page) noexcept
+      -> tl::expected<std::nullptr_t, Error>;
 
     [[nodiscard]] auto
       read_page(page::Page_num page_num) noexcept -> tl::expected<Page, Error>;
