@@ -54,6 +54,8 @@ namespace toocal::core::data_access_layer
       : path(std::move(path)), options(std::move(options))
     {}
 
+    Data_access_layer() : options(std::move(DEFAULT_OPTIONS)) {}
+
     ~Data_access_layer() { this->close(); }
 
   private:
@@ -80,7 +82,7 @@ namespace toocal::core::data_access_layer
 
     [[nodiscard]] auto
       write_page(const Page & page) noexcept -> tl::expected<std::nullptr_t, Error>;
-      
+
     [[nodiscard]] auto
       read_page(page::Page_num page_num) noexcept -> tl::expected<Page, Error>;
 
