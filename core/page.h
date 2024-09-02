@@ -14,7 +14,7 @@ namespace toocal::core::page
   {
   public:
     const Page_num page_num;
-    const std::vector<std::byte> data;
+    std::vector<std::uint8_t> data;
   };
 } // namespace toocal::core::page
 
