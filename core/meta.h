@@ -28,8 +28,8 @@ namespace toocal::core::meta
 
 namespace toocal::core::types
 {
-  using meta::Meta;
   using errors::Error;
+  using meta::Meta;
 
   template <> class Serializer<Meta>
   {
@@ -43,18 +43,19 @@ namespace toocal::core::types
         /* freelist_page */
         sizeof(self.freelist_page));
 
-      auto serializer =
-        endian::stream_writer<endian::little_endian>(buffer.data(), buffer.size());
+      auto serializer = endian::stream_writer<endian::little_endian>(
+        buffer.data(), buffer.size());
 
       serializer << self.root << self.freelist_page;
       return buffer;
     }
 
-    [[nodiscard]] static auto deserialize(const std::vector<std::uint8_t> &buffer) noexcept
+    [[nodiscard]] static auto
+      deserialize(const std::vector<std::uint8_t> &buffer) noexcept
       -> tl::expected<Meta, Error>
     {
-      auto deserializer =
-        endian::stream_reader<endian::little_endian>(buffer.data(), buffer.size());
+      auto deserializer = endian::stream_reader<endian::little_endian>(
+        buffer.data(), buffer.size());
       auto meta = Meta{};
 
       deserializer >> meta.root >> meta.freelist_page;

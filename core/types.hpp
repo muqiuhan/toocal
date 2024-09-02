@@ -8,7 +8,7 @@
 namespace toocal::core::types
 {
   using errors::Error;
-  
+
   template <typename _Tp_serialize_type> class Serializer
   {
   public:
@@ -18,7 +18,8 @@ namespace toocal::core::types
       unimplemented();
     }
 
-    [[nodiscard]] static auto deserialize(const std::vector<std::uint8_t> &buffer) noexcept
+    [[nodiscard]] static auto
+      deserialize(const std::vector<std::uint8_t> &buffer) noexcept
       -> tl::expected<_Tp_serialize_type, Error>
     {
       unimplemented();
