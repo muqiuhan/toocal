@@ -89,6 +89,13 @@ namespace toocal::core::data_access_layer
     [[nodiscard]] auto
       read_page(page::Page_num page_num) noexcept -> tl::expected<Page, Error>;
 
+    [[nodiscard]] auto read_freelist() noexcept -> tl::expected<Freelist, Error>;
+    [[nodiscard]] auto write_freelist(const Freelist & freelist) noexcept
+      -> tl::expected<std::nullptr_t, Error>;
+    [[nodiscard]] auto read_meta() noexcept -> tl::expected<Meta, Error>;
+    [[nodiscard]] auto write_meta(const Meta & meta) noexcept
+      -> tl::expected<std::nullptr_t, Error>;
+
   private:
     inline static const auto DEFAULT_PAGE_SIZE =
       Data_access_layer::get_system_page_size();

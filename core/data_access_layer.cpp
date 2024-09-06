@@ -4,6 +4,7 @@
 #include <cerrno>
 #include <cstring>
 #include "tl/expected.hpp"
+#include "types.hpp"
 #include <cstdint>
 #include <exception>
 #include <vector>
@@ -89,4 +90,52 @@ namespace toocal::core::data_access_layer
         return Err(e.what());
       }
   }
+
+  [[nodiscard]] auto
+    Data_access_layer::read_freelist() noexcept -> tl::expected<Freelist, Error>
+  {
+    return this->read_page(this->meta.freelist_page)
+      .transform([&](const auto &&page) {
+        return types::Serializer<Freelist>::deserialize(page.data)
+          .transform_error([&](const auto &&error) { return error.panic(); })
+          .value();
+      });
+  }
+
+  [[nodiscard]] auto Data_access_layer::write_freelist(
+    const Freelist &freelist) noexcept -> tl::expected<std::nullptr_t, Error>
+  {
+    auto page = this->allocate_empty_page(this->meta.freelist_page);
+    return types::Serializer<Freelist>::serialize(freelist).transform(
+      [&](const auto &&data) {
+        page.data = data;
+        return this->write_page(page)
+          .transform_error([&](const auto &&error) { return error.panic(); })
+          .value();
+      });
+  }
+
+  [[nodiscard]] auto
+    Data_access_layer::read_meta() noexcept -> tl::expected<Meta, Error>
+  {
+    return this->read_page(Meta::PAGE_NUM).transform([&](const auto &&page) {
+      return types::Serializer<Meta>::deserialize(page.data)
+        .transform_error([&](const auto &&error) { return error.panic(); })
+        .value();
+    });
+  }
+
+  [[nodiscard]] auto Data_access_layer::write_meta(const Meta &meta) noexcept
+    -> tl::expected<std::nullptr_t, Error>
+  {
+    auto page = this->allocate_empty_page(Meta::PAGE_NUM);
+    return types::Serializer<Meta>::serialize(meta).transform(
+      [&](const auto &&data) {
+        page.data = data;
+        return this->write_page(page)
+          .transform_error([&](const auto &&error) { return error.panic(); })
+          .value();
+      });
+  }
+
 } // namespace toocal::core::data_access_layer
