@@ -1,8 +1,6 @@
 #ifndef TOOCAL_CORE_PAGE_H
 #define TOOCAL_CORE_PAGE_H
 
-#include <array>
-#include <cstddef>
 #include <cstdint>
 #include <vector>
 
