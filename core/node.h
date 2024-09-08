@@ -78,10 +78,10 @@ namespace toocal::core::types
 
       /* We use slotted pages for storing data in the page. It means the actual
        * keys and values (the cells) are appended to right of the page whereas
-       * offsets have a fixed size and are appended from the left. It's easier to
-       * preserve the logical order (alphabetical in the case of b-tree) using the
-       * metadata and performing pointer arithmetic. Using the data itself is
-       * harder as it varies by size.
+       * offsets have a fixed size and are appended from the left. It's easier
+       * to preserve the logical order (alphabetical in the case of b-tree)
+       * using the metadata and performing pointer arithmetic. Using the data
+       * itself is harder as it varies by size.
        *
        * Page structure is:
        * -----------------------------------------------------------------------
