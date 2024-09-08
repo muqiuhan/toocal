@@ -74,7 +74,7 @@ PenaltyBreakString:	80
 PenaltyExcessCharacter:	80
 PenaltyReturnTypeOnItsOwnLine:	80
 PointerAlignment:	Middle
-ReflowComments:	false
+ReflowComments:	true
 SortIncludes:	"Never"
 SpaceAfterCStyleCast:	true
 SpaceBeforeAssignmentOperators:	true

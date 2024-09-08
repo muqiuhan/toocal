@@ -32,7 +32,9 @@ namespace toocal::core::errors
             std::source_location::current().function_name()))                  \
     .panic()
 
-#define Err(message) tl::make_unexpected(__error(message))
+#define fatal(message) __error(fmt::format("fatal error: {}", message)).panic()
+
+#define Err(message)   tl::make_unexpected(__error(message))
 }; // namespace toocal::core::errors
 
 #endif /* TOOCAL_CORE_ERRORS_HPP */

@@ -17,8 +17,8 @@ namespace toocal::core::freelist
   class Freelist
   {
   public:
-    /** META_PAGE is the maximum page num that is used by the db for its own purposes.
-     ** For now, only page 0 is used as the header page.
+    /** META_PAGE is the maximum page num that is used by the db for its own
+     ** purposes. For now, only page 0 is used as the header page.
      ** It means all other page numbers can be used. */
     inline static const page::Page_num META_PAGE = 0;
 
@@ -27,15 +27,16 @@ namespace toocal::core::freelist
     page::Page_num max_page;
 
     /** released_pages holds all the ids that were released during delete.
-     ** New page ids are first given from the releasedPageIDs to avoid growing the file.
-     ** If it's empty, then max_page is incremented and a new page is created thus
-     ** increasing the file size. */
+     ** New page ids are first given from the releasedPageIDs to avoid growing
+     ** the file. If it's empty, then max_page is incremented and a new page is
+     ** created thus increasing the file size. */
     std::vector<page::Page_num> released_pages;
 
   public:
-    /** get_next_page returns page ids for writing New page ids are first given from the
-     ** releasedPageIDs to avoid growing the file. If it's empty, then maxPage is
-     ** incremented and a new page is created thus increasing the file size. */
+    /** get_next_page returns page ids for writing New page ids are first given
+     ** from the releasedPageIDs to avoid growing the file. If it's empty, then
+     ** maxPage is incremented and a new page is created thus increasing the
+     ** file size. */
     [[nodiscard]] auto get_next_page() noexcept -> page::Page_num;
     auto               release_page(page::Page_num page) noexcept -> void;
   };
