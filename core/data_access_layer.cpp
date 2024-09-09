@@ -54,7 +54,7 @@ namespace toocal::core::data_access_layer
       }
 
     return this->write_freelist()
-      .transform([&](const auto &&_) {
+      .map([&](const auto &&_) {
         /* init root */
         // unimplemented();
         return nullptr;
@@ -82,7 +82,7 @@ namespace toocal::core::data_access_layer
         this->meta = meta;
         return this->read_freelist();
       })
-      .transform([&](const auto &&freelist) {
+      .map([&](const auto &&freelist) {
         this->freelist = freelist;
         return nullptr;
       });
@@ -166,6 +166,37 @@ namespace toocal::core::data_access_layer
       });
   }
 
+  [[nodiscard]] auto Data_access_layer::write_node(Node &node) noexcept
+    -> tl::expected<std::nullptr_t, Error>
+  {
+    auto page = this->allocate_empty_page();
+    if (node.page_num == 0)
+      {
+        page.page_num = this->freelist.get_next_page();
+        node.page_num = page.page_num;
+      }
+    else
+      page.page_num = node.page_num;
+
+    return types::Serializer<Node>::serialize(node).and_then(
+      [&](const auto &&data) {
+        std::copy(data.begin(), data.end(), page.data.begin());
+        return this->write_page(page);
+      });
+  }
+
+  [[nodiscard]] auto Data_access_layer::get_node(
+    page::Page_num page_num) noexcept -> tl::expected<Node, Error>
+  {
+    return this->read_page(page_num)
+      .and_then([](const auto &&page) {
+        return types::Serializer<Node>::deserialize(page.data);
+      })
+      .map([&](const auto &&node) {
+        return Node{this, page_num, node.items, node.children};
+      });
+  }
+
   [[nodiscard]] auto Data_access_layer::max_threshold() const noexcept -> float
   {
     return this->options.max_fill_percent
@@ -208,37 +239,6 @@ namespace toocal::core::data_access_layer
       }
 
     return -1;
-  }
-
-  [[nodiscard]] auto Data_access_layer::write_node(Node &node) noexcept
-    -> tl::expected<std::nullptr_t, Error>
-  {
-    auto page = this->allocate_empty_page();
-    if (node.page_num == 0)
-      {
-        page.page_num = this->freelist.get_next_page();
-        node.page_num = page.page_num;
-      }
-    else
-      page.page_num = node.page_num;
-
-    return types::Serializer<Node>::serialize(node).and_then(
-      [&](const auto &&data) {
-        std::copy(data.begin(), data.end(), page.data.begin());
-        return this->write_page(page);
-      });
-  }
-
-  [[nodiscard]] auto Data_access_layer::get_node(
-    page::Page_num page_num) noexcept -> tl::expected<Node, Error>
-  {
-    return this->read_page(page_num)
-      .and_then([](const auto &&page) {
-        return types::Serializer<Node>::deserialize(page.data);
-      })
-      .transform([&](const auto &&node) {
-        return Node{this, page_num, node.items, node.children};
-      });
   }
 
   auto Data_access_layer::delete_node(page::Page_num page_num) noexcept -> void

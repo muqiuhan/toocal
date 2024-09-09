@@ -6,8 +6,10 @@
 #include <cstdint>
 #include <numeric>
 #include <span>
+#include <tuple>
 #include <utility>
 #include <vector>
+#include "tl/expected.hpp"
 #include "types.hpp"
 #include <endian/stream_reader.hpp>
 #include <endian/stream_writer.hpp>
@@ -21,6 +23,7 @@ namespace toocal::core::data_access_layer
 namespace toocal::core::node
 {
   using data_access_layer::Data_access_layer;
+  using errors::Error;
   using page::Page;
   using types::Serializer;
 
@@ -73,6 +76,53 @@ namespace toocal::core::node
 
     /** Returns the node's size in bytes */
     [[nodiscard]] auto size() const noexcept -> uint32_t;
+
+    /** Searches for a key inside the tree. Once the key is found, the
+     ** parent node and the correct index are returned so the key itself can be
+     ** accessed in the following way parent[index]. A list of the node
+     ** ancestors (not including the node itself) is also returned. If the key
+     ** isn't found, we have 2 options. If exact is true, it means we expect
+     ** findKey to find the key, so a falsey answer. If exact is false, then
+     ** findKey is used to locate where a new key should be inserted so the
+     ** position is returned. */
+    [[nodiscard]] auto
+      find_key(const std::vector<uint8_t> &key, bool exact) const noexcept
+      -> tl::expected<std::tuple<int, Node, std::vector<uint32_t>>, Error>;
+
+    auto add_item(const Item &item, uint32_t insertion_index) const noexcept
+      -> int;
+
+  private:
+    /** findKeyInNode iterates all the items and finds the key. If the key is
+     ** found, then the item is returned. If the key isn't found then return the
+     ** index where it should have been (the first index that key is greater
+     ** than it's previous). */
+    [[nodiscard]] auto find_key_in_node(
+      const std::vector<uint8_t> &key) const noexcept -> std::tuple<bool, int>;
+
+    [[nodiscard]] auto find_key_helper(
+      Node                        &node,
+      const std::vector<uint8_t>  &key,
+      bool                         exact,
+      const std::vector<uint32_t> &ancestors_indexes) const noexcept
+      -> tl::expected<std::tuple<int, Node>, Error>;
+
+    /** split rebalances the tree after adding. After insertion the modified
+     ** node has to be checked to make sure it didn't exceed the maximum number
+     ** of elements. If it did, then it has to be split and rebalanced. The
+     ** mapation is depicted in the graph below. If it's not a leaf node,
+     ** then the children has to be moved as well as shown. This may leave the
+     ** parent unbalanced by having too many items so rebalancing has to be
+     ** checked for all the ancestors. The split is performed in a for loop to
+     ** support splitting a node more than once. (Though in practice used only
+     ** once):
+     ** 	       n                                  n
+     **          3                                 3,6
+     **	      /    \       ------>       /          |           \
+     **	   a    modifiedNode            a       modifiedNode  newNode
+     ** 1,2      4,5,6,7,8            1,2          4,5         7,8            */
+    auto split(const Node &node_to_split, uint32_t node_to_split_index)
+      const noexcept -> void;
 
   public:
     inline static const uint32_t HEADER_SIZE = 3;
