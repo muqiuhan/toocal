@@ -45,4 +45,4 @@ target("test_toocal_core")
         "tl_optional",
         "fmt",
         "endian"
-    )
+     )

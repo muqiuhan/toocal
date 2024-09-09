@@ -1,6 +1,7 @@
 #include "data_access_layer.h"
 #include "errors.hpp"
 #include "page.h"
+#include <algorithm>
 #include <cerrno>
 #include <cstddef>
 #include <cstring>
@@ -129,10 +130,8 @@ namespace toocal::core::data_access_layer
     Data_access_layer::read_freelist() noexcept -> tl::expected<Freelist, Error>
   {
     return this->read_page(this->meta.freelist_page)
-      .transform([&](const auto &&page) {
-        return types::Serializer<Freelist>::deserialize(page.data)
-          .transform_error([&](const auto &&error) { return error.panic(); })
-          .value();
+      .and_then([&](const auto &&page) {
+        return types::Serializer<Freelist>::deserialize(page.data);
       });
   }
 
@@ -141,21 +140,17 @@ namespace toocal::core::data_access_layer
   {
     auto page = this->allocate_empty_page(this->meta.freelist_page);
     return types::Serializer<Freelist>::serialize(this->freelist)
-      .transform([&](const auto &&data) {
-        page.data = data;
-        return this->write_page(page)
-          .transform_error([&](const auto &&error) { return error.panic(); })
-          .value();
+      .and_then([&](const auto &&data) {
+        std::copy(data.begin(), data.end(), page.data.begin());
+        return this->write_page(page);
       });
   }
 
   [[nodiscard]] auto
     Data_access_layer::read_meta() noexcept -> tl::expected<Meta, Error>
   {
-    return this->read_page(Meta::PAGE_NUM).transform([&](const auto &&page) {
-      return types::Serializer<Meta>::deserialize(page.data)
-        .transform_error([&](const auto &&error) { return error.panic(); })
-        .value();
+    return this->read_page(Meta::PAGE_NUM).and_then([&](const auto &&page) {
+      return types::Serializer<Meta>::deserialize(page.data);
     });
   }
 
@@ -163,12 +158,10 @@ namespace toocal::core::data_access_layer
     -> tl::expected<std::nullptr_t, Error>
   {
     auto page = this->allocate_empty_page(Meta::PAGE_NUM);
-    return types::Serializer<Meta>::serialize(meta).transform(
+    return types::Serializer<Meta>::serialize(meta).and_then(
       [&](const auto &&data) {
-        page.data = data;
-        return this->write_page(page)
-          .transform_error([&](const auto &&error) { return error.panic(); })
-          .value();
+        std::copy(data.begin(), data.end(), page.data.begin());
+        return this->write_page(page);
       });
   }
 
