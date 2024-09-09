@@ -6,7 +6,7 @@
 #include <cstring>
 #include "tl/expected.hpp"
 #include <cstdint>
-#include <exception>
+#include <filesystem>
 #include <vector>
 
 namespace toocal::core::data_access_layer
@@ -32,10 +32,29 @@ namespace toocal::core::data_access_layer
     this->freelist = Freelist{};
     this->meta.freelist_page = this->freelist.get_next_page();
 
+    /* To create a database file, first create the missing directory in the path
+     * based on path (nothing will be done if it exists), and then construct an
+     * empty file through std::ofstream. */
+    if (const auto parent = std::filesystem::path{this->path}.parent_path();
+        !parent.empty())
+      std::filesystem::create_directories(parent);
+    std::ofstream{this->path}.close();
+
+    this->file = std::fstream{path, std::fstream::out | std::fstream::in};
+
+    if (!this->file.is_open())
+      {
+        this->file.close();
+        fatal(fmt::format(
+          "unable to initialize database because {} cannot be created: {}",
+          this->path,
+          std::strerror(errno)));
+      }
+
     return this->write_freelist()
       .transform([&](const auto &&_) {
         /* init root */
-        unimplemented();
+        // unimplemented();
         return nullptr;
       })
       .and_then([&](const auto &&_) { return this->write_meta(this->meta); });
@@ -44,6 +63,18 @@ namespace toocal::core::data_access_layer
   auto Data_access_layer::load_database() noexcept
     -> tl::expected<std::nullptr_t, Error>
   {
+    this->file = std::fstream{
+      path, std::fstream::out | std::fstream::in | std::fstream::binary};
+
+    if (!this->file.is_open())
+      {
+        this->file.close();
+        fatal(fmt::format(
+          "unable to load database, the {} is not exists: {}",
+          this->path,
+          std::strerror(errno)));
+      }
+
     return this->read_meta()
       .and_then([&](const auto &&meta) {
         this->meta = meta;
@@ -66,8 +97,7 @@ namespace toocal::core::data_access_layer
   [[nodiscard]] auto Data_access_layer::write_page(const Page &page) noexcept
     -> tl::expected<std::nullptr_t, Error>
   {
-    if (this->file.seekp(page.page_num * Data_access_layer::DEFAULT_PAGE_SIZE)
-          .fail())
+    if (this->file.seekp(page.page_num * this->options.page_size).fail())
       return Err(std::strerror(errno));
 
     if (this->file
@@ -83,7 +113,8 @@ namespace toocal::core::data_access_layer
     page::Page_num page_num) noexcept -> tl::expected<Page, Error>
   {
     auto page = this->allocate_empty_page(page_num);
-    if (this->file.seekg(page_num * Data_access_layer::DEFAULT_PAGE_SIZE).fail())
+
+    if (this->file.seekg(page_num * this->options.page_size).fail())
       return Err(std::strerror(errno));
 
     if (this->file
