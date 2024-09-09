@@ -11,7 +11,7 @@ namespace toocal::core::page
   class Page
   {
   public:
-    const Page_num            page_num;
+    Page_num                  page_num;
     std::vector<std::uint8_t> data;
   };
 } // namespace toocal::core::page

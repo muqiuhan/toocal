@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <cstring>
 #include "tl/expected.hpp"
+#include "types.hpp"
 #include <cstdint>
 #include <filesystem>
 #include <vector>
@@ -90,7 +91,7 @@ namespace toocal::core::data_access_layer
   auto Data_access_layer::close() noexcept -> void { this->file.close(); }
 
   [[nodiscard]] auto Data_access_layer::allocate_empty_page(
-    page::Page_num page_num) const noexcept -> Page
+    page::Page_num page_num = -1) const noexcept -> Page
   {
     return Page{page_num, std::vector<uint8_t>(this->options.page_size)};
   }
@@ -163,6 +164,86 @@ namespace toocal::core::data_access_layer
         std::copy(data.begin(), data.end(), page.data.begin());
         return this->write_page(page);
       });
+  }
+
+  [[nodiscard]] auto Data_access_layer::max_threshold() const noexcept -> float
+  {
+    return this->options.max_fill_percent
+           * static_cast<float>(this->options.page_size);
+  }
+
+  [[nodiscard]] auto Data_access_layer::min_threshold() const noexcept -> float
+  {
+    return this->options.min_fill_percent
+           * static_cast<float>(this->options.page_size);
+  }
+
+  [[nodiscard]] auto Data_access_layer::is_under_populated(
+    const Node &node) const noexcept -> bool
+  {
+    return static_cast<float>(node.size()) < this->max_threshold();
+  }
+
+  [[nodiscard]] auto Data_access_layer::is_over_populated(
+    const Node &node) const noexcept -> bool
+  {
+    return static_cast<float>(node.size()) > this->max_threshold();
+  }
+
+  [[nodiscard]] auto Data_access_layer::get_split_index(
+    const Node &node) const noexcept -> uint32_t
+  {
+    auto size = Node::HEADER_SIZE;
+
+    for (uint32_t i = 0; i < node.items.size(); i++)
+      {
+        size += node.item_size(i);
+
+        /* if we have a big enough page size (more than minimum), and didn't
+         * reach the last node, which means we can spare an element. */
+        if (
+          static_cast<float>(size) > this->min_threshold()
+          && i < node.items.size() - 1)
+          return i + 1;
+      }
+
+    return -1;
+  }
+
+  [[nodiscard]] auto Data_access_layer::write_node(Node &node) noexcept
+    -> tl::expected<std::nullptr_t, Error>
+  {
+    auto page = this->allocate_empty_page();
+    if (node.page_num == 0)
+      {
+        page.page_num = this->freelist.get_next_page();
+        node.page_num = page.page_num;
+      }
+    else
+      page.page_num = node.page_num;
+
+    return types::Serializer<Node>::serialize(node).and_then(
+      [&](const auto &&data) {
+        std::copy(data.begin(), data.end(), page.data.begin());
+        return this->write_page(page);
+      });
+  }
+
+  [[nodiscard]] auto Data_access_layer::get_node(
+    page::Page_num page_num) noexcept -> tl::expected<Node, Error>
+  {
+    return this->read_page(page_num)
+      .and_then([](const auto &&page) {
+        return types::Serializer<Node>::deserialize(page.data);
+      })
+      .transform([&](const auto &&node) {
+        return Node{this, page_num, node.items, node.children};
+      });
+  }
+
+  auto Data_access_layer::delete_node(page::Page_num page_num) noexcept -> void
+  {
+    this->freelist.release_page(page_num);
   }
 
 } // namespace toocal::core::data_access_layer
