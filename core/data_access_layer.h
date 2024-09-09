@@ -56,7 +56,6 @@ namespace toocal::core::data_access_layer
       : path(std::move(path)), options(std::move(options))
     {
       meta = Meta{};
-      
 
       if (std::filesystem::exists(path))
         this->load_database().map_error(
