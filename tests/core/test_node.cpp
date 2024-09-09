@@ -33,9 +33,6 @@ namespace toocal::core::node::tests
         })
         .value();
 
-    std::ranges::for_each(
-      buffer, [&](const auto byte) { fmt::print("{} ", byte); });
-
     const auto node = types::Serializer<Node>::deserialize(buffer);
 
     CHECK_EQ(node->items.size(), 2);

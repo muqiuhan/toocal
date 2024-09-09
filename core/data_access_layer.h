@@ -56,16 +56,7 @@ namespace toocal::core::data_access_layer
       : path(std::move(path)), options(std::move(options))
     {
       meta = Meta{};
-      this->file =
-        std::fstream{path, std::ios::in | std::ios::out | std::ios::binary};
-
-      if (this->file.is_open())
-        {
-          this->file.close();
-          fatal(fmt::format(
-            "unable to construct data access layer because: {}",
-            std::strerror(errno)));
-        }
+      
 
       if (std::filesystem::exists(path))
         this->load_database().map_error(
@@ -78,6 +69,11 @@ namespace toocal::core::data_access_layer
     Data_access_layer() : options(std::move(DEFAULT_OPTIONS)) {}
 
     ~Data_access_layer() { this->close(); }
+
+    /** Manually close the Data access layer. Note: This function will be
+     ** automatically called after the scope of the Data access layer ends, and
+     ** there is usually no need to call it manually. */
+    auto close() noexcept -> void;
 
   private:
     /** Get the virtual memory page size of the current operating system.
@@ -93,11 +89,6 @@ namespace toocal::core::data_access_layer
     /** During the process of creating the Data access layer, If the database
      ** file exists at the target path, load it. */
     auto load_database() noexcept -> tl::expected<std::nullptr_t, Error>;
-
-    /** Manually close the Data access layer. Note: This function will be
-     ** automatically called after the scope of the Data access layer ends, and
-     ** there is usually no need to call it manually. */
-    auto close() noexcept -> void;
 
     /** Allocate an empty page. Different from directly constructing Page,
      ** this function will fill in a Page.data of option.page_size size. */
