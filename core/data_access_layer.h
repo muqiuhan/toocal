@@ -4,6 +4,7 @@
 #include "errors.hpp"
 #include "freelist.h"
 #include "meta.h"
+#include "node.h"
 #include "page.h"
 #include "tl/expected.hpp"
 #include <cstddef>
@@ -26,6 +27,7 @@ namespace toocal::core::data_access_layer
   using errors::Error;
   using freelist::Freelist;
   using meta::Meta;
+  using node::Node;
   using page::Page;
 
   class Options
@@ -74,20 +76,19 @@ namespace toocal::core::data_access_layer
      ** there is usually no need to call it manually. */
     auto close() noexcept -> void;
 
-  private:
-    /** Get the virtual memory page size of the current operating system.
-     *Currently, only
-     ** the POSIX standard is supported.
-     ** TODO: Windows support. */
-    [[nodiscard]] static auto get_system_page_size() noexcept -> uint32_t;
+    /** get_split_index should be called when performing rebalance after an item
+     ** is removed. It checks if a node can spare an element, and if it does
+     ** then it returns the index when there the split should happen. Otherwise
+     ** -1 is returned. */
+    [[nodiscard]] auto
+      get_split_index(const Node &node) const noexcept -> uint32_t;
 
-    /** During the process of creating the Data access layer, if the database
-     ** file does not exist in the target path, it is initialized. */
-    auto intialize_database() noexcept -> tl::expected<std::nullptr_t, Error>;
-
-    /** During the process of creating the Data access layer, If the database
-     ** file exists at the target path, load it. */
-    auto load_database() noexcept -> tl::expected<std::nullptr_t, Error>;
+    [[nodiscard]] auto max_threshold() const noexcept -> float;
+    [[nodiscard]] auto min_threshold() const noexcept -> float;
+    [[nodiscard]] auto
+      is_under_populated(const Node &node) const noexcept -> bool;
+    [[nodiscard]] auto
+      is_over_populated(const Node &node) const noexcept -> bool;
 
     /** Allocate an empty page. Different from directly constructing Page,
      ** this function will fill in a Page.data of option.page_size size. */
@@ -117,6 +118,29 @@ namespace toocal::core::data_access_layer
     /** Use read_page to write meta and return it. */
     [[nodiscard]] auto write_meta(const Meta &meta) noexcept
       -> tl::expected<std::nullptr_t, Error>;
+
+    [[nodiscard]] auto
+      write_node(Node &node) noexcept -> tl::expected<std::nullptr_t, Error>;
+
+    [[nodiscard]] auto
+      get_node(page::Page_num page_num) noexcept -> tl::expected<Node, Error>;
+
+    auto delete_node(page::Page_num page_num) noexcept -> void;
+
+  private:
+    /** Get the virtual memory page size of the current operating system.
+     *Currently, only
+     ** the POSIX standard is supported.
+     ** TODO: Windows support. */
+    [[nodiscard]] static auto get_system_page_size() noexcept -> uint32_t;
+
+    /** During the process of creating the Data access layer, if the database
+     ** file does not exist in the target path, it is initialized. */
+    auto intialize_database() noexcept -> tl::expected<std::nullptr_t, Error>;
+
+    /** During the process of creating the Data access layer, If the database
+     ** file exists at the target path, load it. */
+    auto load_database() noexcept -> tl::expected<std::nullptr_t, Error>;
 
   private:
     inline static const auto DEFAULT_PAGE_SIZE =

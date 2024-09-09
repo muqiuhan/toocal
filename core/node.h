@@ -1,7 +1,6 @@
 #ifndef TOOCAL_CORE_NODE_H
 #define TOOCAL_CORE_NODE_H
 
-#include "data_access_layer.h"
 #include "errors.hpp"
 #include "page.h"
 #include <cstdint>
@@ -9,10 +8,21 @@
 #include <span>
 #include <utility>
 #include <vector>
+#include "types.hpp"
+#include <endian/stream_reader.hpp>
+#include <endian/stream_writer.hpp>
+#include <endian/little_endian.hpp>
+
+namespace toocal::core::data_access_layer
+{
+  class Data_access_layer;
+}
 
 namespace toocal::core::node
 {
   using data_access_layer::Data_access_layer;
+  using page::Page;
+  using types::Serializer;
 
   class Item
   {
@@ -37,8 +47,35 @@ namespace toocal::core::node
       : items(std::move(items)), children(std::move(children))
     {}
 
-  public:
+    Node(
+      class Data_access_layer    *dal,
+      page::Page_num              page_num,
+      std::vector<Item>           items,
+      std::vector<page::Page_num> children)
+      : dal(dal)
+      , page_num(page_num)
+      , items(std::move(items))
+      , children(std::move(children))
+    {}
+
+    /** Determine whether the current node is a leaf node. */
     [[nodiscard]] auto is_leaf() const noexcept -> bool;
+
+    [[nodiscard]] auto
+      is_last(uint32_t index, const Node &parent_node) const noexcept -> bool;
+
+    [[nodiscard]] auto is_first(uint32_t index) const noexcept -> bool;
+
+    /** Returns the size of a key-value-childNode triplet at a given index. If
+     ** the node is a leaf, then the size of a key-value pair is returned. It's
+     ** assumed i <= len(n.items) */
+    [[nodiscard]] auto item_size(uint32_t index) const noexcept -> uint32_t;
+
+    /** Returns the node's size in bytes */
+    [[nodiscard]] auto size() const noexcept -> uint32_t;
+
+  public:
+    inline static const uint32_t HEADER_SIZE = 3;
   };
 } // namespace toocal::core::node
 
