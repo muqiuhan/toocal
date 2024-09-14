@@ -82,33 +82,34 @@ namespace toocal::core::node
      ** accessed in the following way parent[index]. A list of the node
      ** ancestors (not including the node itself) is also returned. If the key
      ** isn't found, we have 2 options. If exact is true, it means we expect
-     ** findKey to find the key, so a falsey answer. If exact is false, then
-     ** findKey is used to locate where a new key should be inserted so the
+     ** find_key to find the key, so a falsey answer. If exact is false, then
+     ** find_key is used to locate where a new key should be inserted so the
      ** position is returned. */
     [[nodiscard]] auto
       find_key(const std::vector<uint8_t> &key, bool exact) const noexcept
-      -> tl::expected<std::tuple<int, Node, std::vector<uint32_t>>, Error>;
+      -> tl::expected<std::tuple<int, const Node *, std::vector<uint32_t>>, Error>;
 
     auto add_item(const Item &item, uint32_t insertion_index) const noexcept
       -> int;
 
   private:
-    /** findKeyInNode iterates all the items and finds the key. If the key is
+    /** find_key_in_node iterates all the items and finds the key. If the key is
      ** found, then the item is returned. If the key isn't found then return the
      ** index where it should have been (the first index that key is greater
      ** than it's previous). */
-    [[nodiscard]] auto find_key_in_node(
-      const std::vector<uint8_t> &key) const noexcept -> std::tuple<bool, int>;
+    [[nodiscard]] auto find_key_in_node(const std::vector<uint8_t> &key)
+      const noexcept -> std::tuple<bool, uint32_t>;
 
     [[nodiscard]] auto find_key_helper(
-      Node                        &node,
-      const std::vector<uint8_t>  &key,
-      bool                         exact,
-      const std::vector<uint32_t> &ancestors_indexes) const noexcept
-      -> tl::expected<std::tuple<int, Node>, Error>;
+      const Node                 *node,
+      const std::vector<uint8_t> &key,
+      bool                        exact,
+      std::vector<uint32_t>      &ancestors_indexes) const noexcept
+      -> tl::expected<std::tuple<int, const Node *>, Error>;
 
     /** split rebalances the tree after adding. After insertion the modified
-     ** node has to be checked to make sure it didn't exceed the maximum number
+     ** node has to be checked to make sure it didn't exceed the maximum
+     *number
      ** of elements. If it did, then it has to be split and rebalanced. The
      ** mapation is depicted in the graph below. If it's not a leaf node,
      ** then the children has to be moved as well as shown. This may leave the
@@ -120,7 +121,7 @@ namespace toocal::core::node
      **          3                                 3,6
      **	      /    \       ------>       /          |           \
      **	   a    modifiedNode            a       modifiedNode  newNode
-     ** 1,2      4,5,6,7,8            1,2          4,5         7,8            */
+     ** 1,2      4,5,6,7,8            1,2          4,5         7,8 */
     auto split(const Node &node_to_split, uint32_t node_to_split_index)
       const noexcept -> void;
 

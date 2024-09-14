@@ -129,8 +129,7 @@ namespace toocal::core::data_access_layer
 
   private:
     /** Get the virtual memory page size of the current operating system.
-     *Currently, only
-     ** the POSIX standard is supported.
+     ** Currently, only the POSIX standard is supported.
      ** TODO: Windows support. */
     [[nodiscard]] static auto get_system_page_size() noexcept -> uint32_t;
 
