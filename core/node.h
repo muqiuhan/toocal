@@ -46,6 +46,8 @@ namespace toocal::core::node
     std::vector<page::Page_num> children;
 
   public:
+    Node() = default;
+
     Node(std::vector<Item> items, std::vector<page::Page_num> children)
       : items(std::move(items)), children(std::move(children))
     {}
@@ -89,8 +91,7 @@ namespace toocal::core::node
       find_key(const std::vector<uint8_t> &key, bool exact) const noexcept
       -> tl::expected<std::tuple<int, const Node *, std::vector<uint32_t>>, Error>;
 
-    auto add_item(const Item &item, uint32_t insertion_index) const noexcept
-      -> int;
+    auto add_item(const Item &item, uint32_t insertion_index) noexcept -> int;
 
   private:
     /** find_key_in_node iterates all the items and finds the key. If the key is
@@ -118,12 +119,12 @@ namespace toocal::core::node
      ** support splitting a node more than once. (Though in practice used only
      ** once):
      ** 	       n                                  n
-     **          3                                 3,6
-     **	      /    \       ------>       /          |           \
-     **	   a    modifiedNode            a       modifiedNode  newNode
-     ** 1,2      4,5,6,7,8            1,2          4,5         7,8 */
-    auto split(const Node &node_to_split, uint32_t node_to_split_index)
-      const noexcept -> void;
+     **                3                                 3,6
+     **	            /    \       ------>       /          |           \
+     **	          a    modifiedNode            a       modifiedNode  newNode
+     **         1,2      4,5,6,7,8            1,2          4,5         7,8 */
+    auto
+      split(Node &node_to_split, uint32_t node_to_split_index) noexcept -> void;
 
   public:
     inline static const uint32_t HEADER_SIZE = 3;

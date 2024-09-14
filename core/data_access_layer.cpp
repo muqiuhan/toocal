@@ -1,5 +1,6 @@
 #include "data_access_layer.h"
 #include "errors.hpp"
+#include "node.h"
 #include "page.h"
 #include <algorithm>
 #include <cerrno>
@@ -54,10 +55,12 @@ namespace toocal::core::data_access_layer
       }
 
     return this->write_freelist()
-      .map([&](const auto &&_) {
+      .and_then([&](const auto &&_) {
         /* init root */
-        // unimplemented();
-        return nullptr;
+        auto node =
+          Node{std::vector<node::Item>{}, std::vector<page::Page_num>{}};
+
+        return this->write_node(node);
       })
       .and_then([&](const auto &&_) { return this->write_meta(this->meta); });
   }
@@ -244,6 +247,13 @@ namespace toocal::core::data_access_layer
   auto Data_access_layer::delete_node(page::Page_num page_num) noexcept -> void
   {
     this->freelist.release_page(page_num);
+  }
+
+  [[nodiscard]] auto Data_access_layer::new_node(
+    const std::vector<node::Item> items,
+    std::vector<page::Page_num>   children) noexcept -> Node
+  {
+    return Node{this, this->freelist.get_next_page(), items, children};
   }
 
 } // namespace toocal::core::data_access_layer

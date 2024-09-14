@@ -119,6 +119,10 @@ namespace toocal::core::data_access_layer
     [[nodiscard]] auto write_meta(const Meta &meta) noexcept
       -> tl::expected<std::nullptr_t, Error>;
 
+    [[nodiscard]] auto new_node(
+      const std::vector<node::Item> items,
+      std::vector<page::Page_num>   children) noexcept -> Node;
+
     [[nodiscard]] auto
       write_node(Node &node) noexcept -> tl::expected<std::nullptr_t, Error>;
 
