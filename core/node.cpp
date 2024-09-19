@@ -56,20 +56,20 @@ namespace toocal::core::node
   }
 
   [[nodiscard]] auto Node::find_key_helper(
-    const Node                 *node,
+    const Node                  node,
     const std::vector<uint8_t> &key,
     bool                        exact,
     std::vector<uint32_t>      &ancestors_indexes) const noexcept
-    -> tl::expected<std::tuple<int, const Node *>, Error>
+    -> tl::expected<std::tuple<int, tl::optional<Node>>, Error>
   {
     const auto &&[was_found, index] = this->find_key_in_node(key);
     if (was_found)
-      return std::make_tuple(index, this);
+      return std::make_tuple(index, *this);
     else if (this->is_leaf())
       if (exact)
-        return std::make_tuple(-1, nullptr);
+        return std::make_tuple(-1, tl::nullopt);
       else
-        return std::make_tuple(index, this);
+        return std::make_tuple(index, *this);
     else
       {
         ancestors_indexes.push_back(index);
@@ -82,7 +82,7 @@ namespace toocal::core::node
 
         if (next_child.has_value())
           return this->find_key_helper(
-            &next_child.value(), key, exact, ancestors_indexes);
+            next_child.value(), key, exact, ancestors_indexes);
         else
           return tl::unexpected(next_child.error());
       }
@@ -108,13 +108,14 @@ namespace toocal::core::node
     return {false, this->items.size()};
   }
 
-  [[nodiscard]] auto
-    Node::find_key(const std::vector<uint8_t> &key, bool exact) const noexcept
-    -> tl::expected<std::tuple<int, const Node *, std::vector<uint32_t>>, Error>
+  [[nodiscard]] auto Node::find_key(const std::vector<uint8_t> &key, bool exact)
+    const noexcept -> tl::expected<
+                     std::tuple<int, tl::optional<Node>, std::vector<uint32_t>>,
+                     Error>
   {
     auto ancestors_indexes = std::vector<uint32_t>{/* index of root */ 0};
 
-    return this->find_key_helper(this, key, exact, ancestors_indexes)
+    return this->find_key_helper(*this, key, exact, ancestors_indexes)
       .map([&](const auto &&result) {
         const auto [index, node] = result;
         return std::make_tuple(index, node, ancestors_indexes);

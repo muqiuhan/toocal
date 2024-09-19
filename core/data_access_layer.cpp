@@ -7,7 +7,6 @@
 #include <cstddef>
 #include <cstring>
 #include "tl/expected.hpp"
-#include "types.hpp"
 #include <cstdint>
 #include <filesystem>
 #include <vector>

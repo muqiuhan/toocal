@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 #include "tl/expected.hpp"
+#include "tl/optional.hpp"
 #include "types.hpp"
 #include <endian/stream_reader.hpp>
 #include <endian/stream_writer.hpp>
@@ -89,7 +90,9 @@ namespace toocal::core::node
      ** position is returned. */
     [[nodiscard]] auto
       find_key(const std::vector<uint8_t> &key, bool exact) const noexcept
-      -> tl::expected<std::tuple<int, const Node *, std::vector<uint32_t>>, Error>;
+      -> tl::expected<
+        std::tuple<int, tl::optional<Node>, std::vector<uint32_t>>,
+        Error>;
 
     auto add_item(const Item &item, uint32_t insertion_index) noexcept -> int;
 
@@ -102,11 +105,11 @@ namespace toocal::core::node
       const noexcept -> std::tuple<bool, uint32_t>;
 
     [[nodiscard]] auto find_key_helper(
-      const Node                 *node,
+      const Node                  node,
       const std::vector<uint8_t> &key,
       bool                        exact,
       std::vector<uint32_t>      &ancestors_indexes) const noexcept
-      -> tl::expected<std::tuple<int, const Node *>, Error>;
+      -> tl::expected<std::tuple<int, tl::optional<Node>>, Error>;
 
     /** split rebalances the tree after adding. After insertion the modified
      ** node has to be checked to make sure it didn't exceed the maximum
@@ -174,8 +177,8 @@ namespace toocal::core::types
        *
        * Page structure is:
        * -----------------------------------------------------------------------------
-       * |  Page  | key-value /  child node    key-value              | key-value    |
-       * | Header |   offset /	 pointer	  offset         .... | data .....   |
+       * |  Page  | key-value /  child node    key-value        | key-value          |
+       * | Header |   offset /	 pointer	      offset     .... | data .....         |
        * -----------------------------------------------------------------------------
        */
       uint32_t left = 3, right = buffer.size() - 1;
