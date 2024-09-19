@@ -1,10 +1,9 @@
-#include <algorithm>
 #include <doctest/doctest.h>
 #include <numeric>
+#include <string>
 #include <vector>
 #include "node.h"
 #include "page.h"
-#include "spdlog/fmt/bundled/core.h"
 
 namespace toocal::core::node::tests
 {

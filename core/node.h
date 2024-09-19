@@ -83,7 +83,7 @@ namespace toocal::core::node
      ** parent node and the correct index are returned so the key itself can be
      ** accessed in the following way parent[index]. A list of the node
      ** ancestors (not including the node itself) is also returned. If the key
-     ** isn't found, we have 2 options. If exact is true, it means we expect
+     ** is not found, we have 2 options. If exact is true, it means we expect
      ** find_key to find the key, so a falsey answer. If exact is false, then
      ** find_key is used to locate where a new key should be inserted so the
      ** position is returned. */
@@ -173,10 +173,10 @@ namespace toocal::core::types
        * itself is harder as it varies by size.
        *
        * Page structure is:
-       * -----------------------------------------------------------------------
-       * |  Page  | key-value /  child node    key-value 		    | key-value    |
+       * -----------------------------------------------------------------------------
+       * |  Page  | key-value /  child node    key-value              | key-value    |
        * | Header |   offset /	 pointer	  offset         .... | data .....   |
-       * -----------------------------------------------------------------------
+       * -----------------------------------------------------------------------------
        */
       uint32_t left = 3, right = buffer.size() - 1;
       for (int i = 0; i < items_count; i++)
