@@ -140,19 +140,28 @@ namespace toocal::core::node
       }
   }
 
+  [[nodiscard]] auto Node::is_over_populated() const noexcept -> bool
+  {
+    return this->dal->is_over_populated(*this);
+  }
+
+  [[nodiscard]] auto Node::is_under_populated() const noexcept -> bool
+  {
+    return this->dal->is_under_populated(*this);
+  }
+
   static auto __split_when_node_is_leaf(
     Data_access_layer *dal,
     Node              &node_to_split,
     uint32_t           split_index,
     Node              *new_node) noexcept -> void
   {
-    auto node_to_write = dal->new_node(
-      std::vector<Item>{
-        node_to_split.items.begin() + split_index + 1,
-        node_to_split.items.end()},
-      std::vector<page::Page_num>{});
-
-    dal->write_node(node_to_write)
+    dal
+      ->write_node(dal->new_node(
+        std::vector<Item>{
+          node_to_split.items.begin() + split_index + 1,
+          node_to_split.items.end()},
+        std::vector<page::Page_num>{}))
       .map([&](const auto &&node) {
         new_node = std::move(node);
         node_to_split.items = std::vector<Item>{
@@ -173,15 +182,14 @@ namespace toocal::core::node
     uint32_t           split_index,
     Node              *new_node) noexcept -> void
   {
-    auto node_to_write = dal->new_node(
-      std::vector<Item>{
-        node_to_split.items.begin() + split_index + 1,
-        node_to_split.items.end()},
-      std::vector<page::Page_num>{
-        node_to_split.children.begin() + split_index + 1,
-        node_to_split.children.end()});
-
-    dal->write_node(node_to_write)
+    dal
+      ->write_node(dal->new_node(
+        std::vector<Item>{
+          node_to_split.items.begin() + split_index + 1,
+          node_to_split.items.end()},
+        std::vector<page::Page_num>{
+          node_to_split.children.begin() + split_index + 1,
+          node_to_split.children.end()}))
       .map([&](const auto &&node) {
         new_node = std::move(node);
         node_to_split.items = std::vector<Item>{

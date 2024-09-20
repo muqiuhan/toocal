@@ -120,11 +120,14 @@ namespace toocal::core::data_access_layer
       -> tl::expected<std::nullptr_t, Error>;
 
     [[nodiscard]] auto new_node(
-      const std::vector<node::Item> items,
-      std::vector<page::Page_num>   children) noexcept -> Node;
+      std::vector<node::Item>     items,
+      std::vector<page::Page_num> children) noexcept -> Node;
 
     [[nodiscard]] auto
       write_node(Node &node) noexcept -> tl::expected<std::nullptr_t, Error>;
+
+    [[nodiscard]] auto write_node(const Node &&node) noexcept
+      -> tl::expected<std::nullptr_t, Error>;
 
     [[nodiscard]] auto
       get_node(page::Page_num page_num) noexcept -> tl::expected<Node, Error>;

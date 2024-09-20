@@ -187,6 +187,22 @@ namespace toocal::core::data_access_layer
       });
   }
 
+  [[nodiscard]] auto Data_access_layer::write_node(const Node &&node) noexcept
+    -> tl::expected<std::nullptr_t, Error>
+  {
+    auto page = this->allocate_empty_page();
+    if (node.page_num == 0)
+      page.page_num = this->freelist.get_next_page();
+    else
+      page.page_num = node.page_num;
+
+    return types::Serializer<Node>::serialize(node).and_then(
+      [&](const auto &&data) {
+        std::copy(data.begin(), data.end(), page.data.begin());
+        return this->write_page(page);
+      });
+  }
+
   [[nodiscard]] auto Data_access_layer::get_node(
     page::Page_num page_num) noexcept -> tl::expected<Node, Error>
   {
@@ -249,8 +265,8 @@ namespace toocal::core::data_access_layer
   }
 
   [[nodiscard]] auto Data_access_layer::new_node(
-    const std::vector<node::Item> items,
-    std::vector<page::Page_num>   children) noexcept -> Node
+    std::vector<node::Item>     items,
+    std::vector<page::Page_num> children) noexcept -> Node
   {
     return Node{this, this->freelist.get_next_page(), items, children};
   }

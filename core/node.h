@@ -96,20 +96,11 @@ namespace toocal::core::node
 
     auto add_item(const Item &item, uint32_t insertion_index) noexcept -> int;
 
-  private:
-    /** find_key_in_node iterates all the items and finds the key. If the key is
-     ** found, then the item is returned. If the key isn't found then return the
-     ** index where it should have been (the first index that key is greater
-     ** than it's previous). */
-    [[nodiscard]] auto find_key_in_node(const std::vector<uint8_t> &key)
-      const noexcept -> std::tuple<bool, uint32_t>;
+    /* Checks if the node size is bigger than the size of a page. */
+    [[nodiscard]] auto is_over_populated() const noexcept -> bool;
 
-    [[nodiscard]] auto find_key_helper(
-      const Node                  node,
-      const std::vector<uint8_t> &key,
-      bool                        exact,
-      std::vector<uint32_t>      &ancestors_indexes) const noexcept
-      -> tl::expected<std::tuple<int, tl::optional<Node>>, Error>;
+    /* Checks if the node size is smaller than the size of a page. */
+    [[nodiscard]] auto is_under_populated() const noexcept -> bool;
 
     /** split rebalances the tree after adding. After insertion the modified
      ** node has to be checked to make sure it didn't exceed the maximum
@@ -128,6 +119,21 @@ namespace toocal::core::node
      **         1,2      4,5,6,7,8            1,2          4,5         7,8 */
     auto
       split(Node &node_to_split, uint32_t node_to_split_index) noexcept -> void;
+
+  private:
+    /** find_key_in_node iterates all the items and finds the key. If the key is
+     ** found, then the item is returned. If the key isn't found then return the
+     ** index where it should have been (the first index that key is greater
+     ** than it's previous). */
+    [[nodiscard]] auto find_key_in_node(const std::vector<uint8_t> &key)
+      const noexcept -> std::tuple<bool, uint32_t>;
+
+    [[nodiscard]] auto find_key_helper(
+      const Node                  node,
+      const std::vector<uint8_t> &key,
+      bool                        exact,
+      std::vector<uint32_t>      &ancestors_indexes) const noexcept
+      -> tl::expected<std::tuple<int, tl::optional<Node>>, Error>;
 
   public:
     inline static const uint32_t HEADER_SIZE = 3;
@@ -176,10 +182,10 @@ namespace toocal::core::types
        * itself is harder as it varies by size.
        *
        * Page structure is:
-       * -----------------------------------------------------------------------------
-       * |  Page  | key-value /  child node    key-value        | key-value          |
-       * | Header |   offset /	 pointer	      offset     .... | data .....         |
-       * -----------------------------------------------------------------------------
+       * --------------------------------------------------------------------
+       * |  Page  | key-value /  child node    key-value        | key-value |
+       * | Header |   offset /	 pointer	      offset     .... | data .....|
+       * --------------------------------------------------------------------
        */
       uint32_t left = 3, right = buffer.size() - 1;
       for (int i = 0; i < items_count; i++)
