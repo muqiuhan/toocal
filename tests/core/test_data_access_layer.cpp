@@ -6,7 +6,7 @@ namespace toocal::core::data_access_layer::tests
   TEST_CASE("initialize database")
   {
     auto dal = Data_access_layer{"db.db"};
-    CHECK_EQ(dal.freelist.max_page, 1);
+    CHECK_EQ(dal.freelist.max_page, 2);
     CHECK_EQ(dal.meta.freelist_page, 1);
     std::filesystem::remove(dal.path);
     dal.close();

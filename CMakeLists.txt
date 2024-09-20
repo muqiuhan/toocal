@@ -8,35 +8,36 @@ cmake_policy(SET CMP0091 NEW)
 project(test_toocal_core LANGUAGES CXX)
 
 # target
-set(CMAKE_C_COMPILER "/usr/bin/gcc")
-set(CMAKE_CXX_COMPILER "/usr/bin/g++")
+set(CMAKE_C_COMPILER "/usr/bin/clang")
+set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 add_executable(test_toocal_core "")
 set_target_properties(test_toocal_core PROPERTIES OUTPUT_NAME "test_toocal_core")
-set_target_properties(test_toocal_core PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
+set_target_properties(test_toocal_core PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/release")
 target_include_directories(test_toocal_core PRIVATE
     core
 )
 target_include_directories(test_toocal_core SYSTEM PRIVATE
-    /home/muqiu/.xmake/packages/s/spdlog/v1.14.1/4288910d886c4f8d95dae25fab63dd80/include
+    /home/muqiu/.xmake/packages/s/spdlog/v1.14.1/e4490651087647e189bd99bf53ec35cc/include
     /home/muqiu/.xmake/packages/t/tl_expected/v1.1.0/57774aec28a24eb8b84e9c45d2905d73/include
     /home/muqiu/.xmake/packages/t/tl_optional/v1.1.0/c98c96f6367f4230ab618e8e653468c7/include
-    build/.packages/e/endian/latest/8d30e36b7d054d69b6e1aa5e8cceff03/include
+    build/.packages/e/endian/latest/5e932289495e4d1ba23bdca998625cd8/include
 )
 target_compile_options(test_toocal_core PRIVATE
     $<$<COMPILE_LANGUAGE:C>:-m64>
     $<$<COMPILE_LANGUAGE:CXX>:-m64>
+    $<$<COMPILE_LANGUAGE:C>:-DNDEBUG>
+    $<$<COMPILE_LANGUAGE:CXX>:-DNDEBUG>
 )
 set_target_properties(test_toocal_core PROPERTIES CXX_EXTENSIONS OFF)
 target_compile_features(test_toocal_core PRIVATE cxx_std_20)
 if(MSVC)
-    target_compile_options(test_toocal_core PRIVATE $<$<CONFIG:Debug>:-Od>)
+    target_compile_options(test_toocal_core PRIVATE $<$<CONFIG:Release>:-O2>)
 else()
-    target_compile_options(test_toocal_core PRIVATE -O0)
+    target_compile_options(test_toocal_core PRIVATE -O3)
 endif()
 if(MSVC)
-    target_compile_options(test_toocal_core PRIVATE -Zi)
 else()
-    target_compile_options(test_toocal_core PRIVATE -g)
+    target_compile_options(test_toocal_core PRIVATE -fvisibility=hidden)
 endif()
 if(MSVC)
     set_property(TARGET test_toocal_core PROPERTY
@@ -51,39 +52,40 @@ target_link_options(test_toocal_core PRIVATE
 target_sources(test_toocal_core PRIVATE
     core/freelist.cpp
     core/main.cpp
-    core/collection.cpp
-    core/data_access_layer.cpp
     core/node.cpp
     core/utils.cpp
+    core/collection.cpp
+    core/data_access_layer.cpp
 )
 
 # target
-set(CMAKE_C_COMPILER "/usr/bin/gcc")
-set(CMAKE_CXX_COMPILER "/usr/bin/g++")
+set(CMAKE_C_COMPILER "/usr/bin/clang")
+set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 add_executable(toocal_core "")
 set_target_properties(toocal_core PROPERTIES OUTPUT_NAME "toocal_core")
-set_target_properties(toocal_core PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
+set_target_properties(toocal_core PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/release")
 target_include_directories(toocal_core SYSTEM PRIVATE
-    /home/muqiu/.xmake/packages/s/spdlog/v1.14.1/4288910d886c4f8d95dae25fab63dd80/include
+    /home/muqiu/.xmake/packages/s/spdlog/v1.14.1/e4490651087647e189bd99bf53ec35cc/include
     /home/muqiu/.xmake/packages/t/tl_expected/v1.1.0/57774aec28a24eb8b84e9c45d2905d73/include
     /home/muqiu/.xmake/packages/t/tl_optional/v1.1.0/c98c96f6367f4230ab618e8e653468c7/include
-    build/.packages/e/endian/latest/8d30e36b7d054d69b6e1aa5e8cceff03/include
+    build/.packages/e/endian/latest/5e932289495e4d1ba23bdca998625cd8/include
 )
 target_compile_options(toocal_core PRIVATE
     $<$<COMPILE_LANGUAGE:C>:-m64>
     $<$<COMPILE_LANGUAGE:CXX>:-m64>
+    $<$<COMPILE_LANGUAGE:C>:-DNDEBUG>
+    $<$<COMPILE_LANGUAGE:CXX>:-DNDEBUG>
 )
 set_target_properties(toocal_core PROPERTIES CXX_EXTENSIONS OFF)
 target_compile_features(toocal_core PRIVATE cxx_std_20)
 if(MSVC)
-    target_compile_options(toocal_core PRIVATE $<$<CONFIG:Debug>:-Od>)
+    target_compile_options(toocal_core PRIVATE $<$<CONFIG:Release>:-O2>)
 else()
-    target_compile_options(toocal_core PRIVATE -O0)
+    target_compile_options(toocal_core PRIVATE -O3)
 endif()
 if(MSVC)
-    target_compile_options(toocal_core PRIVATE -Zi)
 else()
-    target_compile_options(toocal_core PRIVATE -g)
+    target_compile_options(toocal_core PRIVATE -fvisibility=hidden)
 endif()
 if(MSVC)
     set_property(TARGET toocal_core PROPERTY
@@ -98,9 +100,9 @@ target_link_options(toocal_core PRIVATE
 target_sources(toocal_core PRIVATE
     core/freelist.cpp
     core/main.cpp
-    core/collection.cpp
-    core/data_access_layer.cpp
     core/node.cpp
     core/utils.cpp
+    core/collection.cpp
+    core/data_access_layer.cpp
 )
 
