@@ -7,7 +7,6 @@ add_requires(
     "spdlog",
     "tl_expected",
     "tl_optional",
-    "fmt",
     "endian",
     "doctest"
 )
@@ -20,7 +19,6 @@ target("toocal_core")
         "spdlog",
         "tl_expected",
         "tl_optional",
-        "fmt",
         "endian"
     )
 
@@ -43,6 +41,5 @@ target("test_toocal_core")
         "spdlog",
         "tl_expected",
         "tl_optional",
-        "fmt",
         "endian"
      )

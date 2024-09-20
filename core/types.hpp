@@ -2,7 +2,6 @@
 #define TOOCAL_CORE_TYPES
 
 #include "errors.hpp"
-#include <fmt/core.h>
 #include <tl/expected.hpp>
 
 namespace toocal::core::types
