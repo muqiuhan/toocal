@@ -68,18 +68,15 @@ namespace toocal::core::node::tests
       .map([&](const auto &&result) {
         const auto [index, containing_node, _] = result;
 
-        if (!containing_node.has_value())
-          fatal("containing_node is nullopt");
+        CHECK_NE(containing_node, tl::nullopt);
 
         const auto &item = containing_node.value().items.at(index);
         const auto  item_key = std::string{item.key.begin(), item.key.end()};
         const auto  item_value =
           std::string{item.value.begin(), item.value.end()};
 
-        if (item_key == key1 && item_value == value1)
-          return tl::nullopt;
-        else
-          fatal(fmt::format("key = {}, value = {}", item_key, item_value));
+        CHECK_EQ(item_key, key1);
+        CHECK_EQ(item_value, value1);
       })
       .map_error([&](const auto &&error) { return error.panic(); });
     dal.close();
