@@ -105,7 +105,7 @@ namespace toocal::core::node
 
     /* The key is bigger than the previous item, so it doesn't exist in the
      * node, but may exist in child nodes. */
-    return {false, this->items.size()};
+    return {false, this->items.size() - 1};
   }
 
   [[nodiscard]] auto Node::find_key(const std::vector<uint8_t> &key, bool exact)

@@ -148,7 +148,7 @@ namespace toocal::core::data_access_layer
      ** file exists at the target path, load it. */
     auto load_database() noexcept -> tl::expected<std::nullptr_t, Error>;
 
-  private:
+  public:
     inline static const auto DEFAULT_PAGE_SIZE =
       Data_access_layer::get_system_page_size();
 
