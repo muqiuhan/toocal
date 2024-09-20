@@ -32,6 +32,13 @@ namespace toocal::core::collection
       : name(std::move(name)), root(root)
     {}
 
+    Collection(
+      data_access_layer::Data_access_layer * dal,
+      std::vector<uint8_t>                   name,
+      page::Page_num                         root)
+      : dal(dal), name(std::move(name)), root(root)
+    {}
+
     /** Returns an item according based on the given key by performing a
      ** binary search. */
     [[nodiscard]] auto find(std::vector<uint8_t> key) const noexcept

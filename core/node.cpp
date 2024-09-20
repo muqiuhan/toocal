@@ -6,6 +6,7 @@
 #include <numeric>
 #include <span>
 #include <stdexcept>
+#include "utils.h"
 
 namespace toocal::core::node
 {
@@ -94,7 +95,7 @@ namespace toocal::core::node
     for (uint32_t index = 0; auto existing_item : this->items)
       {
         const auto compare_result =
-          std::memcmp(existing_item.key.data(), key.data(), key.size());
+          utils::safe_bytescmp(existing_item.key, key);
         if (compare_result == 0)
           return {true, index};
         else if (compare_result > 0)
@@ -105,7 +106,7 @@ namespace toocal::core::node
 
     /* The key is bigger than the previous item, so it doesn't exist in the
      * node, but may exist in child nodes. */
-    return {false, this->items.size() - 1};
+    return {false, this->items.size()};
   }
 
   [[nodiscard]] auto Node::find_key(const std::vector<uint8_t> &key, bool exact)
@@ -119,10 +120,6 @@ namespace toocal::core::node
       .map([&](const auto &&result) {
         const auto [index, node] = result;
         return std::make_tuple(index, node, ancestors_indexes);
-      })
-      .map_error([](auto &&error) {
-        error.append("find_key_helper error in find_key");
-        return error;
       });
   }
 
