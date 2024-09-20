@@ -1,12 +1,12 @@
 #include "data_access_layer.h"
 #include "errors.hpp"
+#include "node.h"
 #include "page.h"
 #include <algorithm>
 #include <cerrno>
 #include <cstddef>
 #include <cstring>
 #include "tl/expected.hpp"
-#include "types.hpp"
 #include <cstdint>
 #include <filesystem>
 #include <vector>
@@ -54,10 +54,12 @@ namespace toocal::core::data_access_layer
       }
 
     return this->write_freelist()
-      .map([&](const auto &&_) {
+      .and_then([&](const auto &&_) {
         /* init root */
-        // unimplemented();
-        return nullptr;
+        auto node =
+          Node{std::vector<node::Item>{}, std::vector<page::Page_num>{}};
+
+        return this->write_node(node);
       })
       .and_then([&](const auto &&_) { return this->write_meta(this->meta); });
   }
@@ -185,6 +187,22 @@ namespace toocal::core::data_access_layer
       });
   }
 
+  [[nodiscard]] auto Data_access_layer::write_node(const Node &&node) noexcept
+    -> tl::expected<std::nullptr_t, Error>
+  {
+    auto page = this->allocate_empty_page();
+    if (node.page_num == 0)
+      page.page_num = this->freelist.get_next_page();
+    else
+      page.page_num = node.page_num;
+
+    return types::Serializer<Node>::serialize(node).and_then(
+      [&](const auto &&data) {
+        std::copy(data.begin(), data.end(), page.data.begin());
+        return this->write_page(page);
+      });
+  }
+
   [[nodiscard]] auto Data_access_layer::get_node(
     page::Page_num page_num) noexcept -> tl::expected<Node, Error>
   {
@@ -244,6 +262,13 @@ namespace toocal::core::data_access_layer
   auto Data_access_layer::delete_node(page::Page_num page_num) noexcept -> void
   {
     this->freelist.release_page(page_num);
+  }
+
+  [[nodiscard]] auto Data_access_layer::new_node(
+    std::vector<node::Item>     items,
+    std::vector<page::Page_num> children) noexcept -> Node
+  {
+    return Node{this, this->freelist.get_next_page(), items, children};
   }
 
 } // namespace toocal::core::data_access_layer

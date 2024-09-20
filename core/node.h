@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 #include "tl/expected.hpp"
+#include "tl/optional.hpp"
 #include "types.hpp"
 #include <endian/stream_reader.hpp>
 #include <endian/stream_writer.hpp>
@@ -46,6 +47,8 @@ namespace toocal::core::node
     std::vector<page::Page_num> children;
 
   public:
+    Node() = default;
+
     Node(std::vector<Item> items, std::vector<page::Page_num> children)
       : items(std::move(items)), children(std::move(children))
     {}
@@ -81,34 +84,27 @@ namespace toocal::core::node
      ** parent node and the correct index are returned so the key itself can be
      ** accessed in the following way parent[index]. A list of the node
      ** ancestors (not including the node itself) is also returned. If the key
-     ** isn't found, we have 2 options. If exact is true, it means we expect
-     ** findKey to find the key, so a falsey answer. If exact is false, then
-     ** findKey is used to locate where a new key should be inserted so the
+     ** is not found, we have 2 options. If exact is true, it means we expect
+     ** find_key to find the key, so a falsey answer. If exact is false, then
+     ** find_key is used to locate where a new key should be inserted so the
      ** position is returned. */
     [[nodiscard]] auto
       find_key(const std::vector<uint8_t> &key, bool exact) const noexcept
-      -> tl::expected<std::tuple<int, Node, std::vector<uint32_t>>, Error>;
+      -> tl::expected<
+        std::tuple<int, tl::optional<Node>, std::vector<uint32_t>>,
+        Error>;
 
-    auto add_item(const Item &item, uint32_t insertion_index) const noexcept
-      -> int;
+    auto add_item(const Item &item, uint32_t insertion_index) noexcept -> int;
 
-  private:
-    /** findKeyInNode iterates all the items and finds the key. If the key is
-     ** found, then the item is returned. If the key isn't found then return the
-     ** index where it should have been (the first index that key is greater
-     ** than it's previous). */
-    [[nodiscard]] auto find_key_in_node(
-      const std::vector<uint8_t> &key) const noexcept -> std::tuple<bool, int>;
+    /* Checks if the node size is bigger than the size of a page. */
+    [[nodiscard]] auto is_over_populated() const noexcept -> bool;
 
-    [[nodiscard]] auto find_key_helper(
-      Node                        &node,
-      const std::vector<uint8_t>  &key,
-      bool                         exact,
-      const std::vector<uint32_t> &ancestors_indexes) const noexcept
-      -> tl::expected<std::tuple<int, Node>, Error>;
+    /* Checks if the node size is smaller than the size of a page. */
+    [[nodiscard]] auto is_under_populated() const noexcept -> bool;
 
     /** split rebalances the tree after adding. After insertion the modified
-     ** node has to be checked to make sure it didn't exceed the maximum number
+     ** node has to be checked to make sure it didn't exceed the maximum
+     *number
      ** of elements. If it did, then it has to be split and rebalanced. The
      ** mapation is depicted in the graph below. If it's not a leaf node,
      ** then the children has to be moved as well as shown. This may leave the
@@ -117,12 +113,27 @@ namespace toocal::core::node
      ** support splitting a node more than once. (Though in practice used only
      ** once):
      ** 	       n                                  n
-     **          3                                 3,6
-     **	      /    \       ------>       /          |           \
-     **	   a    modifiedNode            a       modifiedNode  newNode
-     ** 1,2      4,5,6,7,8            1,2          4,5         7,8            */
-    auto split(const Node &node_to_split, uint32_t node_to_split_index)
-      const noexcept -> void;
+     **                3                                 3,6
+     **	            /    \       ------>       /          |           \
+     **	          a    modifiedNode            a       modifiedNode  newNode
+     **         1,2      4,5,6,7,8            1,2          4,5         7,8 */
+    auto
+      split(Node &node_to_split, uint32_t node_to_split_index) noexcept -> void;
+
+  private:
+    /** find_key_in_node iterates all the items and finds the key. If the key is
+     ** found, then the item is returned. If the key isn't found then return the
+     ** index where it should have been (the first index that key is greater
+     ** than it's previous). */
+    [[nodiscard]] auto find_key_in_node(const std::vector<uint8_t> &key)
+      const noexcept -> std::tuple<bool, uint32_t>;
+
+    [[nodiscard]] auto find_key_helper(
+      const Node                  node,
+      const std::vector<uint8_t> &key,
+      bool                        exact,
+      std::vector<uint32_t>      &ancestors_indexes) const noexcept
+      -> tl::expected<std::tuple<int, tl::optional<Node>>, Error>;
 
   public:
     inline static const uint32_t HEADER_SIZE = 3;
@@ -171,10 +182,10 @@ namespace toocal::core::types
        * itself is harder as it varies by size.
        *
        * Page structure is:
-       * -----------------------------------------------------------------------
-       * |  Page  | key-value /  child node    key-value 		    | key-value    |
-       * | Header |   offset /	 pointer	  offset         .... | data .....   |
-       * -----------------------------------------------------------------------
+       * --------------------------------------------------------------------
+       * |  Page  | key-value /  child node    key-value        | key-value |
+       * | Header |   offset /	 pointer	      offset     .... | data .....|
+       * --------------------------------------------------------------------
        */
       uint32_t left = 3, right = buffer.size() - 1;
       for (int i = 0; i < items_count; i++)

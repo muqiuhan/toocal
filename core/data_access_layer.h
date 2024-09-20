@@ -119,8 +119,15 @@ namespace toocal::core::data_access_layer
     [[nodiscard]] auto write_meta(const Meta &meta) noexcept
       -> tl::expected<std::nullptr_t, Error>;
 
+    [[nodiscard]] auto new_node(
+      std::vector<node::Item>     items,
+      std::vector<page::Page_num> children) noexcept -> Node;
+
     [[nodiscard]] auto
       write_node(Node &node) noexcept -> tl::expected<std::nullptr_t, Error>;
+
+    [[nodiscard]] auto write_node(const Node &&node) noexcept
+      -> tl::expected<std::nullptr_t, Error>;
 
     [[nodiscard]] auto
       get_node(page::Page_num page_num) noexcept -> tl::expected<Node, Error>;
@@ -129,8 +136,7 @@ namespace toocal::core::data_access_layer
 
   private:
     /** Get the virtual memory page size of the current operating system.
-     *Currently, only
-     ** the POSIX standard is supported.
+     ** Currently, only the POSIX standard is supported.
      ** TODO: Windows support. */
     [[nodiscard]] static auto get_system_page_size() noexcept -> uint32_t;
 
@@ -142,7 +148,7 @@ namespace toocal::core::data_access_layer
      ** file exists at the target path, load it. */
     auto load_database() noexcept -> tl::expected<std::nullptr_t, Error>;
 
-  private:
+  public:
     inline static const auto DEFAULT_PAGE_SIZE =
       Data_access_layer::get_system_page_size();
 

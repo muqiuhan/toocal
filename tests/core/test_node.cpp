@@ -1,10 +1,13 @@
-#include <algorithm>
+#include <cstddef>
 #include <doctest/doctest.h>
 #include <numeric>
+#include <string>
 #include <vector>
+#include "data_access_layer.h"
+#include "errors.hpp"
 #include "node.h"
 #include "page.h"
-#include "spdlog/fmt/bundled/core.h"
+#include "tl/optional.hpp"
 
 namespace toocal::core::node::tests
 {
@@ -49,4 +52,33 @@ namespace toocal::core::node::tests
       std::string(node->items[1].value.begin(), node->items[1].value.end()),
       "value2");
   };
+
+  TEST_CASE("find key")
+  {
+    const auto key1 = std::string{"Key1"};
+    const auto value1 = std::string{"value1"};
+
+    auto dal = Data_access_layer{"../../../../tests/dbfiles/test_node_find.db"};
+    dal.get_node(dal.meta.root)
+      .and_then([&](auto &&node) {
+        node.dal = &dal;
+        return node.find_key(
+          std::vector<uint8_t>{key1.begin(), key1.end()}, false);
+      })
+      .map([&](const auto &&result) {
+        const auto [index, containing_node, _] = result;
+
+        CHECK_NE(containing_node, tl::nullopt);
+
+        const auto &item = containing_node.value().items.at(index);
+        const auto  item_key = std::string{item.key.begin(), item.key.end()};
+        const auto  item_value =
+          std::string{item.value.begin(), item.value.end()};
+
+        CHECK_EQ(item_key, key1);
+        CHECK_EQ(item_value, value1);
+      })
+      .map_error([&](const auto &&error) { return error.panic(); });
+    dal.close();
+  }
 } // namespace toocal::core::node::tests

@@ -15,6 +15,12 @@ namespace toocal::core::errors
     const std::source_location location;
 
   public:
+    auto append(const std::string append_message) noexcept -> void
+    {
+      spdlog::error(
+        "{} at ({}:{})", append_message, location.file_name(), location.line());
+    }
+
     [[noreturn]] auto panic() const noexcept -> void
     {
       spdlog::error(
