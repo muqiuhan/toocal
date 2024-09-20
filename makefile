@@ -6,11 +6,11 @@ ifneq ($(VERBOSE),1)
 VV=@
 endif
 
+MM=/usr/bin/gcc
+CC=/usr/bin/gcc
 MXX=/usr/bin/gcc
 CXX=/usr/bin/gcc
-CC=/usr/bin/gcc
 AS=/usr/bin/gcc
-MM=/usr/bin/gcc
 
 LD=/usr/bin/g++
 AR=/usr/bin/ar
@@ -37,20 +37,10 @@ all:  toocal_core test_toocal_core
 .PHONY: default all  toocal_core test_toocal_core
 
 toocal_core: build/linux/x86_64/debug/toocal_core
-build/linux/x86_64/debug/toocal_core: build/.objs/toocal_core/linux/x86_64/debug/core/page.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/meta.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/freelist.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/main.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/collection.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/data_access_layer.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/node.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/utils.cpp.o
+build/linux/x86_64/debug/toocal_core: build/.objs/toocal_core/linux/x86_64/debug/core/freelist.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/main.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/collection.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/data_access_layer.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/node.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/utils.cpp.o
 	@echo linking.debug toocal_core
 	@mkdir -p build/linux/x86_64/debug
-	$(VV)$(toocal_core_LD) -o build/linux/x86_64/debug/toocal_core build/.objs/toocal_core/linux/x86_64/debug/core/page.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/meta.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/freelist.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/main.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/collection.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/data_access_layer.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/node.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/utils.cpp.o $(toocal_core_LDFLAGS)
-
-build/.objs/toocal_core/linux/x86_64/debug/core/page.cpp.o: core/page.cpp
-	@echo compiling.debug core/page.cpp
-	@mkdir -p build/.objs/toocal_core/linux/x86_64/debug/core
-	$(VV)$(toocal_core_CXX) -c $(toocal_core_CXXFLAGS) -o build/.objs/toocal_core/linux/x86_64/debug/core/page.cpp.o core/page.cpp
-
-build/.objs/toocal_core/linux/x86_64/debug/core/meta.cpp.o: core/meta.cpp
-	@echo compiling.debug core/meta.cpp
-	@mkdir -p build/.objs/toocal_core/linux/x86_64/debug/core
-	$(VV)$(toocal_core_CXX) -c $(toocal_core_CXXFLAGS) -o build/.objs/toocal_core/linux/x86_64/debug/core/meta.cpp.o core/meta.cpp
+	$(VV)$(toocal_core_LD) -o build/linux/x86_64/debug/toocal_core build/.objs/toocal_core/linux/x86_64/debug/core/freelist.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/main.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/collection.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/data_access_layer.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/node.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/utils.cpp.o $(toocal_core_LDFLAGS)
 
 build/.objs/toocal_core/linux/x86_64/debug/core/freelist.cpp.o: core/freelist.cpp
 	@echo compiling.debug core/freelist.cpp
@@ -83,20 +73,10 @@ build/.objs/toocal_core/linux/x86_64/debug/core/utils.cpp.o: core/utils.cpp
 	$(VV)$(toocal_core_CXX) -c $(toocal_core_CXXFLAGS) -o build/.objs/toocal_core/linux/x86_64/debug/core/utils.cpp.o core/utils.cpp
 
 test_toocal_core: build/linux/x86_64/debug/test_toocal_core
-build/linux/x86_64/debug/test_toocal_core: build/.objs/test_toocal_core/linux/x86_64/debug/core/page.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/meta.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/freelist.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/main.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/collection.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/data_access_layer.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/node.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/utils.cpp.o
+build/linux/x86_64/debug/test_toocal_core: build/.objs/test_toocal_core/linux/x86_64/debug/core/freelist.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/main.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/collection.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/data_access_layer.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/node.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/utils.cpp.o
 	@echo linking.debug test_toocal_core
 	@mkdir -p build/linux/x86_64/debug
-	$(VV)$(test_toocal_core_LD) -o build/linux/x86_64/debug/test_toocal_core build/.objs/test_toocal_core/linux/x86_64/debug/core/page.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/meta.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/freelist.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/main.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/collection.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/data_access_layer.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/node.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/utils.cpp.o $(test_toocal_core_LDFLAGS)
-
-build/.objs/test_toocal_core/linux/x86_64/debug/core/page.cpp.o: core/page.cpp
-	@echo compiling.debug core/page.cpp
-	@mkdir -p build/.objs/test_toocal_core/linux/x86_64/debug/core
-	$(VV)$(test_toocal_core_CXX) -c $(test_toocal_core_CXXFLAGS) -o build/.objs/test_toocal_core/linux/x86_64/debug/core/page.cpp.o core/page.cpp
-
-build/.objs/test_toocal_core/linux/x86_64/debug/core/meta.cpp.o: core/meta.cpp
-	@echo compiling.debug core/meta.cpp
-	@mkdir -p build/.objs/test_toocal_core/linux/x86_64/debug/core
-	$(VV)$(test_toocal_core_CXX) -c $(test_toocal_core_CXXFLAGS) -o build/.objs/test_toocal_core/linux/x86_64/debug/core/meta.cpp.o core/meta.cpp
+	$(VV)$(test_toocal_core_LD) -o build/linux/x86_64/debug/test_toocal_core build/.objs/test_toocal_core/linux/x86_64/debug/core/freelist.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/main.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/collection.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/data_access_layer.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/node.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/utils.cpp.o $(test_toocal_core_LDFLAGS)
 
 build/.objs/test_toocal_core/linux/x86_64/debug/core/freelist.cpp.o: core/freelist.cpp
 	@echo compiling.debug core/freelist.cpp
@@ -133,8 +113,6 @@ clean:  clean_toocal_core clean_test_toocal_core
 clean_toocal_core: 
 	@rm -rf build/linux/x86_64/debug/toocal_core
 	@rm -rf build/linux/x86_64/debug/toocal_core.sym
-	@rm -rf build/.objs/toocal_core/linux/x86_64/debug/core/page.cpp.o
-	@rm -rf build/.objs/toocal_core/linux/x86_64/debug/core/meta.cpp.o
 	@rm -rf build/.objs/toocal_core/linux/x86_64/debug/core/freelist.cpp.o
 	@rm -rf build/.objs/toocal_core/linux/x86_64/debug/core/main.cpp.o
 	@rm -rf build/.objs/toocal_core/linux/x86_64/debug/core/collection.cpp.o
@@ -145,8 +123,6 @@ clean_toocal_core:
 clean_test_toocal_core: 
 	@rm -rf build/linux/x86_64/debug/test_toocal_core
 	@rm -rf build/linux/x86_64/debug/test_toocal_core.sym
-	@rm -rf build/.objs/test_toocal_core/linux/x86_64/debug/core/page.cpp.o
-	@rm -rf build/.objs/test_toocal_core/linux/x86_64/debug/core/meta.cpp.o
 	@rm -rf build/.objs/test_toocal_core/linux/x86_64/debug/core/freelist.cpp.o
 	@rm -rf build/.objs/test_toocal_core/linux/x86_64/debug/core/main.cpp.o
 	@rm -rf build/.objs/test_toocal_core/linux/x86_64/debug/core/collection.cpp.o

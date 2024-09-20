@@ -49,8 +49,6 @@ target_link_options(test_toocal_core PRIVATE
     -m64
 )
 target_sources(test_toocal_core PRIVATE
-    core/page.cpp
-    core/meta.cpp
     core/freelist.cpp
     core/main.cpp
     core/collection.cpp
@@ -98,8 +96,6 @@ target_link_options(toocal_core PRIVATE
     -m64
 )
 target_sources(toocal_core PRIVATE
-    core/page.cpp
-    core/meta.cpp
     core/freelist.cpp
     core/main.cpp
     core/collection.cpp
