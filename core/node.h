@@ -49,12 +49,11 @@ namespace toocal::core::node
 
     Node(std::vector<Item> items, std::vector<page::Page_num> children)
       : items(std::move(items)), children(std::move(children))
-    {
-    }
+    {}
 
     Node(
-      Data_access_layer    *dal,
-      const page::Page_num              page_num,
+      Data_access_layer          *dal,
+      const page::Page_num        page_num,
       std::vector<Item>           items,
       std::vector<page::Page_num> children)
       : dal(dal)
@@ -93,7 +92,8 @@ namespace toocal::core::node
         std::tuple<int, tl::optional<Node>, std::vector<uint32_t>>,
         Error>;
 
-    auto add_item(const Item &item, uint32_t insertion_index) noexcept -> uint32_t;
+    auto
+      add_item(const Item &item, uint32_t insertion_index) noexcept -> uint32_t;
 
     /* Checks if the node size is bigger than the size of a page. */
     [[nodiscard]] auto is_over_populated() const noexcept -> bool;

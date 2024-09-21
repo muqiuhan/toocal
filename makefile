@@ -6,128 +6,135 @@ ifneq ($(VERBOSE),1)
 VV=@
 endif
 
-CXX=/usr/bin/clang
-MRC=/usr/bin/llvm-rc
-MXX=/usr/bin/clang
-CC=/usr/bin/clang
-MM=/usr/bin/clang
-AS=/usr/bin/clang
+CU=/usr/bin/clang
+GC=/usr/bin/go
+MXX=/usr/bin/gcc
+RC=/usr/bin/rustc
+MM=/usr/bin/gcc
+AS=/usr/bin/gcc
+CXX=/usr/bin/gcc
+CC=/usr/bin/gcc
 
+SH=/usr/bin/g++
+RCSH=/usr/bin/rustc
 AR=/usr/bin/ar
-LD=/usr/bin/clang++
-SH=/usr/bin/clang++
+RCAR=/usr/bin/rustc
+GCAR=/usr/bin/go
+LD=/usr/bin/g++
+RCLD=/usr/bin/rustc
+GCLD=/usr/bin/go
 
-test_toocal_core_LD=/usr/bin/clang++
-test_toocal_core_CXX=/usr/bin/clang
-test_toocal_core_CXX=/usr/bin/clang
-toocal_core_LD=/usr/bin/clang++
-toocal_core_CXX=/usr/bin/clang
-toocal_core_CXX=/usr/bin/clang
+toocal_core_LD=/usr/bin/g++
+toocal_core_CXX=/usr/bin/gcc
+toocal_core_CXX=/usr/bin/gcc
+test_toocal_core_LD=/usr/bin/g++
+test_toocal_core_CXX=/usr/bin/gcc
+test_toocal_core_CXX=/usr/bin/gcc
 
-test_toocal_core_CXXFLAGS=-Qunused-arguments -m64 -fvisibility=hidden -fvisibility-inlines-hidden -O3 -std=c++20 -Icore -isystem /home/muqiu/.xmake/packages/s/spdlog/v1.14.1/e4490651087647e189bd99bf53ec35cc/include -isystem /home/muqiu/.xmake/packages/t/tl_expected/v1.1.0/57774aec28a24eb8b84e9c45d2905d73/include -isystem /home/muqiu/.xmake/packages/t/tl_optional/v1.1.0/c98c96f6367f4230ab618e8e653468c7/include -isystem build/.packages/e/endian/latest/5e932289495e4d1ba23bdca998625cd8/include -DNDEBUG
-test_toocal_core_CXXFLAGS=-Qunused-arguments -m64 -fvisibility=hidden -fvisibility-inlines-hidden -O3 -std=c++20 -Icore -isystem /home/muqiu/.xmake/packages/s/spdlog/v1.14.1/e4490651087647e189bd99bf53ec35cc/include -isystem /home/muqiu/.xmake/packages/t/tl_expected/v1.1.0/57774aec28a24eb8b84e9c45d2905d73/include -isystem /home/muqiu/.xmake/packages/t/tl_optional/v1.1.0/c98c96f6367f4230ab618e8e653468c7/include -isystem build/.packages/e/endian/latest/5e932289495e4d1ba23bdca998625cd8/include -DNDEBUG
-test_toocal_core_LDFLAGS=-m64 -s -lpthread
-toocal_core_CXXFLAGS=-Qunused-arguments -m64 -fvisibility=hidden -fvisibility-inlines-hidden -O3 -std=c++20 -isystem /home/muqiu/.xmake/packages/s/spdlog/v1.14.1/e4490651087647e189bd99bf53ec35cc/include -isystem /home/muqiu/.xmake/packages/t/tl_expected/v1.1.0/57774aec28a24eb8b84e9c45d2905d73/include -isystem /home/muqiu/.xmake/packages/t/tl_optional/v1.1.0/c98c96f6367f4230ab618e8e653468c7/include -isystem build/.packages/e/endian/latest/5e932289495e4d1ba23bdca998625cd8/include -DNDEBUG
-toocal_core_CXXFLAGS=-Qunused-arguments -m64 -fvisibility=hidden -fvisibility-inlines-hidden -O3 -std=c++20 -isystem /home/muqiu/.xmake/packages/s/spdlog/v1.14.1/e4490651087647e189bd99bf53ec35cc/include -isystem /home/muqiu/.xmake/packages/t/tl_expected/v1.1.0/57774aec28a24eb8b84e9c45d2905d73/include -isystem /home/muqiu/.xmake/packages/t/tl_optional/v1.1.0/c98c96f6367f4230ab618e8e653468c7/include -isystem build/.packages/e/endian/latest/5e932289495e4d1ba23bdca998625cd8/include -DNDEBUG
-toocal_core_LDFLAGS=-m64 -s -lpthread
+toocal_core_CXXFLAGS=-m64 -g -O0 -std=c++20 -isystem /home/muqiu/.xmake/packages/s/spdlog/v1.14.1/469f312ffeff47d9aa249e3ed8e400dc/include -isystem /home/muqiu/.xmake/packages/t/tl_expected/v1.1.0/57774aec28a24eb8b84e9c45d2905d73/include -isystem /home/muqiu/.xmake/packages/t/tl_optional/v1.1.0/c98c96f6367f4230ab618e8e653468c7/include -isystem build/.packages/e/endian/latest/4e0143c97b65425b855ad5fd03038b6a/include
+toocal_core_CXXFLAGS=-m64 -g -O0 -std=c++20 -isystem /home/muqiu/.xmake/packages/s/spdlog/v1.14.1/469f312ffeff47d9aa249e3ed8e400dc/include -isystem /home/muqiu/.xmake/packages/t/tl_expected/v1.1.0/57774aec28a24eb8b84e9c45d2905d73/include -isystem /home/muqiu/.xmake/packages/t/tl_optional/v1.1.0/c98c96f6367f4230ab618e8e653468c7/include -isystem build/.packages/e/endian/latest/4e0143c97b65425b855ad5fd03038b6a/include
+toocal_core_LDFLAGS=-m64 -lpthread
+test_toocal_core_CXXFLAGS=-m64 -g -O0 -std=c++20 -Icore -isystem /home/muqiu/.xmake/packages/s/spdlog/v1.14.1/469f312ffeff47d9aa249e3ed8e400dc/include -isystem /home/muqiu/.xmake/packages/t/tl_expected/v1.1.0/57774aec28a24eb8b84e9c45d2905d73/include -isystem /home/muqiu/.xmake/packages/t/tl_optional/v1.1.0/c98c96f6367f4230ab618e8e653468c7/include -isystem build/.packages/e/endian/latest/4e0143c97b65425b855ad5fd03038b6a/include
+test_toocal_core_CXXFLAGS=-m64 -g -O0 -std=c++20 -Icore -isystem /home/muqiu/.xmake/packages/s/spdlog/v1.14.1/469f312ffeff47d9aa249e3ed8e400dc/include -isystem /home/muqiu/.xmake/packages/t/tl_expected/v1.1.0/57774aec28a24eb8b84e9c45d2905d73/include -isystem /home/muqiu/.xmake/packages/t/tl_optional/v1.1.0/c98c96f6367f4230ab618e8e653468c7/include -isystem build/.packages/e/endian/latest/4e0143c97b65425b855ad5fd03038b6a/include
+test_toocal_core_LDFLAGS=-m64 -lpthread
 
-default:  toocal_core
+default:  toocal_core test_toocal_core
 
-all:  test_toocal_core toocal_core
+all:  toocal_core test_toocal_core
 
-.PHONY: default all  test_toocal_core toocal_core
+.PHONY: default all  toocal_core test_toocal_core
 
-test_toocal_core: build/linux/x86_64/release/test_toocal_core
-build/linux/x86_64/release/test_toocal_core: build/.objs/test_toocal_core/linux/x86_64/release/core/freelist.cpp.o build/.objs/test_toocal_core/linux/x86_64/release/core/main.cpp.o build/.objs/test_toocal_core/linux/x86_64/release/core/node.cpp.o build/.objs/test_toocal_core/linux/x86_64/release/core/utils.cpp.o build/.objs/test_toocal_core/linux/x86_64/release/core/collection.cpp.o build/.objs/test_toocal_core/linux/x86_64/release/core/data_access_layer.cpp.o
-	@echo linking.release test_toocal_core
-	@mkdir -p build/linux/x86_64/release
-	$(VV)$(test_toocal_core_LD) -o build/linux/x86_64/release/test_toocal_core build/.objs/test_toocal_core/linux/x86_64/release/core/freelist.cpp.o build/.objs/test_toocal_core/linux/x86_64/release/core/main.cpp.o build/.objs/test_toocal_core/linux/x86_64/release/core/node.cpp.o build/.objs/test_toocal_core/linux/x86_64/release/core/utils.cpp.o build/.objs/test_toocal_core/linux/x86_64/release/core/collection.cpp.o build/.objs/test_toocal_core/linux/x86_64/release/core/data_access_layer.cpp.o $(test_toocal_core_LDFLAGS)
+toocal_core: build/linux/x86_64/debug/toocal_core
+build/linux/x86_64/debug/toocal_core: build/.objs/toocal_core/linux/x86_64/debug/core/main.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/collection.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/freelist.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/utils.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/data_access_layer.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/node.cpp.o
+	@echo linking.debug toocal_core
+	@mkdir -p build/linux/x86_64/debug
+	$(VV)$(toocal_core_LD) -o build/linux/x86_64/debug/toocal_core build/.objs/toocal_core/linux/x86_64/debug/core/main.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/collection.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/freelist.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/utils.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/data_access_layer.cpp.o build/.objs/toocal_core/linux/x86_64/debug/core/node.cpp.o $(toocal_core_LDFLAGS)
 
-build/.objs/test_toocal_core/linux/x86_64/release/core/freelist.cpp.o: core/freelist.cpp
-	@echo compiling.release core/freelist.cpp
-	@mkdir -p build/.objs/test_toocal_core/linux/x86_64/release/core
-	$(VV)$(test_toocal_core_CXX) -c $(test_toocal_core_CXXFLAGS) -o build/.objs/test_toocal_core/linux/x86_64/release/core/freelist.cpp.o core/freelist.cpp
+build/.objs/toocal_core/linux/x86_64/debug/core/main.cpp.o: core/main.cpp
+	@echo compiling.debug core/main.cpp
+	@mkdir -p build/.objs/toocal_core/linux/x86_64/debug/core
+	$(VV)$(toocal_core_CXX) -c $(toocal_core_CXXFLAGS) -o build/.objs/toocal_core/linux/x86_64/debug/core/main.cpp.o core/main.cpp
 
-build/.objs/test_toocal_core/linux/x86_64/release/core/main.cpp.o: core/main.cpp
-	@echo compiling.release core/main.cpp
-	@mkdir -p build/.objs/test_toocal_core/linux/x86_64/release/core
-	$(VV)$(test_toocal_core_CXX) -c $(test_toocal_core_CXXFLAGS) -o build/.objs/test_toocal_core/linux/x86_64/release/core/main.cpp.o core/main.cpp
+build/.objs/toocal_core/linux/x86_64/debug/core/collection.cpp.o: core/collection.cpp
+	@echo compiling.debug core/collection.cpp
+	@mkdir -p build/.objs/toocal_core/linux/x86_64/debug/core
+	$(VV)$(toocal_core_CXX) -c $(toocal_core_CXXFLAGS) -o build/.objs/toocal_core/linux/x86_64/debug/core/collection.cpp.o core/collection.cpp
 
-build/.objs/test_toocal_core/linux/x86_64/release/core/node.cpp.o: core/node.cpp
-	@echo compiling.release core/node.cpp
-	@mkdir -p build/.objs/test_toocal_core/linux/x86_64/release/core
-	$(VV)$(test_toocal_core_CXX) -c $(test_toocal_core_CXXFLAGS) -o build/.objs/test_toocal_core/linux/x86_64/release/core/node.cpp.o core/node.cpp
+build/.objs/toocal_core/linux/x86_64/debug/core/freelist.cpp.o: core/freelist.cpp
+	@echo compiling.debug core/freelist.cpp
+	@mkdir -p build/.objs/toocal_core/linux/x86_64/debug/core
+	$(VV)$(toocal_core_CXX) -c $(toocal_core_CXXFLAGS) -o build/.objs/toocal_core/linux/x86_64/debug/core/freelist.cpp.o core/freelist.cpp
 
-build/.objs/test_toocal_core/linux/x86_64/release/core/utils.cpp.o: core/utils.cpp
-	@echo compiling.release core/utils.cpp
-	@mkdir -p build/.objs/test_toocal_core/linux/x86_64/release/core
-	$(VV)$(test_toocal_core_CXX) -c $(test_toocal_core_CXXFLAGS) -o build/.objs/test_toocal_core/linux/x86_64/release/core/utils.cpp.o core/utils.cpp
+build/.objs/toocal_core/linux/x86_64/debug/core/utils.cpp.o: core/utils.cpp
+	@echo compiling.debug core/utils.cpp
+	@mkdir -p build/.objs/toocal_core/linux/x86_64/debug/core
+	$(VV)$(toocal_core_CXX) -c $(toocal_core_CXXFLAGS) -o build/.objs/toocal_core/linux/x86_64/debug/core/utils.cpp.o core/utils.cpp
 
-build/.objs/test_toocal_core/linux/x86_64/release/core/collection.cpp.o: core/collection.cpp
-	@echo compiling.release core/collection.cpp
-	@mkdir -p build/.objs/test_toocal_core/linux/x86_64/release/core
-	$(VV)$(test_toocal_core_CXX) -c $(test_toocal_core_CXXFLAGS) -o build/.objs/test_toocal_core/linux/x86_64/release/core/collection.cpp.o core/collection.cpp
+build/.objs/toocal_core/linux/x86_64/debug/core/data_access_layer.cpp.o: core/data_access_layer.cpp
+	@echo compiling.debug core/data_access_layer.cpp
+	@mkdir -p build/.objs/toocal_core/linux/x86_64/debug/core
+	$(VV)$(toocal_core_CXX) -c $(toocal_core_CXXFLAGS) -o build/.objs/toocal_core/linux/x86_64/debug/core/data_access_layer.cpp.o core/data_access_layer.cpp
 
-build/.objs/test_toocal_core/linux/x86_64/release/core/data_access_layer.cpp.o: core/data_access_layer.cpp
-	@echo compiling.release core/data_access_layer.cpp
-	@mkdir -p build/.objs/test_toocal_core/linux/x86_64/release/core
-	$(VV)$(test_toocal_core_CXX) -c $(test_toocal_core_CXXFLAGS) -o build/.objs/test_toocal_core/linux/x86_64/release/core/data_access_layer.cpp.o core/data_access_layer.cpp
+build/.objs/toocal_core/linux/x86_64/debug/core/node.cpp.o: core/node.cpp
+	@echo compiling.debug core/node.cpp
+	@mkdir -p build/.objs/toocal_core/linux/x86_64/debug/core
+	$(VV)$(toocal_core_CXX) -c $(toocal_core_CXXFLAGS) -o build/.objs/toocal_core/linux/x86_64/debug/core/node.cpp.o core/node.cpp
 
-toocal_core: build/linux/x86_64/release/toocal_core
-build/linux/x86_64/release/toocal_core: build/.objs/toocal_core/linux/x86_64/release/core/freelist.cpp.o build/.objs/toocal_core/linux/x86_64/release/core/main.cpp.o build/.objs/toocal_core/linux/x86_64/release/core/node.cpp.o build/.objs/toocal_core/linux/x86_64/release/core/utils.cpp.o build/.objs/toocal_core/linux/x86_64/release/core/collection.cpp.o build/.objs/toocal_core/linux/x86_64/release/core/data_access_layer.cpp.o
-	@echo linking.release toocal_core
-	@mkdir -p build/linux/x86_64/release
-	$(VV)$(toocal_core_LD) -o build/linux/x86_64/release/toocal_core build/.objs/toocal_core/linux/x86_64/release/core/freelist.cpp.o build/.objs/toocal_core/linux/x86_64/release/core/main.cpp.o build/.objs/toocal_core/linux/x86_64/release/core/node.cpp.o build/.objs/toocal_core/linux/x86_64/release/core/utils.cpp.o build/.objs/toocal_core/linux/x86_64/release/core/collection.cpp.o build/.objs/toocal_core/linux/x86_64/release/core/data_access_layer.cpp.o $(toocal_core_LDFLAGS)
+test_toocal_core: build/linux/x86_64/debug/test_toocal_core
+build/linux/x86_64/debug/test_toocal_core: build/.objs/test_toocal_core/linux/x86_64/debug/core/main.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/collection.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/freelist.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/utils.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/data_access_layer.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/node.cpp.o
+	@echo linking.debug test_toocal_core
+	@mkdir -p build/linux/x86_64/debug
+	$(VV)$(test_toocal_core_LD) -o build/linux/x86_64/debug/test_toocal_core build/.objs/test_toocal_core/linux/x86_64/debug/core/main.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/collection.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/freelist.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/utils.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/data_access_layer.cpp.o build/.objs/test_toocal_core/linux/x86_64/debug/core/node.cpp.o $(test_toocal_core_LDFLAGS)
 
-build/.objs/toocal_core/linux/x86_64/release/core/freelist.cpp.o: core/freelist.cpp
-	@echo compiling.release core/freelist.cpp
-	@mkdir -p build/.objs/toocal_core/linux/x86_64/release/core
-	$(VV)$(toocal_core_CXX) -c $(toocal_core_CXXFLAGS) -o build/.objs/toocal_core/linux/x86_64/release/core/freelist.cpp.o core/freelist.cpp
+build/.objs/test_toocal_core/linux/x86_64/debug/core/main.cpp.o: core/main.cpp
+	@echo compiling.debug core/main.cpp
+	@mkdir -p build/.objs/test_toocal_core/linux/x86_64/debug/core
+	$(VV)$(test_toocal_core_CXX) -c $(test_toocal_core_CXXFLAGS) -o build/.objs/test_toocal_core/linux/x86_64/debug/core/main.cpp.o core/main.cpp
 
-build/.objs/toocal_core/linux/x86_64/release/core/main.cpp.o: core/main.cpp
-	@echo compiling.release core/main.cpp
-	@mkdir -p build/.objs/toocal_core/linux/x86_64/release/core
-	$(VV)$(toocal_core_CXX) -c $(toocal_core_CXXFLAGS) -o build/.objs/toocal_core/linux/x86_64/release/core/main.cpp.o core/main.cpp
+build/.objs/test_toocal_core/linux/x86_64/debug/core/collection.cpp.o: core/collection.cpp
+	@echo compiling.debug core/collection.cpp
+	@mkdir -p build/.objs/test_toocal_core/linux/x86_64/debug/core
+	$(VV)$(test_toocal_core_CXX) -c $(test_toocal_core_CXXFLAGS) -o build/.objs/test_toocal_core/linux/x86_64/debug/core/collection.cpp.o core/collection.cpp
 
-build/.objs/toocal_core/linux/x86_64/release/core/node.cpp.o: core/node.cpp
-	@echo compiling.release core/node.cpp
-	@mkdir -p build/.objs/toocal_core/linux/x86_64/release/core
-	$(VV)$(toocal_core_CXX) -c $(toocal_core_CXXFLAGS) -o build/.objs/toocal_core/linux/x86_64/release/core/node.cpp.o core/node.cpp
+build/.objs/test_toocal_core/linux/x86_64/debug/core/freelist.cpp.o: core/freelist.cpp
+	@echo compiling.debug core/freelist.cpp
+	@mkdir -p build/.objs/test_toocal_core/linux/x86_64/debug/core
+	$(VV)$(test_toocal_core_CXX) -c $(test_toocal_core_CXXFLAGS) -o build/.objs/test_toocal_core/linux/x86_64/debug/core/freelist.cpp.o core/freelist.cpp
 
-build/.objs/toocal_core/linux/x86_64/release/core/utils.cpp.o: core/utils.cpp
-	@echo compiling.release core/utils.cpp
-	@mkdir -p build/.objs/toocal_core/linux/x86_64/release/core
-	$(VV)$(toocal_core_CXX) -c $(toocal_core_CXXFLAGS) -o build/.objs/toocal_core/linux/x86_64/release/core/utils.cpp.o core/utils.cpp
+build/.objs/test_toocal_core/linux/x86_64/debug/core/utils.cpp.o: core/utils.cpp
+	@echo compiling.debug core/utils.cpp
+	@mkdir -p build/.objs/test_toocal_core/linux/x86_64/debug/core
+	$(VV)$(test_toocal_core_CXX) -c $(test_toocal_core_CXXFLAGS) -o build/.objs/test_toocal_core/linux/x86_64/debug/core/utils.cpp.o core/utils.cpp
 
-build/.objs/toocal_core/linux/x86_64/release/core/collection.cpp.o: core/collection.cpp
-	@echo compiling.release core/collection.cpp
-	@mkdir -p build/.objs/toocal_core/linux/x86_64/release/core
-	$(VV)$(toocal_core_CXX) -c $(toocal_core_CXXFLAGS) -o build/.objs/toocal_core/linux/x86_64/release/core/collection.cpp.o core/collection.cpp
+build/.objs/test_toocal_core/linux/x86_64/debug/core/data_access_layer.cpp.o: core/data_access_layer.cpp
+	@echo compiling.debug core/data_access_layer.cpp
+	@mkdir -p build/.objs/test_toocal_core/linux/x86_64/debug/core
+	$(VV)$(test_toocal_core_CXX) -c $(test_toocal_core_CXXFLAGS) -o build/.objs/test_toocal_core/linux/x86_64/debug/core/data_access_layer.cpp.o core/data_access_layer.cpp
 
-build/.objs/toocal_core/linux/x86_64/release/core/data_access_layer.cpp.o: core/data_access_layer.cpp
-	@echo compiling.release core/data_access_layer.cpp
-	@mkdir -p build/.objs/toocal_core/linux/x86_64/release/core
-	$(VV)$(toocal_core_CXX) -c $(toocal_core_CXXFLAGS) -o build/.objs/toocal_core/linux/x86_64/release/core/data_access_layer.cpp.o core/data_access_layer.cpp
+build/.objs/test_toocal_core/linux/x86_64/debug/core/node.cpp.o: core/node.cpp
+	@echo compiling.debug core/node.cpp
+	@mkdir -p build/.objs/test_toocal_core/linux/x86_64/debug/core
+	$(VV)$(test_toocal_core_CXX) -c $(test_toocal_core_CXXFLAGS) -o build/.objs/test_toocal_core/linux/x86_64/debug/core/node.cpp.o core/node.cpp
 
-clean:  clean_test_toocal_core clean_toocal_core
-
-clean_test_toocal_core: 
-	@rm -rf build/linux/x86_64/release/test_toocal_core
-	@rm -rf build/linux/x86_64/release/test_toocal_core.sym
-	@rm -rf build/.objs/test_toocal_core/linux/x86_64/release/core/freelist.cpp.o
-	@rm -rf build/.objs/test_toocal_core/linux/x86_64/release/core/main.cpp.o
-	@rm -rf build/.objs/test_toocal_core/linux/x86_64/release/core/node.cpp.o
-	@rm -rf build/.objs/test_toocal_core/linux/x86_64/release/core/utils.cpp.o
-	@rm -rf build/.objs/test_toocal_core/linux/x86_64/release/core/collection.cpp.o
-	@rm -rf build/.objs/test_toocal_core/linux/x86_64/release/core/data_access_layer.cpp.o
+clean:  clean_toocal_core clean_test_toocal_core
 
 clean_toocal_core: 
-	@rm -rf build/linux/x86_64/release/toocal_core
-	@rm -rf build/linux/x86_64/release/toocal_core.sym
-	@rm -rf build/.objs/toocal_core/linux/x86_64/release/core/freelist.cpp.o
-	@rm -rf build/.objs/toocal_core/linux/x86_64/release/core/main.cpp.o
-	@rm -rf build/.objs/toocal_core/linux/x86_64/release/core/node.cpp.o
-	@rm -rf build/.objs/toocal_core/linux/x86_64/release/core/utils.cpp.o
-	@rm -rf build/.objs/toocal_core/linux/x86_64/release/core/collection.cpp.o
-	@rm -rf build/.objs/toocal_core/linux/x86_64/release/core/data_access_layer.cpp.o
+	@rm -rf build/linux/x86_64/debug/toocal_core
+	@rm -rf build/linux/x86_64/debug/toocal_core.sym
+	@rm -rf build/.objs/toocal_core/linux/x86_64/debug/core/main.cpp.o
+	@rm -rf build/.objs/toocal_core/linux/x86_64/debug/core/collection.cpp.o
+	@rm -rf build/.objs/toocal_core/linux/x86_64/debug/core/freelist.cpp.o
+	@rm -rf build/.objs/toocal_core/linux/x86_64/debug/core/utils.cpp.o
+	@rm -rf build/.objs/toocal_core/linux/x86_64/debug/core/data_access_layer.cpp.o
+	@rm -rf build/.objs/toocal_core/linux/x86_64/debug/core/node.cpp.o
+
+clean_test_toocal_core: 
+	@rm -rf build/linux/x86_64/debug/test_toocal_core
+	@rm -rf build/linux/x86_64/debug/test_toocal_core.sym
+	@rm -rf build/.objs/test_toocal_core/linux/x86_64/debug/core/main.cpp.o
+	@rm -rf build/.objs/test_toocal_core/linux/x86_64/debug/core/collection.cpp.o
+	@rm -rf build/.objs/test_toocal_core/linux/x86_64/debug/core/freelist.cpp.o
+	@rm -rf build/.objs/test_toocal_core/linux/x86_64/debug/core/utils.cpp.o
+	@rm -rf build/.objs/test_toocal_core/linux/x86_64/debug/core/data_access_layer.cpp.o
+	@rm -rf build/.objs/test_toocal_core/linux/x86_64/debug/core/node.cpp.o
 

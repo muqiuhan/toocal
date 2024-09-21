@@ -89,9 +89,10 @@ namespace toocal::core::node
   [[nodiscard]] auto Node::find_key_in_node(const std::vector<uint8_t> & key)
     const noexcept -> std::tuple<bool, uint32_t>
   {
-    for (uint32_t index = 0; const auto & existing_item : this->items)
+    for (uint32_t index = 0; const auto & [existing_item_key, _] : this->items)
       {
-        const auto compare_result = utils::safe_bytescmp(existing_item.key, key);
+        const auto compare_result =
+          utils::Safecmp::bytescmp(existing_item_key, key);
         if (compare_result == 0)
           return {true, index};
 

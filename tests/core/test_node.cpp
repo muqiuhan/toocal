@@ -26,11 +26,11 @@ namespace toocal::core::node::tests
             items.begin(),
             items.end(),
             std::vector<Item>{},
-            [&](auto items, const auto &item) {
-              items.push_back(Item{
+            [&](auto _items, const auto &item) {
+              _items.push_back(Item{
                 std::vector<uint8_t>(item.first.begin(), item.first.end()),
                 std::vector<uint8_t>(item.second.begin(), item.second.end())});
-              return items;
+              return _items;
             }),
           std::vector<page::Page_num>{},
         })

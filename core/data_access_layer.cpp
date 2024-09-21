@@ -11,6 +11,14 @@
 #include <filesystem>
 #include <vector>
 
+#ifdef __unix__
+#include <unistd.h>
+#endif
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 namespace toocal::core::data_access_layer
 {
   [[nodiscard]] auto
@@ -28,7 +36,7 @@ namespace toocal::core::data_access_layer
 #endif
   }
 
-  auto Data_access_layer::intialize_database() noexcept
+  auto Data_access_layer::initialize_database() noexcept
     -> tl::expected<std::nullptr_t, Error>
   {
     this->freelist = Freelist{};
@@ -39,7 +47,7 @@ namespace toocal::core::data_access_layer
      * empty file through std::ofstream. */
     if (const auto parent = std::filesystem::path{this->path}.parent_path();
         !parent.empty())
-      std::filesystem::create_directories(parent);
+      create_directories(parent);
     std::ofstream{this->path}.close();
 
     this->file = std::fstream{path, std::fstream::out | std::fstream::in};
@@ -93,7 +101,7 @@ namespace toocal::core::data_access_layer
   auto Data_access_layer::close() noexcept -> void { this->file.close(); }
 
   [[nodiscard]] auto Data_access_layer::allocate_empty_page(
-    page::Page_num page_num = -1) const noexcept -> Page
+    const page::Page_num page_num = -1) const noexcept -> Page
   {
     return Page{page_num, std::vector<uint8_t>(this->options.page_size)};
   }
@@ -101,12 +109,15 @@ namespace toocal::core::data_access_layer
   [[nodiscard]] auto Data_access_layer::write_page(const Page &page) noexcept
     -> tl::expected<std::nullptr_t, Error>
   {
-    if (this->file.seekp(page.page_num * this->options.page_size).fail())
+    if (this->file
+          .seekp(static_cast<int64_t>(page.page_num * this->options.page_size))
+          .fail())
       return Err(std::strerror(errno));
 
     if (this->file
           .write(
-            reinterpret_cast<const char *>(page.data.data()), page.data.size())
+            reinterpret_cast<const char *>(page.data.data()),
+            static_cast<int64_t>(page.data.size()))
           .fail())
       return Err(std::strerror(errno));
 
@@ -118,11 +129,15 @@ namespace toocal::core::data_access_layer
   {
     auto page = this->allocate_empty_page(page_num);
 
-    if (this->file.seekg(page_num * this->options.page_size).fail())
+    if (this->file
+          .seekg(static_cast<int64_t>(page_num * this->options.page_size))
+          .fail())
       return Err(std::strerror(errno));
 
     if (this->file
-          .read(reinterpret_cast<char *>(page.data.data()), page.data.size())
+          .read(
+            reinterpret_cast<char *>(page.data.data()),
+            static_cast<int64_t>(page.data.size()))
           .fail())
       return Err(std::strerror(errno));
 
@@ -268,7 +283,11 @@ namespace toocal::core::data_access_layer
     std::vector<node::Item>     items,
     std::vector<page::Page_num> children) noexcept -> Node
   {
-    return Node{this, this->freelist.get_next_page(), items, children};
+    return Node{
+      this,
+      this->freelist.get_next_page(),
+      std::move(items),
+      std::move(children)};
   }
 
 } // namespace toocal::core::data_access_layer

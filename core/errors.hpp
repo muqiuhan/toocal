@@ -14,8 +14,7 @@ namespace toocal::core::errors
     const std::string          message;
     const std::source_location location;
 
-  public:
-    auto append(const std::string append_message) noexcept -> void
+    auto append(std::string append_message) const noexcept -> void
     {
       spdlog::error(
         "{} at ({}:{})", append_message, location.file_name(), location.line());
@@ -29,18 +28,18 @@ namespace toocal::core::errors
     }
   };
 
-#define __error(message)                                                       \
+#define _error(message)                                                        \
   toocal::core::errors::Error { message, std::source_location::current() }
 
 #define unimplemented()                                                        \
-  __error(fmt::format(                                                         \
-            "unimplemented function: {}",                                      \
-            std::source_location::current().function_name()))                  \
+  _error(fmt::format(                                                          \
+           "unimplemented function: {}",                                       \
+           std::source_location::current().function_name()))                   \
     .panic()
 
-#define fatal(message) __error(fmt::format("fatal error: {}", message)).panic()
+#define fatal(message) _error(fmt::format("fatal error: {}", message)).panic()
 
-#define Err(message)   tl::make_unexpected(__error(message))
+#define Err(message)   tl::make_unexpected(_error(message))
 }; // namespace toocal::core::errors
 
 #endif /* TOOCAL_CORE_ERRORS_HPP */

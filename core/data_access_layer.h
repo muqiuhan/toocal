@@ -14,14 +14,6 @@
 #include <string>
 #include <utility>
 
-#ifdef __unix__
-#include <unistd.h>
-#endif
-
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
 namespace toocal::core::data_access_layer
 {
   using errors::Error;
@@ -61,7 +53,7 @@ namespace toocal::core::data_access_layer
         this->load_database().map_error(
           [&](const auto&& error) { error.panic(); });
       else
-        this->intialize_database().map_error(
+        this->initialize_database().map_error(
           [&](const auto&& error) { error.panic(); });
     }
 
@@ -138,18 +130,17 @@ namespace toocal::core::data_access_layer
 
     /** During the process of creating the Data access layer, if the database
      ** file does not exist in the target path, it is initialized. */
-    auto intialize_database() noexcept -> tl::expected<std::nullptr_t, Error>;
+    auto initialize_database() noexcept -> tl::expected<std::nullptr_t, Error>;
 
     /** During the process of creating the Data access layer, If the database
      ** file exists at the target path, load it. */
     auto load_database() noexcept -> tl::expected<std::nullptr_t, Error>;
 
   public:
-    inline static const auto DEFAULT_PAGE_SIZE =
-      Data_access_layer::get_system_page_size();
+    inline static const auto DEFAULT_PAGE_SIZE = get_system_page_size();
 
     inline static const auto DEFAULT_OPTIONS = Options{
-      Data_access_layer::DEFAULT_PAGE_SIZE,
+      DEFAULT_PAGE_SIZE,
       Options::DEFAULT_FILL_PERCENT.first,
       Options::DEFAULT_FILL_PERCENT.second};
   }; // namespace toocal::core::data_access_layer
