@@ -20,7 +20,7 @@ namespace toocal::core::node::tests
     };
 
     const auto buffer =
-      types::Serializer<Node>::serialize(
+      Serializer<Node>::serialize(
         Node{
           std::accumulate(
             items.begin(),
@@ -36,7 +36,7 @@ namespace toocal::core::node::tests
         })
         .value();
 
-    const auto node = types::Serializer<Node>::deserialize(buffer);
+    const auto node = Serializer<Node>::deserialize(buffer);
 
     CHECK_EQ(node->items.size(), 2);
     CHECK_EQ(

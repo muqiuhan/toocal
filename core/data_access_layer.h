@@ -37,8 +37,7 @@ namespace toocal::core::data_access_layer
     const float    min_fill_percent;
     const float    max_fill_percent;
 
-  public:
-    inline static const auto DEFAULT_FILL_PERCENT = std::make_pair(0.5f, 0.95f);
+    static constexpr auto DEFAULT_FILL_PERCENT = std::make_pair(0.5f, 0.95f);
   };
 
   class Data_access_layer
@@ -51,23 +50,20 @@ namespace toocal::core::data_access_layer
     Meta         meta;
     Freelist     freelist;
 
-  public:
-    Data_access_layer(
-      const std::string path,
-      const Options     options = Data_access_layer::DEFAULT_OPTIONS)
-      : path(std::move(path)), options(std::move(options))
-    {
-      meta = Meta{};
+    explicit Data_access_layer(std::string path)
+      : Data_access_layer(std::move(path), DEFAULT_OPTIONS)
+    {}
 
-      if (std::filesystem::exists(path))
+    explicit Data_access_layer(std::string path, const Options options)
+      : path(std::move(path)), options(options), meta({})
+    {
+      if (std::filesystem::exists(this->path))
         this->load_database().map_error(
-          [&](const auto &&error) { error.panic(); });
+          [&](const auto&& error) { error.panic(); });
       else
         this->intialize_database().map_error(
-          [&](const auto &&error) { error.panic(); });
+          [&](const auto&& error) { error.panic(); });
     }
-
-    Data_access_layer() : options(std::move(DEFAULT_OPTIONS)) {}
 
     ~Data_access_layer() { this->close(); }
 
@@ -81,14 +77,14 @@ namespace toocal::core::data_access_layer
      ** then it returns the index when there the split should happen. Otherwise
      ** -1 is returned. */
     [[nodiscard]] auto
-      get_split_index(const Node &node) const noexcept -> uint32_t;
+      get_split_index(const Node& node) const noexcept -> uint32_t;
 
     [[nodiscard]] auto max_threshold() const noexcept -> float;
     [[nodiscard]] auto min_threshold() const noexcept -> float;
     [[nodiscard]] auto
-      is_under_populated(const Node &node) const noexcept -> bool;
+      is_under_populated(const Node& node) const noexcept -> bool;
     [[nodiscard]] auto
-      is_over_populated(const Node &node) const noexcept -> bool;
+      is_over_populated(const Node& node) const noexcept -> bool;
 
     /** Allocate an empty page. Different from directly constructing Page,
      ** this function will fill in a Page.data of option.page_size size. */
@@ -98,7 +94,7 @@ namespace toocal::core::data_access_layer
     /** Write a page. This function will check the operation results of all
      ** fstream functions during the writing process. If it fails, it will use
      ** std::strerror(errno) to construct an Error and return it. */
-    [[nodiscard]] auto write_page(const Page &page) noexcept
+    [[nodiscard]] auto write_page(const Page& page) noexcept
       -> tl::expected<std::nullptr_t, Error>;
 
     /** Read a page. The error handling method is the same as write_page. */
@@ -116,7 +112,7 @@ namespace toocal::core::data_access_layer
     [[nodiscard]] auto read_meta() noexcept -> tl::expected<Meta, Error>;
 
     /** Use read_page to write meta and return it. */
-    [[nodiscard]] auto write_meta(const Meta &meta) noexcept
+    [[nodiscard]] auto write_meta(const Meta& meta) noexcept
       -> tl::expected<std::nullptr_t, Error>;
 
     [[nodiscard]] auto new_node(
@@ -124,9 +120,9 @@ namespace toocal::core::data_access_layer
       std::vector<page::Page_num> children) noexcept -> Node;
 
     [[nodiscard]] auto
-      write_node(Node &node) noexcept -> tl::expected<std::nullptr_t, Error>;
+      write_node(Node& node) noexcept -> tl::expected<std::nullptr_t, Error>;
 
-    [[nodiscard]] auto write_node(const Node &&node) noexcept
+    [[nodiscard]] auto write_node(const Node&& node) noexcept
       -> tl::expected<std::nullptr_t, Error>;
 
     [[nodiscard]] auto

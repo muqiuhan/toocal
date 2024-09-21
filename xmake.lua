@@ -24,7 +24,6 @@ target("toocal_core")
 
 target("test_toocal_core")
      set_kind("binary")
-     set_default(false)
      set_languages("c++20")
 
      add_includedirs("core")
