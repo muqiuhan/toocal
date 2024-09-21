@@ -8,8 +8,6 @@ cmake_policy(SET CMP0091 NEW)
 project(test_toocal_core LANGUAGES CXX)
 
 # target
-set(CMAKE_C_COMPILER "/usr/bin/gcc")
-set(CMAKE_CXX_COMPILER "/usr/bin/g++")
 add_executable(test_toocal_core "")
 set_target_properties(test_toocal_core PROPERTIES OUTPUT_NAME "test_toocal_core")
 set_target_properties(test_toocal_core PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
@@ -17,10 +15,10 @@ target_include_directories(test_toocal_core PRIVATE
     core
 )
 target_include_directories(test_toocal_core SYSTEM PRIVATE
-    /home/muqiu/.xmake/packages/s/spdlog/v1.14.1/4288910d886c4f8d95dae25fab63dd80/include
+    /home/muqiu/.xmake/packages/s/spdlog/v1.14.1/469f312ffeff47d9aa249e3ed8e400dc/include
     /home/muqiu/.xmake/packages/t/tl_expected/v1.1.0/57774aec28a24eb8b84e9c45d2905d73/include
     /home/muqiu/.xmake/packages/t/tl_optional/v1.1.0/c98c96f6367f4230ab618e8e653468c7/include
-    build/.packages/e/endian/latest/8d30e36b7d054d69b6e1aa5e8cceff03/include
+    build/.packages/e/endian/latest/4e0143c97b65425b855ad5fd03038b6a/include
 )
 target_compile_options(test_toocal_core PRIVATE
     $<$<COMPILE_LANGUAGE:C>:-m64>
@@ -49,27 +47,23 @@ target_link_options(test_toocal_core PRIVATE
     -m64
 )
 target_sources(test_toocal_core PRIVATE
-    core/page.cpp
-    core/meta.cpp
-    core/freelist.cpp
     core/main.cpp
     core/collection.cpp
+    core/freelist.cpp
+    core/utils.cpp
     core/data_access_layer.cpp
     core/node.cpp
-    core/utils.cpp
 )
 
 # target
-set(CMAKE_C_COMPILER "/usr/bin/gcc")
-set(CMAKE_CXX_COMPILER "/usr/bin/g++")
 add_executable(toocal_core "")
 set_target_properties(toocal_core PROPERTIES OUTPUT_NAME "toocal_core")
 set_target_properties(toocal_core PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
 target_include_directories(toocal_core SYSTEM PRIVATE
-    /home/muqiu/.xmake/packages/s/spdlog/v1.14.1/4288910d886c4f8d95dae25fab63dd80/include
+    /home/muqiu/.xmake/packages/s/spdlog/v1.14.1/469f312ffeff47d9aa249e3ed8e400dc/include
     /home/muqiu/.xmake/packages/t/tl_expected/v1.1.0/57774aec28a24eb8b84e9c45d2905d73/include
     /home/muqiu/.xmake/packages/t/tl_optional/v1.1.0/c98c96f6367f4230ab618e8e653468c7/include
-    build/.packages/e/endian/latest/8d30e36b7d054d69b6e1aa5e8cceff03/include
+    build/.packages/e/endian/latest/4e0143c97b65425b855ad5fd03038b6a/include
 )
 target_compile_options(toocal_core PRIVATE
     $<$<COMPILE_LANGUAGE:C>:-m64>
@@ -98,13 +92,11 @@ target_link_options(toocal_core PRIVATE
     -m64
 )
 target_sources(toocal_core PRIVATE
-    core/page.cpp
-    core/meta.cpp
-    core/freelist.cpp
     core/main.cpp
     core/collection.cpp
+    core/freelist.cpp
+    core/utils.cpp
     core/data_access_layer.cpp
     core/node.cpp
-    core/utils.cpp
 )
 

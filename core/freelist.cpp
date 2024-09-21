@@ -15,7 +15,7 @@ namespace toocal::core::freelist
     return ++this->max_page;
   }
 
-  auto Freelist::release_page(page::Page_num page) noexcept -> void
+  auto Freelist::release_page(const page::Page_num page) noexcept -> void
   {
     this->released_pages.push_back(page);
   }

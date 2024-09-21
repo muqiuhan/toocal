@@ -16,8 +16,7 @@ namespace toocal::core::collection
         const auto [index, containing_node, _] = result;
         if (-1 == index)
           return tl::nullopt;
-        else
-          return containing_node->items[index];
+        return containing_node->items[index];
       });
   }
 
@@ -34,22 +33,19 @@ namespace toocal::core::collection
     if (0 == this->root)
       {
         root = std::move(this->dal->new_node(
-          std::vector<node::Item>{item}, std::vector<page::Page_num>{}));
+          std::vector{item}, std::vector<page::Page_num>{}));
 
         return this->dal->write_node(root).map([&](const auto &&_) {
           this->root = root.page_num;
           return nullptr;
         });
       }
-    else
-      {
-        this->dal->get_node(this->root)
-          .map([&](const auto &exist_root) { root = exist_root; })
-          .map_error([&](auto &&error) {
-            error.append("get_node error in Collection::put");
-            return error.panic();
-          });
-      }
+    this->dal->get_node(this->root)
+      .map([&](const auto &exist_root) { root = exist_root; })
+      .map_error([&](auto &&error) {
+        error.append("get_node error in Collection::put");
+        return error.panic();
+      });
 
     /* Find the path to the node where the insertion should happen */
     auto [insertion_index, node_to_insertin, ancestors_indexes] =
@@ -63,10 +59,10 @@ namespace toocal::core::collection
     /* If key already exists */
     if (
         node_to_insertin.has_value()
-        && node_to_insertin.value().items.size() != 0
+        && !node_to_insertin.value().items.empty()
         && insertion_index < node_to_insertin.value().items.size()
         && (0
-             == utils::safe_bytescmp(
+             == utils::Safecmp::bytescmp(
                node_to_insertin.value().items[insertion_index].key, key)))
       node_to_insertin.value().items[insertion_index] = item;
     else
@@ -86,21 +82,19 @@ namespace toocal::core::collection
                        })
                        .value();
 
-    /* Rebalance the nodes all the way up. Start From one node before
+    /* Rebalanced the nodes all the way up. Start From one node before
      * the last and go all the way up. Exclude root. */
-    for (int32_t i = ancestors.size() - 2; i >= 0; i--)
+    for (auto i = static_cast<int64_t>(ancestors.size() - 2); i >= 0; i--)
       {
         spdlog::info("{} - {}", ancestors.size(), i);
         auto previous_node = ancestors[i];
-        auto node = ancestors[i + 1];
 
-        if (node.is_over_populated())
+        if (auto node = ancestors[i + 1]; node.is_over_populated())
           previous_node.split(node, ancestors_indexes[i + 1]);
       }
 
     /* Handle root */
-    auto &root_node = ancestors[0];
-    if (root_node.is_over_populated())
+    if (auto &root_node = ancestors[0]; root_node.is_over_populated())
       {
         auto new_root = this->dal->new_node({}, {root_node.page_num});
         new_root.split(root_node, 0);

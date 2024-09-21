@@ -8,9 +8,15 @@
 
 namespace toocal::core::utils
 {
-  [[nodiscard]] auto safe_memcmp(std::string k1, std::string k2) noexcept -> int;
-  [[nodiscard]] auto safe_bytescmp(
-    std::vector<uint8_t> k1, std::vector<uint8_t> k2) noexcept -> int;
-}; // namespace toocal::core::utils
+  class Safecmp
+  {
+  public:
+    [[nodiscard]] static auto
+      memcmp(const std::string& k1, const std::string& k2) noexcept -> int;
+    [[nodiscard]] static auto bytescmp(
+      const std::vector<uint8_t>& k1,
+      const std::vector<uint8_t>& k2) noexcept -> int;
+  };
+} // namespace toocal::core::utils
 
 #endif /* TOOCAL_CORE_UTILS_H */

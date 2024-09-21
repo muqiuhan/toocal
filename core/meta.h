@@ -16,9 +16,8 @@ namespace toocal::core::meta
   class Meta
   {
   public:
-    inline static const page::Page_num PAGE_NUM = 0;
+    static constexpr page::Page_num PAGE_NUM = 0;
 
-  public:
     /** The database has a root collection that holds all the collections in the
      ** database. It is called root and the root property of meta holds page
      ** number containing the root of collections collection. The keys are the

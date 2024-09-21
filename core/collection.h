@@ -27,9 +27,8 @@ namespace toocal::core::collection
     std::vector<uint8_t>                   name;
     page::Page_num                         root;
 
-  public:
-    Collection(std::vector<uint8_t> name, page::Page_num root)
-      : name(std::move(name)), root(root)
+    Collection(std::vector<uint8_t> name, const page::Page_num root)
+      : dal{nullptr}, name(std::move(name)), root(root)
     {}
 
     Collection(
@@ -47,7 +46,7 @@ namespace toocal::core::collection
     /** Put adds a key to the tree. It finds the correct node and the insertion
      ** index and adds the item. When performing the search, the ancestors are
      ** returned as well. This way we can iterate over them to check which nodes
-     ** were modified and rebalance by splitting them accordingly. If the root
+     ** were modified and balance by splitting them accordingly. If the root
      ** has too many items, then a new root of a new layer is created and the
      ** created nodes from the split are added as children. */
     [[nodiscard]] auto
@@ -67,4 +66,4 @@ namespace toocal::core::collection
   };
 } // namespace toocal::core::collection
 
-#endif /* collection.h */
+#endif /* TOOCAL_CORE_COLLECTION_H */

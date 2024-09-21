@@ -15,7 +15,7 @@ namespace toocal::core::collection::tests
     const auto value1 = std::string{"Value1"};
 
     auto dal = Data_access_layer{
-      "./db.db", {Data_access_layer::DEFAULT_PAGE_SIZE, 0.0125, 0.025}};
+      "test_collection_put.db", {Data_access_layer::DEFAULT_PAGE_SIZE, 0.0125, 0.025}};
 
     auto collection = Collection{
       &dal,

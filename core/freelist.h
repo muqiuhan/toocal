@@ -20,9 +20,8 @@ namespace toocal::core::freelist
     /** META_PAGE is the maximum page num that is used by the db for its own
      ** purposes. For now, only page 0 is used as the header page.
      ** It means all other page numbers can be used. */
-    inline static const page::Page_num META_PAGE = 0;
+    static constexpr page::Page_num META_PAGE = 0;
 
-  public:
     /** max_page holds the latest page num allocated. */
     page::Page_num max_page;
 
@@ -32,7 +31,6 @@ namespace toocal::core::freelist
      ** created thus increasing the file size. */
     std::vector<page::Page_num> released_pages;
 
-  public:
     /** get_next_page returns page ids for writing New page ids are first given
      ** from the releasedPageIDs to avoid growing the file. If it's empty, then
      ** maxPage is incremented and a new page is created thus increasing the
@@ -63,7 +61,7 @@ namespace toocal::core::types
         /* released pages count */
         sizeof(released_pages_count) +
         /* released pages */
-        (sizeof(page::Page_num) * self.released_pages.size()));
+        sizeof(page::Page_num) * self.released_pages.size());
 
       auto serializer = endian::stream_writer<endian::little_endian>(
         buffer.data(), buffer.size());
