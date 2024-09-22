@@ -148,15 +148,16 @@ namespace toocal::core::node
     Data_access_layer * dal,
     Node &              node_to_split,
     const uint32_t      split_index,
-    Node *              new_node) noexcept -> void
+    Node &              new_node) noexcept -> void
   {
-    dal
-      ->write_node(dal->new_node(
-        std::vector<Item>{
-          node_to_split.items.begin() + split_index + 1,
-          node_to_split.items.end()},
-        std::vector<page::Page_num>{}))
-      .map([&](const auto && node) {
+    auto node = dal->new_node(
+      std::vector<Item>{
+        node_to_split.items.begin() + split_index + 1,
+        node_to_split.items.end()},
+      std::vector<page::Page_num>{});
+
+    dal->write_node(node)
+      .map([&](const auto && _) {
         new_node = std::move(node);
         node_to_split.items = std::vector<Item>{
           node_to_split.items.begin(),
@@ -174,17 +175,18 @@ namespace toocal::core::node
     Data_access_layer * dal,
     Node &              node_to_split,
     const uint32_t      split_index,
-    Node *              new_node) noexcept -> void
+    Node &              new_node) noexcept -> void
   {
-    dal
-      ->write_node(dal->new_node(
-        std::vector<Item>{
-          node_to_split.items.begin() + split_index + 1,
-          node_to_split.items.end()},
-        std::vector<page::Page_num>{
-          node_to_split.children.begin() + split_index + 1,
-          node_to_split.children.end()}))
-      .map([&](const auto && node) {
+    auto node = dal->new_node(
+      std::vector<Item>{
+        node_to_split.items.begin() + split_index + 1,
+        node_to_split.items.end()},
+      std::vector<page::Page_num>{
+        node_to_split.children.begin() + split_index + 1,
+        node_to_split.children.end()});
+
+    dal->write_node(node)
+      .map([&](const auto && _) {
         new_node = std::move(node);
         node_to_split.items = std::vector<Item>{
           node_to_split.items.begin(),
@@ -210,7 +212,7 @@ namespace toocal::core::node
     const auto split_index = node_to_split.dal->get_split_index(node_to_split);
     const auto middle_item = node_to_split.items.at(split_index);
 
-    Node * new_node = nullptr;
+    Node new_node;
     if (node_to_split.is_leaf())
       _split_when_node_is_leaf(this->dal, node_to_split, split_index, new_node);
     else
@@ -221,10 +223,10 @@ namespace toocal::core::node
 
     /* if middle of list, then move items forward. */
     if (this->children.size() == node_to_split_index + 1)
-      this->children.push_back(new_node->page_num);
+      this->children.push_back(new_node.page_num);
     else
       this->children.insert(
-        this->children.begin() + node_to_split_index + 1, new_node->page_num);
+        this->children.begin() + node_to_split_index + 1, new_node.page_num);
 
     this->dal->write_node(*this)
       .and_then(
@@ -235,4 +237,12 @@ namespace toocal::core::node
       });
   }
 
+  auto Node::remove_items_from_leaf(int32_t index) noexcept -> void
+  {
+    this->items.erase(this->items.begin() + index);
+    this->dal->write_node(*this).map_error([&](auto && error) {
+      error.append("write_node error in Node::remove_items_from_leaf");
+      return error.panic();
+    });
+  }
 } // namespace toocal::core::node

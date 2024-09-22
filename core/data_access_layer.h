@@ -123,11 +123,6 @@ namespace toocal::core::data_access_layer
     auto delete_node(page::Page_num page_num) noexcept -> void;
 
   private:
-    /** Get the virtual memory page size of the current operating system.
-     ** Currently, only the POSIX standard is supported.
-     ** TODO: Windows support. */
-    [[nodiscard]] static auto get_system_page_size() noexcept -> uint32_t;
-
     /** During the process of creating the Data access layer, if the database
      ** file does not exist in the target path, it is initialized. */
     auto initialize_database() noexcept -> tl::expected<std::nullptr_t, Error>;
@@ -137,10 +132,8 @@ namespace toocal::core::data_access_layer
     auto load_database() noexcept -> tl::expected<std::nullptr_t, Error>;
 
   public:
-    inline static const auto DEFAULT_PAGE_SIZE = get_system_page_size();
-
     inline static const auto DEFAULT_OPTIONS = Options{
-      DEFAULT_PAGE_SIZE,
+      Page::DEFAULT_PAGE_SIZE,
       Options::DEFAULT_FILL_PERCENT.first,
       Options::DEFAULT_FILL_PERCENT.second};
   }; // namespace toocal::core::data_access_layer
