@@ -40,6 +40,7 @@ namespace toocal::core::collection
           return nullptr;
         });
       }
+
     this->dal->get_node(this->root)
       .map([&](const auto &exist_root) { root = exist_root; })
       .map_error([&](auto &&error) {
@@ -58,14 +59,14 @@ namespace toocal::core::collection
 
     /* If key already exists */
     if (
-        node_to_insertin.has_value()
-        && !node_to_insertin.value().items.empty()
-        && insertion_index < node_to_insertin.value().items.size()
-        && (0
-             == utils::Safecmp::bytescmp(
-               node_to_insertin.value().items[insertion_index].key, key)))
+      node_to_insertin.has_value() && !node_to_insertin.value().items.empty()
+      && insertion_index < node_to_insertin.value().items.size()
+      && 0
+           == utils::Safecmp::bytescmp(
+             node_to_insertin.value().items[insertion_index].key, key))
       node_to_insertin.value().items[insertion_index] = item;
-    else
+
+    else /* Add item to the leaf node */
       node_to_insertin.value().add_item(item, insertion_index);
 
     node_to_insertin.value()
@@ -86,7 +87,6 @@ namespace toocal::core::collection
      * the last and go all the way up. Exclude root. */
     for (auto i = static_cast<int64_t>(ancestors.size() - 2); i >= 0; i--)
       {
-        spdlog::info("{} - {}", ancestors.size(), i);
         auto previous_node = ancestors[i];
 
         if (auto node = ancestors[i + 1]; node.is_over_populated())

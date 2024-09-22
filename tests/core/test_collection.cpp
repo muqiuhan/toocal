@@ -49,14 +49,14 @@ namespace toocal::core::collection::tests
     std::filesystem::remove(dal.path);
   }
 
-  TEST_CASE("put large amounts of data")
+  TEST_CASE("put big data")
   {
     const auto collection_name = std::string{"collection1"};
     const auto key1 = std::string{"Key1"};
     const auto value1 = std::string{"Value1"};
 
     auto dal = Data_access_layer{
-      "test_collection_put.db", {page::Page::DEFAULT_PAGE_SIZE, 0.0125, 0.025}};
+      "test_collection_put_big_data.db", {page::Page::DEFAULT_PAGE_SIZE, 0.0125, 0.025}};
 
     auto collection = Collection{
       &dal,
