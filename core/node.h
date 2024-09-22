@@ -40,7 +40,7 @@ namespace toocal::core::node
   class Node
   {
   public:
-    Data_access_layer          *dal{};
+    Data_access_layer*          dal{};
     page::Page_num              page_num{};
     std::vector<Item>           items;
     std::vector<page::Page_num> children;
@@ -52,7 +52,7 @@ namespace toocal::core::node
     {}
 
     Node(
-      Data_access_layer          *dal,
+      Data_access_layer*          dal,
       const page::Page_num        page_num,
       std::vector<Item>           items,
       std::vector<page::Page_num> children)
@@ -66,7 +66,7 @@ namespace toocal::core::node
     [[nodiscard]] auto is_leaf() const noexcept -> bool;
 
     [[nodiscard]] auto
-      is_last(uint32_t index, const Node &parent_node) const noexcept -> bool;
+      is_last(uint32_t index, const Node& parent_node) const noexcept -> bool;
 
     [[nodiscard]] auto is_first(uint32_t index) const noexcept -> bool;
 
@@ -87,13 +87,13 @@ namespace toocal::core::node
      ** find_key is used to locate where a new key should be inserted so the
      ** position is returned. */
     [[nodiscard]] auto
-      find_key(const std::vector<uint8_t> &key, bool exact) const noexcept
+      find_key(const std::vector<uint8_t>& key, bool exact) const noexcept
       -> tl::expected<
         std::tuple<int, tl::optional<Node>, std::vector<uint32_t>>,
         Error>;
 
     auto
-      add_item(const Item &item, uint32_t insertion_index) noexcept -> uint32_t;
+      add_item(const Item& item, uint32_t insertion_index) noexcept -> uint32_t;
 
     /* Checks if the node size is bigger than the size of a page. */
     [[nodiscard]] auto is_over_populated() const noexcept -> bool;
@@ -117,21 +117,21 @@ namespace toocal::core::node
      **	          a    modifiedNode            a       modifiedNode  newNode
      **         1,2      4,5,6,7,8            1,2          4,5         7,8 */
     auto
-      split(Node &node_to_split, uint32_t node_to_split_index) noexcept -> void;
+      split(Node& node_to_split, uint32_t node_to_split_index) noexcept -> void;
 
   private:
     /** find_key_in_node iterates all the items and finds the key. If the key is
      ** found, then the item is returned. If the key isn't found then return the
      ** index where it should have been (the first index that key is greater
      ** than it's previous). */
-    [[nodiscard]] auto find_key_in_node(const std::vector<uint8_t> &key)
+    [[nodiscard]] auto find_key_in_node(const std::vector<uint8_t>& key)
       const noexcept -> std::tuple<bool, uint32_t>;
 
     [[nodiscard]] static auto find_key_helper(
-      const Node                 &node,
-      const std::vector<uint8_t> &key,
+      const Node&                 node,
+      const std::vector<uint8_t>& key,
       bool                        exact,
-      std::vector<uint32_t>      &ancestors_indexes) noexcept
+      std::vector<uint32_t>&      ancestors_indexes) noexcept
       -> tl::expected<std::tuple<int, tl::optional<Node>>, Error>;
 
   public:
@@ -143,28 +143,20 @@ namespace toocal::core::types
 {
   using errors::Error;
   using node::Node;
+  using page::Page;
 
   template <> class Serializer<Node>
   {
   public:
-    [[nodiscard]] static auto serialize(const Node &self) noexcept
+    [[nodiscard]] static auto serialize(
+      const Node&    self,
+      const uint32_t buffer_size = Page::DEFAULT_PAGE_SIZE) noexcept
       -> tl::expected<std::vector<std::uint8_t>, Error>
     {
       const auto is_leaf = self.is_leaf();
       const auto items_count = static_cast<uint16_t>(self.items.size());
 
-      auto buffer = std::vector<uint8_t>(
-        sizeof(static_cast<uint8_t>(is_leaf)) + sizeof(items_count)
-        + std::accumulate(
-          self.items.begin(),
-          self.items.end(),
-          0,
-          [&](const auto &items_size, const auto &item) {
-            return items_size +
-                   /* item.key.size() + item.value.size() + offset */
-                   (sizeof(uint8_t) * 3) +
-                   /* offset */ sizeof(uint16_t) + item.size();
-          }));
+      auto buffer = std::vector<uint8_t>(buffer_size);
 
       /* serialize header (is_leaf, items_count) */
       {
@@ -183,10 +175,11 @@ namespace toocal::core::types
        * Page structure is:
        * --------------------------------------------------------------------
        * |  Page  | key-value /  child node    key-value        | key-value |
-       * | Header |   offset /	 pointer	      offset     .... | data .....|
+       * | Header |   offset /	 pointer	      offset     ...  | data ...  |
        * --------------------------------------------------------------------
        */
       uint32_t left = 3, right = buffer.size() - 1;
+
       for (int i = 0; i < items_count; i++)
         {
           const auto [key, value] = self.items[i];
@@ -202,12 +195,13 @@ namespace toocal::core::types
               left += sizeof(page::Page_num);
             }
 
-          const auto key_size = static_cast<uint16_t>(key.size()),
-                     value_size = static_cast<uint16_t>(value.size());
+          const auto key_size = static_cast<uint8_t>(key.size()),
+                     value_size = static_cast<uint8_t>(value.size());
 
           /* write offset */
           {
-            uint16_t offset = right - key_size - value_size - sizeof(uint16_t);
+            const uint16_t offset =
+              right - key_size - value_size - sizeof(uint16_t);
             const auto span = std::span(buffer.begin() + left, buffer.end());
             endian::stream_writer<endian::little_endian>(
               span.data(), span.size())
@@ -223,8 +217,7 @@ namespace toocal::core::types
               span.data(), span.size())
               .write(value.data(), value_size);
 
-            right -= 1;
-            buffer[right] = static_cast<uint8_t>(value_size);
+            buffer[--right] = static_cast<uint8_t>(value_size);
           }
 
           {
@@ -234,8 +227,7 @@ namespace toocal::core::types
               span.data(), span.size())
               .write(key.data(), key_size);
 
-            right -= 1;
-            buffer[right] = static_cast<uint8_t>(key_size);
+            buffer[--right] = static_cast<uint8_t>(key_size);
           }
         }
 
@@ -251,7 +243,7 @@ namespace toocal::core::types
     }
 
     [[nodiscard]] static auto
-      deserialize(const std::vector<std::uint8_t> &buffer) noexcept
+      deserialize(const std::vector<std::uint8_t>& buffer) noexcept
       -> tl::expected<Node, Error>
     {
       uint8_t  is_leaf;
@@ -289,7 +281,7 @@ namespace toocal::core::types
             left += sizeof(uint16_t);
           }
 
-          const uint16_t key_size = buffer[offset];
+          const uint8_t key_size = buffer[offset];
           offset += 1;
 
           items[i].key = std::vector<uint8_t>(key_size);
@@ -303,7 +295,7 @@ namespace toocal::core::types
             offset += key_size;
           }
 
-          const uint16_t value_size = buffer[offset];
+          const uint8_t value_size = buffer[offset];
           offset += 1;
 
           items[i].value = std::vector<uint8_t>(value_size);
@@ -314,7 +306,7 @@ namespace toocal::core::types
               span.data(), span.size())
               .read(items[i].value.data(), value_size);
 
-            offset += key_size;
+            offset += value_size;
           }
         }
 
