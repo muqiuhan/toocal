@@ -103,9 +103,8 @@ namespace toocal::core::node
 
     /** split rebalances the tree after adding. After insertion the modified
      ** node has to be checked to make sure it didn't exceed the maximum
-     *number
-     ** of elements. If it did, then it has to be split and rebalanced. The
-     ** mapation is depicted in the graph below. If it's not a leaf node,
+     ** number of elements. If it did, then it has to be split and rebalanced.
+     ** The mapation is depicted in the graph below. If it's not a leaf node,
      ** then the children has to be moved as well as shown. This may leave the
      ** parent unbalanced by having too many items so rebalancing has to be
      ** checked for all the ancestors. The split is performed in a for loop to
@@ -126,6 +125,8 @@ namespace toocal::core::node
      ** than it's previous). */
     [[nodiscard]] auto find_key_in_node(const std::vector<uint8_t>& key)
       const noexcept -> std::tuple<bool, uint32_t>;
+
+    auto remove_items_from_leaf(int32_t index) noexcept -> void;
 
     [[nodiscard]] static auto find_key_helper(
       const Node&                 node,

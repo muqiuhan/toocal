@@ -237,4 +237,12 @@ namespace toocal::core::node
       });
   }
 
+  auto Node::remove_items_from_leaf(int32_t index) noexcept -> void
+  {
+    this->items.erase(this->items.begin() + index);
+    this->dal->write_node(*this).map_error([&](auto && error) {
+      error.append("write_node error in Node::remove_items_from_leaf");
+      return error.panic();
+    });
+  }
 } // namespace toocal::core::node
