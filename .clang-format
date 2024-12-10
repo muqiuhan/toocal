@@ -22,7 +22,7 @@ BreakBeforeTernaryOperators:	true
 BreakConstructorInitializersBeforeComma:	true
 AllowAllArgumentsOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: true
-ColumnLimit: 80
+ColumnLimit: 100
 LambdaBodyIndentation: Signature
 RemoveBracesLLVM: true
 SeparateDefinitionBlocks: Always
@@ -68,11 +68,11 @@ MacroBlockBegin:	''
 MacroBlockEnd:	''
 MaxEmptyLinesToKeep:	1
 NamespaceIndentation: All
-PenaltyBreakComment:	80
-PenaltyBreakFirstLessLess:	80
-PenaltyBreakString:	80
-PenaltyExcessCharacter:	80
-PenaltyReturnTypeOnItsOwnLine:	80
+PenaltyBreakComment:	100
+PenaltyBreakFirstLessLess:	100
+PenaltyBreakString:	100
+PenaltyExcessCharacter:	100
+PenaltyReturnTypeOnItsOwnLine:	100
 PointerAlignment:	Middle
 ReflowComments:	true
 SortIncludes:	"Never"

@@ -4,7 +4,6 @@
 #include "errors.hpp"
 #include "page.h"
 #include <cstdint>
-#include <numeric>
 #include <span>
 #include <tuple>
 #include <utility>
@@ -56,17 +55,13 @@ namespace toocal::core::node
       const page::Page_num        page_num,
       std::vector<Item>           items,
       std::vector<page::Page_num> children)
-      : dal(dal)
-      , page_num(page_num)
-      , items(std::move(items))
-      , children(std::move(children))
+      : dal(dal), page_num(page_num), items(std::move(items)), children(std::move(children))
     {}
 
     /** Determine whether the current node is a leaf node. */
     [[nodiscard]] auto is_leaf() const noexcept -> bool;
 
-    [[nodiscard]] auto
-      is_last(uint32_t index, const Node& parent_node) const noexcept -> bool;
+    [[nodiscard]] auto is_last(uint32_t index, const Node& parent_node) const noexcept -> bool;
 
     [[nodiscard]] auto is_first(uint32_t index) const noexcept -> bool;
 
@@ -86,14 +81,10 @@ namespace toocal::core::node
      ** find_key to find the key, so a falsey answer. If exact is false, then
      ** find_key is used to locate where a new key should be inserted so the
      ** position is returned. */
-    [[nodiscard]] auto
-      find_key(const std::vector<uint8_t>& key, bool exact) const noexcept
-      -> tl::expected<
-        std::tuple<int, tl::optional<Node>, std::vector<uint32_t>>,
-        Error>;
+    [[nodiscard]] auto find_key(const std::vector<uint8_t>& key, bool exact) const noexcept
+      -> tl::expected<std::tuple<int, tl::optional<Node>, std::vector<uint32_t>>, Error>;
 
-    auto
-      add_item(const Item& item, uint32_t insertion_index) noexcept -> uint32_t;
+    auto add_item(const Item& item, uint32_t insertion_index) noexcept -> uint32_t;
 
     /* Checks if the node size is bigger than the size of a page. */
     [[nodiscard]] auto is_over_populated() const noexcept -> bool;
@@ -115,16 +106,15 @@ namespace toocal::core::node
      **	            /    \       ------>       /          |           \
      **	          a    modifiedNode            a       modifiedNode  newNode
      **         1,2      4,5,6,7,8            1,2          4,5         7,8 */
-    auto
-      split(Node& node_to_split, uint32_t node_to_split_index) noexcept -> void;
+    auto split(Node& node_to_split, uint32_t node_to_split_index) noexcept -> void;
 
   private:
     /** find_key_in_node iterates all the items and finds the key. If the key is
      ** found, then the item is returned. If the key isn't found then return the
      ** index where it should have been (the first index that key is greater
      ** than it's previous). */
-    [[nodiscard]] auto find_key_in_node(const std::vector<uint8_t>& key)
-      const noexcept -> std::tuple<bool, uint32_t>;
+    [[nodiscard]] auto find_key_in_node(const std::vector<uint8_t>& key) const noexcept
+      -> std::tuple<bool, uint32_t>;
 
     auto remove_items_from_leaf(int32_t index) noexcept -> void;
 
@@ -149,9 +139,8 @@ namespace toocal::core::types
   template <> class Serializer<Node>
   {
   public:
-    [[nodiscard]] static auto serialize(
-      const Node&    self,
-      const uint32_t buffer_size = Page::DEFAULT_PAGE_SIZE) noexcept
+    [[nodiscard]] static auto
+      serialize(const Node& self, const uint32_t buffer_size = Page::DEFAULT_PAGE_SIZE) noexcept
       -> tl::expected<std::vector<std::uint8_t>, Error>
     {
       const auto is_leaf = self.is_leaf();
@@ -161,8 +150,7 @@ namespace toocal::core::types
 
       /* serialize header (is_leaf, items_count) */
       {
-        endian::stream_writer<endian::little_endian>(
-          buffer.data(), buffer.size())
+        endian::stream_writer<endian::little_endian>(buffer.data(), buffer.size())
           << static_cast<uint8_t>(is_leaf ? 1 : 0) << items_count;
       }
 
@@ -189,8 +177,7 @@ namespace toocal::core::types
           if (!is_leaf)
             {
               const auto span = std::span(buffer.begin() + left, buffer.end());
-              endian::stream_writer<endian::little_endian>(
-                span.data(), span.size())
+              endian::stream_writer<endian::little_endian>(span.data(), span.size())
                 << self.children[i];
 
               left += sizeof(page::Page_num);
@@ -201,12 +188,9 @@ namespace toocal::core::types
 
           /* write offset */
           {
-            const uint16_t offset =
-              right - key_size - value_size - sizeof(uint16_t);
-            const auto span = std::span(buffer.begin() + left, buffer.end());
-            endian::stream_writer<endian::little_endian>(
-              span.data(), span.size())
-              << offset;
+            const uint16_t offset = right - key_size - value_size - sizeof(uint16_t);
+            const auto     span = std::span(buffer.begin() + left, buffer.end());
+            endian::stream_writer<endian::little_endian>(span.data(), span.size()) << offset;
 
             left += sizeof(uint16_t);
           }
@@ -214,8 +198,7 @@ namespace toocal::core::types
           {
             right -= value_size;
             const auto span = std::span(buffer.begin() + right, buffer.end());
-            endian::stream_writer<endian::little_endian>(
-              span.data(), span.size())
+            endian::stream_writer<endian::little_endian>(span.data(), span.size())
               .write(value.data(), value_size);
 
             buffer[--right] = static_cast<uint8_t>(value_size);
@@ -224,8 +207,7 @@ namespace toocal::core::types
           {
             right -= key_size;
             const auto span = std::span(buffer.begin() + right, buffer.end());
-            endian::stream_writer<endian::little_endian>(
-              span.data(), span.size())
+            endian::stream_writer<endian::little_endian>(span.data(), span.size())
               .write(key.data(), key_size);
 
             buffer[--right] = static_cast<uint8_t>(key_size);
@@ -243,17 +225,15 @@ namespace toocal::core::types
       return buffer;
     }
 
-    [[nodiscard]] static auto
-      deserialize(const std::vector<std::uint8_t>& buffer) noexcept
+    [[nodiscard]] static auto deserialize(const std::vector<std::uint8_t>& buffer) noexcept
       -> tl::expected<Node, Error>
     {
       uint8_t  is_leaf;
       uint16_t items_count;
 
       {
-        endian::stream_reader<endian::little_endian>(
-          buffer.data(), buffer.size())
-          >> is_leaf >> items_count;
+        endian::stream_reader<endian::little_endian>(buffer.data(), buffer.size()) >> is_leaf
+          >> items_count;
       }
 
       auto     children = std::vector<page::Page_num>{};
@@ -263,12 +243,10 @@ namespace toocal::core::types
         {
           if (0 == is_leaf)
             {
-              const auto span = std::span(buffer.begin() + left, buffer.end());
+              const auto     span = std::span(buffer.begin() + left, buffer.end());
               page::Page_num page_num;
 
-              endian::stream_reader<endian::little_endian>(
-                span.data(), span.size())
-                >> page_num;
+              endian::stream_reader<endian::little_endian>(span.data(), span.size()) >> page_num;
               children.push_back(page_num);
               left += sizeof(page::Page_num);
             }
@@ -276,9 +254,7 @@ namespace toocal::core::types
           uint16_t offset;
           {
             const auto span = std::span(buffer.begin() + left, buffer.end());
-            endian::stream_reader<endian::little_endian>(
-              span.data(), span.size())
-              >> offset;
+            endian::stream_reader<endian::little_endian>(span.data(), span.size()) >> offset;
             left += sizeof(uint16_t);
           }
 
@@ -287,10 +263,9 @@ namespace toocal::core::types
 
           items[i].key = std::vector<uint8_t>(key_size);
           {
-            const auto span = std::span(
-              buffer.begin() + offset, buffer.begin() + offset + key_size);
-            endian::stream_reader<endian::little_endian>(
-              span.data(), span.size())
+            const auto span =
+              std::span(buffer.begin() + offset, buffer.begin() + offset + key_size);
+            endian::stream_reader<endian::little_endian>(span.data(), span.size())
               .read(items[i].key.data(), key_size);
 
             offset += key_size;
@@ -301,10 +276,9 @@ namespace toocal::core::types
 
           items[i].value = std::vector<uint8_t>(value_size);
           {
-            const auto span = std::span(
-              buffer.begin() + offset, buffer.begin() + offset + value_size);
-            endian::stream_reader<endian::little_endian>(
-              span.data(), span.size())
+            const auto span =
+              std::span(buffer.begin() + offset, buffer.begin() + offset + value_size);
+            endian::stream_reader<endian::little_endian>(span.data(), span.size())
               .read(items[i].value.data(), value_size);
 
             offset += value_size;
@@ -316,8 +290,7 @@ namespace toocal::core::types
           const auto     span = std::span(buffer.begin() + left, buffer.end());
           page::Page_num page_num;
 
-          endian::stream_reader<endian::little_endian>(span.data(), span.size())
-            >> page_num;
+          endian::stream_reader<endian::little_endian>(span.data(), span.size()) >> page_num;
           children.push_back(page_num);
         }
 

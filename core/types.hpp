@@ -17,8 +17,7 @@ namespace toocal::core::types
       unimplemented();
     }
 
-    [[nodiscard]] static auto
-      deserialize(const std::vector<std::uint8_t> &) noexcept
+    [[nodiscard]] static auto deserialize(const std::vector<std::uint8_t> &) noexcept
       -> tl::expected<Tp_serialize_type, Error>
     {
       unimplemented();

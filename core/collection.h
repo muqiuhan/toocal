@@ -32,9 +32,7 @@ namespace toocal::core::collection
     {}
 
     Collection(
-      data_access_layer::Data_access_layer * dal,
-      std::vector<uint8_t>                   name,
-      page::Page_num                         root)
+      data_access_layer::Data_access_layer * dal, std::vector<uint8_t> name, page::Page_num root)
       : dal(dal), name(std::move(name)), root(root)
     {}
 
@@ -49,8 +47,7 @@ namespace toocal::core::collection
      ** were modified and balance by splitting them accordingly. If the root
      ** has too many items, then a new root of a new layer is created and the
      ** created nodes from the split are added as children. */
-    [[nodiscard]] auto
-      put(std::vector<uint8_t> key, std::vector<uint8_t> value) noexcept
+    [[nodiscard]] auto put(std::vector<uint8_t> key, std::vector<uint8_t> value) noexcept
       -> tl::expected<std::nullptr_t, Error>;
 
     /** Returns a list of nodes based on their indexes (the breadcrumbs from the

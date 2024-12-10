@@ -11,34 +11,14 @@ add_requires(
     "doctest"
 )
     
-target("toocal_core")
+target("toocal")
     set_kind("binary")
     set_languages("c++20")
-    add_files("core/*.cpp")
+    add_files("core/*.cpp", "cli/*.cpp")
+    add_includedirs("core")
     add_packages(
         "spdlog",
         "tl_expected",
         "tl_optional",
         "endian"
     )
-
-target("test_toocal_core")
-     set_kind("binary")
-     set_languages("c++20")
-
-     add_includedirs("core")
-     add_files("core/*.cpp")
-     for _, testfile in ipairs(os.files("tests/core/*.cpp")) do
-         add_tests(path.basename(testfile), {
-             files = testfile,
-             remove_files = "core/main.cpp",
-             languages = "c++20",
-             packages = "doctest",
-             defines = "DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN"})
-     end
-     add_packages(
-        "spdlog",
-        "tl_expected",
-        "tl_optional",
-        "endian"
-     )

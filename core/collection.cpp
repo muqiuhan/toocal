@@ -20,9 +20,8 @@ namespace toocal::core::collection
       });
   }
 
-  [[nodiscard]] auto Collection::put(
-    std::vector<uint8_t> key,
-    std::vector<uint8_t> value) noexcept -> tl::expected<std::nullptr_t, Error>
+  [[nodiscard]] auto Collection::put(std::vector<uint8_t> key, std::vector<uint8_t> value) noexcept
+    -> tl::expected<std::nullptr_t, Error>
   {
     const auto item = node::Item{std::move(key), std::move(value)};
 
@@ -32,8 +31,7 @@ namespace toocal::core::collection
 
     if (0 == this->root)
       {
-        root = std::move(this->dal->new_node(
-          std::vector{item}, std::vector<page::Page_num>{}));
+        root = std::move(this->dal->new_node(std::vector{item}, std::vector<page::Page_num>{}));
 
         return this->dal->write_node(root).map([&](const auto &&_) {
           this->root = root.page_num;
@@ -61,20 +59,16 @@ namespace toocal::core::collection
     if (
       node_to_insertin.has_value() && !node_to_insertin.value().items.empty()
       && insertion_index < node_to_insertin.value().items.size()
-      && 0
-           == utils::Safecmp::bytescmp(
-             node_to_insertin.value().items[insertion_index].key, key))
+      && 0 == utils::Safecmp::bytescmp(node_to_insertin.value().items[insertion_index].key, key))
       node_to_insertin.value().items[insertion_index] = item;
 
     else /* Add item to the leaf node */
       node_to_insertin.value().add_item(item, insertion_index);
 
-    node_to_insertin.value()
-      .dal->write_node(node_to_insertin.value())
-      .map_error([&](auto &&error) {
-        error.append("write_node error in Collection::put");
-        return error.panic();
-      });
+    node_to_insertin.value().dal->write_node(node_to_insertin.value()).map_error([&](auto &&error) {
+      error.append("write_node error in Collection::put");
+      return error.panic();
+    });
 
     auto ancestors = this->get_nodes(ancestors_indexes)
                        .map_error([&](auto &&error) {
@@ -111,8 +105,8 @@ namespace toocal::core::collection
     return nullptr;
   }
 
-  [[nodiscard]] auto Collection::get_nodes(std::vector<uint32_t> indexes)
-    const noexcept -> tl::expected<std::vector<Node>, Error>
+  [[nodiscard]] auto Collection::get_nodes(std::vector<uint32_t> indexes) const noexcept
+    -> tl::expected<std::vector<Node>, Error>
   {
     return this->dal->get_node(this->root).map([&](const auto &&root) {
       auto nodes = std::vector<Node>{root};

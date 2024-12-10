@@ -50,11 +50,9 @@ namespace toocal::core::data_access_layer
       : path(std::move(path)), options(options), meta({})
     {
       if (std::filesystem::exists(this->path))
-        this->load_database().map_error(
-          [&](const auto&& error) { error.panic(); });
+        this->load_database().map_error([&](const auto&& error) { error.panic(); });
       else
-        this->initialize_database().map_error(
-          [&](const auto&& error) { error.panic(); });
+        this->initialize_database().map_error([&](const auto&& error) { error.panic(); });
     }
 
     ~Data_access_layer() { this->close(); }
@@ -68,57 +66,46 @@ namespace toocal::core::data_access_layer
      ** is removed. It checks if a node can spare an element, and if it does
      ** then it returns the index when there the split should happen. Otherwise
      ** -1 is returned. */
-    [[nodiscard]] auto
-      get_split_index(const Node& node) const noexcept -> uint32_t;
+    [[nodiscard]] auto get_split_index(const Node& node) const noexcept -> uint32_t;
 
     [[nodiscard]] auto max_threshold() const noexcept -> float;
     [[nodiscard]] auto min_threshold() const noexcept -> float;
-    [[nodiscard]] auto
-      is_under_populated(const Node& node) const noexcept -> bool;
-    [[nodiscard]] auto
-      is_over_populated(const Node& node) const noexcept -> bool;
+    [[nodiscard]] auto is_under_populated(const Node& node) const noexcept -> bool;
+    [[nodiscard]] auto is_over_populated(const Node& node) const noexcept -> bool;
 
     /** Allocate an empty page. Different from directly constructing Page,
      ** this function will fill in a Page.data of option.page_size size. */
-    [[nodiscard]] auto
-      allocate_empty_page(page::Page_num page_num) const noexcept -> Page;
+    [[nodiscard]] auto allocate_empty_page(page::Page_num page_num) const noexcept -> Page;
 
     /** Write a page. This function will check the operation results of all
      ** fstream functions during the writing process. If it fails, it will use
      ** std::strerror(errno) to construct an Error and return it. */
-    [[nodiscard]] auto write_page(const Page& page) noexcept
-      -> tl::expected<std::nullptr_t, Error>;
+    [[nodiscard]] auto write_page(const Page& page) noexcept -> tl::expected<std::nullptr_t, Error>;
 
     /** Read a page. The error handling method is the same as write_page. */
-    [[nodiscard]] auto
-      read_page(page::Page_num page_num) noexcept -> tl::expected<Page, Error>;
+    [[nodiscard]] auto read_page(page::Page_num page_num) noexcept -> tl::expected<Page, Error>;
 
     /** Use read_page to read freelist and return it. */
     [[nodiscard]] auto read_freelist() noexcept -> tl::expected<Freelist, Error>;
 
     /** Use write_page to read freelist and return it. */
-    [[nodiscard]] auto
-      write_freelist() noexcept -> tl::expected<std::nullptr_t, Error>;
+    [[nodiscard]] auto write_freelist() noexcept -> tl::expected<std::nullptr_t, Error>;
 
     /** Use read_page to read meta and return it. */
     [[nodiscard]] auto read_meta() noexcept -> tl::expected<Meta, Error>;
 
     /** Use read_page to write meta and return it. */
-    [[nodiscard]] auto write_meta(const Meta& meta) noexcept
-      -> tl::expected<std::nullptr_t, Error>;
+    [[nodiscard]] auto write_meta(const Meta& meta) noexcept -> tl::expected<std::nullptr_t, Error>;
 
     [[nodiscard]] auto new_node(
-      std::vector<node::Item>     items,
-      std::vector<page::Page_num> children) noexcept -> Node;
+      std::vector<node::Item> items, std::vector<page::Page_num> children) noexcept -> Node;
 
-    [[nodiscard]] auto
-      write_node(Node& node) noexcept -> tl::expected<std::nullptr_t, Error>;
+    [[nodiscard]] auto write_node(Node& node) noexcept -> tl::expected<std::nullptr_t, Error>;
 
     [[nodiscard]] auto write_node(const Node&& node) noexcept
       -> tl::expected<std::nullptr_t, Error>;
 
-    [[nodiscard]] auto
-      get_node(page::Page_num page_num) noexcept -> tl::expected<Node, Error>;
+    [[nodiscard]] auto get_node(page::Page_num page_num) noexcept -> tl::expected<Node, Error>;
 
     auto delete_node(page::Page_num page_num) noexcept -> void;
 

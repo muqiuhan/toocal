@@ -16,25 +16,22 @@ namespace toocal::core::errors
 
     auto append(std::string append_message) const noexcept -> void
     {
-      spdlog::error(
-        "{} at ({}:{})", append_message, location.file_name(), location.line());
+      spdlog::error("{} at ({}:{})", append_message, location.file_name(), location.line());
     }
 
     [[noreturn]] auto panic() const noexcept -> void
     {
-      spdlog::error(
-        "{} at ({}:{})", message, location.file_name(), location.line());
+      spdlog::error("{} at ({}:{})", message, location.file_name(), location.line());
       std::terminate();
     }
   };
 
-#define _error(message)                                                        \
+#define _error(message)                                                                            \
   toocal::core::errors::Error { message, std::source_location::current() }
 
-#define unimplemented()                                                        \
-  _error(fmt::format(                                                          \
-           "unimplemented function: {}",                                       \
-           std::source_location::current().function_name()))                   \
+#define unimplemented()                                                                            \
+  _error(                                                                                          \
+    fmt::format("unimplemented function: {}", std::source_location::current().function_name()))    \
     .panic()
 
 #define fatal(message) _error(fmt::format("fatal error: {}", message)).panic()
