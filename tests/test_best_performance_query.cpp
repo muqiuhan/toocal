@@ -12,7 +12,7 @@ int main(int argc, char ** argv)
   const auto data_size = 10000;
   const auto collection_name = std::string{"collection1"};
 
-  auto dal = Data_access_layer{"test_collection_put_big_data.db"};
+  auto dal = Data_access_layer{__FILE_NAME__".db", builtin_options::BEST_PERFORMANCE};
 
   auto collection = Collection{
     &dal, std::vector<uint8_t>{collection_name.begin(), collection_name.end()}, dal.meta.root};
@@ -26,7 +26,6 @@ int main(int argc, char ** argv)
       values[i] = fmt::format("Value{}", i);
     }
 
-  spdlog::info("10k data are being generated and stored in {}", dal.path);
   for (uint32_t i = 0; i < data_size; i++)
     {
       collection
@@ -36,13 +35,8 @@ int main(int argc, char ** argv)
         .map_error([&](const auto && error) { return error.panic(); });
     }
   auto generation_end_time = std::chrono::high_resolution_clock::now();
-  spdlog::info(
-    "inserting completed, spend {}ms",
-    std::chrono::duration_cast<std::chrono::milliseconds>(
-      generation_end_time - generation_start_time)
-      .count());
 
-  spdlog::info("querying 10k data...");
+  spdlog::info("querying {} data...", data_size);
   const auto finding_start_time = std::chrono::high_resolution_clock::now();
   for (uint32_t i = 0; i < data_size; i++)
     {

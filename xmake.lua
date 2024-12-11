@@ -11,10 +11,10 @@ add_requires(
     "doctest"
 )
     
-target("toocal")
-    set_kind("binary")
+target("toocal_core")
+    set_kind("static")
     set_languages("c++20")
-    add_files("core/*.cpp", "cli/*.cpp")
+    add_files("core/*.cpp")
     add_includedirs("core")
     add_packages(
         "spdlog",
@@ -22,3 +22,36 @@ target("toocal")
         "tl_optional",
         "endian"
     )
+
+target("toocal")
+    set_kind("static")
+    set_languages("c++20")
+    add_files("cli/*.cpp")
+    add_includedirs("core")
+    add_deps("toocal_core")
+    add_packages(
+        "spdlog",
+        "tl_expected",
+        "tl_optional",
+        "endian"
+    )
+    add_links("toocal_core")
+
+for _, file in ipairs(os.files("tests/test_*.cpp")) do
+     local name = path.basename(file)
+     target(name)
+        set_kind("binary")
+        set_default(false)
+        set_languages("c++20")
+        add_files("tests/" .. name .. ".cpp")
+        add_tests(name)
+        add_deps("toocal_core")
+        add_includedirs("core")
+        add_packages(
+            "spdlog",
+            "tl_expected",
+            "tl_optional",
+            "endian"
+        )
+
+end
