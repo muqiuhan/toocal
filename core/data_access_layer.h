@@ -28,9 +28,32 @@ namespace toocal::core::data_access_layer
     const uint32_t page_size;
     const float    min_fill_percent;
     const float    max_fill_percent;
-
-    static constexpr auto DEFAULT_FILL_PERCENT = std::make_pair(0.5f, 0.95f);
   };
+
+  namespace builtin_options
+  {
+    /** The default configuration, balanced mode, database file size and query,
+     ** insert and other performance are moderate.
+     ** The test results of 100k data:
+     **   - generate and insert: 1.25s
+     **   - query: 0.65s
+     **   - file size: 472kb */
+    inline static const auto BALANCE = Options{Page::DEFAULT_PAGE_SIZE, 0.5f, 0.5f};
+
+    /** Optimize database file size, database file size is large, but query performance is low.
+     ** The test results of 100k data:
+     **   - generate and insert: 1.5s
+     **   - query: 0.78s
+     **   - file size: 324kb */
+    inline static const auto BEST_FILE_SIZE = Options{Page::DEFAULT_PAGE_SIZE, 0.75f, 0.75f};
+
+    /** Optimize query performance, database file size is small, but query performance is high.
+     ** The test results of 100k data:
+     **   - generate and insert: 0.49s
+     **   - query: 0.21s
+     **   - file size: 1816kb */
+    inline static const auto BEST_PERFORMANCE = Options{Page::DEFAULT_PAGE_SIZE, 0.125f, 0.125f};
+  } // namespace builtin_options
 
   class Data_access_layer
   {
@@ -43,7 +66,7 @@ namespace toocal::core::data_access_layer
     Freelist     freelist;
 
     explicit Data_access_layer(std::string path)
-      : Data_access_layer(std::move(path), DEFAULT_OPTIONS)
+      : Data_access_layer(std::move(path), builtin_options::BALANCE)
     {}
 
     explicit Data_access_layer(std::string path, const Options options)
@@ -117,12 +140,6 @@ namespace toocal::core::data_access_layer
     /** During the process of creating the Data access layer, If the database
      ** file exists at the target path, load it. */
     auto load_database() noexcept -> tl::expected<std::nullptr_t, Error>;
-
-  public:
-    inline static const auto DEFAULT_OPTIONS = Options{
-      Page::DEFAULT_PAGE_SIZE,
-      Options::DEFAULT_FILL_PERCENT.first,
-      Options::DEFAULT_FILL_PERCENT.second};
   }; // namespace toocal::core::data_access_layer
 } // namespace toocal::core::data_access_layer
 

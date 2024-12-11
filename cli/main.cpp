@@ -12,7 +12,7 @@ int main(int argc, char ** argv)
   const auto collection_name = std::string{"collection1"};
 
   auto dal =
-    Data_access_layer{"test_collection_put_big_data.db", {Page::DEFAULT_PAGE_SIZE, 0.0125, 0.025}};
+    Data_access_layer{"test_collection_put_big_data.db"};
 
   auto collection = Collection{
     &dal, std::vector<uint8_t>{collection_name.begin(), collection_name.end()}, dal.meta.root};
@@ -68,7 +68,7 @@ int main(int argc, char ** argv)
     std::chrono::duration_cast<std::chrono::milliseconds>(finding_end_time - finding_start_time)
       .count());
 
-  spdlog::info("removing db file...{}MB", utils::Filesystem::sizeof_file(dal.path));
+  spdlog::info("removing db file...{}KB", utils::Filesystem::sizeof_file(dal.path));
   std::filesystem::remove(dal.path);
 
   spdlog::info("closing db...");

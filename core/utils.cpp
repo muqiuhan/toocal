@@ -34,7 +34,7 @@ namespace toocal::core::utils
         fatal(fmt::format("Error getting {} size: {}", path, strerror(errno)));
       }
 
-    return static_cast<size_t>(fileStat.st_size) / (1024 * 1024);
+    return static_cast<size_t>(fileStat.st_size) / 1024;
 #else
     unimplemented();
 #endif
