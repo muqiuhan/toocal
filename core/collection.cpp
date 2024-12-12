@@ -139,63 +139,60 @@ namespace toocal::core::collection
                   })
                   .value();
 
-    auto &&[remove_item_index, node_to_remove_from, ancestors_indexes] =
-      root.find_key(key, true)
-        .map_error([&](auto &&error) {
-          error.append("find_key error in Collection::remove");
-          return error.panic();
-        })
-        .value();
+    return root.find_key(key, true).and_then(
+      [&](auto &&result) -> tl::expected<std::nullptr_t, Error> {
+        auto &&[remove_item_index, node_to_remove_from, ancestors_indexes] = result;
 
-    if (remove_item_index == -1 || !node_to_remove_from.has_value())
-      return tl::unexpected(_error(fmt::format(
-        "key {} not found in Collection::remove", std::string{key.begin(), key.end()})));
-        
-    if (node_to_remove_from->is_leaf())
-      node_to_remove_from->remove_item_from_leaf(remove_item_index);
-    else
-      {
-        node_to_remove_from->remove_item_from_internal(remove_item_index)
-          .map([&](const auto &&affected_nodes) {
-            return ancestors_indexes.insert(
-              ancestors_indexes.end(), affected_nodes.begin(), affected_nodes.end());
-          })
-          .map_error([&](auto &&error) {
-            error.append("remove_item_from_internal error in Collection::remove");
-            return error.panic();
-          })
-          .value();
-      }
+        if (remove_item_index == -1 || !node_to_remove_from.has_value())
+          return tl::unexpected(_error(fmt::format(
+            "key {} not found in Collection::remove", std::string{key.begin(), key.end()})));
 
-    auto ancestors = this->get_nodes(ancestors_indexes)
-                       .map_error([&](auto &&error) {
-                         error.append("get_node error in Collection::remove");
-                         return error.panic();
-                       })
-                       .value();
+        if (node_to_remove_from->is_leaf())
+          node_to_remove_from->remove_item_from_leaf(remove_item_index);
+        else
+          {
+            node_to_remove_from->remove_item_from_internal(remove_item_index)
+              .map([&](const auto &&affected_nodes) {
+                return ancestors_indexes.insert(
+                  ancestors_indexes.end(), affected_nodes.begin(), affected_nodes.end());
+              })
+              .map_error([&](auto &&error) {
+                error.append("remove_item_from_internal error in Collection::remove");
+                return error.panic();
+              })
+              .value();
+          }
 
-    /* Rebalance the nodes all the way up.
-     * Start From one node before the last and go all the way up. Exclude root. */
-    for (auto i = static_cast<int64_t>(ancestors.size() - 2); i >= 0; i--)
-      {
-        auto pnode = ancestors[i];
-        auto node = ancestors[i + 1];
+        auto ancestors = this->get_nodes(ancestors_indexes)
+                           .map_error([&](auto &&error) {
+                             error.append("get_node error in Collection::remove");
+                             return error.panic();
+                           })
+                           .value();
 
-        if (node.is_under_populated())
-          pnode.rebalance_remove(node, ancestors_indexes[i + 1]).map_error([&](auto &&error) {
-            error.append("rebalance_remove error in Collection::remove");
-            return error.panic();
-          });
-      }
+        /* Rebalance the nodes all the way up.
+         * Start From one node before the last and go all the way up. Exclude root. */
+        for (auto i = static_cast<int64_t>(ancestors.size() - 2); i >= 0; i--)
+          {
+            auto pnode = ancestors[i];
+            auto node = ancestors[i + 1];
 
-    root = ancestors[0];
+            if (node.is_under_populated())
+              pnode.rebalance_remove(node, ancestors_indexes[i + 1]).map_error([&](auto &&error) {
+                error.append("rebalance_remove error in Collection::remove");
+                return error.panic();
+              });
+          }
 
-    /* If the root has no items after rebalancing,
-     * there's no need to save it because we ignore it. */
-    if (root.items.empty() && !root.children.empty())
-      this->root = ancestors[1].page_num;
+        root = ancestors[0];
 
-    return nullptr;
+        /* If the root has no items after rebalancing,
+         * there's no need to save it because we ignore it. */
+        if (root.items.empty() && !root.children.empty())
+          this->root = ancestors[1].page_num;
+
+        return nullptr;
+      });
   }
 
 } // namespace toocal::core::collection

@@ -106,8 +106,8 @@ namespace toocal::core::node
   {
     auto ancestors_indexes = std::deque<uint32_t>{/* index of root */ 0};
 
-    return find_key_helper(*this, key, exact, ancestors_indexes).map([&](const auto&& result) {
-      const auto [index, node] = result;
+    return find_key_helper(*this, key, exact, ancestors_indexes).map([&](const auto& result) {
+      const auto &[index, node] = result;
       return std::make_tuple(index, node, ancestors_indexes);
     });
   }
@@ -212,7 +212,7 @@ namespace toocal::core::node
 
   auto Node::remove_item_from_leaf(int32_t index) noexcept -> void
   {
-    this->items.erase(this->items.begin() + index + 1);
+    this->items.erase(this->items.begin() + index);
     this->dal->write_node(*this).map_error([&](auto&& error) {
       error.append("write_node error in Node::remove_items_from_leaf");
       return error.panic();

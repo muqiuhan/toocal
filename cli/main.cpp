@@ -41,13 +41,13 @@ int main(int argc, char ** argv)
     std::chrono::duration_cast<std::chrono::milliseconds>(
       generation_end_time - generation_start_time)
       .count());
-
+     
   spdlog::info("querying 10k data...");
   const auto finding_start_time = std::chrono::high_resolution_clock::now();
   for (uint32_t i = 0; i < data_size; i++)
     {
       collection.find(std::vector<uint8_t>{keys[i].begin(), keys[i].end()})
-        .map([&](const auto && item) {
+        .map([&](const auto & item) {
           if (item == tl::nullopt)
             fatal("item is nullopt");
 
@@ -56,7 +56,6 @@ int main(int argc, char ** argv)
                      finded_value =
                        std::string{item.value().value.begin(), item.value().value.end()};
 
-          spdlog::info("finded key: {}, finded value: {}", finded_key, finded_value);
           if (keys[i] != finded_key)
             fatal(fmt::format("finded key is {}", finded_key));
 

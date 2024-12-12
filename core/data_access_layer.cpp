@@ -180,8 +180,8 @@ namespace toocal::core::data_access_layer
     -> tl::expected<Node, Error>
   {
     return this->read_page(page_num)
-      .and_then([](const auto &&page) { return types::Serializer<Node>::deserialize(page.data); })
-      .map([&](const auto &&node) { return Node{this, page_num, node.items, node.children}; });
+      .and_then([](const auto&&page) { return types::Serializer<Node>::deserialize(page.data); })
+      .map([&](const auto &node) { return Node{this, page_num, node.items, node.children}; });
   }
 
   [[nodiscard]] auto Data_access_layer::max_threshold() const noexcept -> float
