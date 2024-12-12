@@ -38,7 +38,7 @@ namespace toocal::core::types
   {
   public:
     [[nodiscard]] static auto serialize(const Meta &self) noexcept
-      -> tl::expected<std::vector<std::uint8_t>, Error>
+      -> tl::expected<std::vector<uint8_t>, Error>
     {
       auto buffer = std::vector<uint8_t>(
         /* root */
@@ -52,7 +52,7 @@ namespace toocal::core::types
       return buffer;
     }
 
-    [[nodiscard]] static auto deserialize(const std::vector<std::uint8_t> &buffer) noexcept
+    [[nodiscard]] static auto deserialize(const std::vector<uint8_t> &buffer) noexcept
       -> tl::expected<Meta, Error>
     {
       auto deserializer =

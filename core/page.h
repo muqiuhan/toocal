@@ -11,8 +11,8 @@ namespace toocal::core::page
   class Page
   {
   public:
-    Page_num                  page_num;
-    std::vector<std::uint8_t> data;
+    Page_num             page_num;
+    std::vector<uint8_t> data;
 
   private:
     /** Get the virtual memory page size of the current operating system.

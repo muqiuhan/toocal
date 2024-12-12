@@ -3,6 +3,7 @@
 
 #include "errors.hpp"
 #include <tl/expected.hpp>
+#include <deque>
 
 namespace toocal::core::types
 {
@@ -12,12 +13,12 @@ namespace toocal::core::types
   {
   public:
     [[nodiscard]] static auto serialize(const Tp_serialize_type &) noexcept
-      -> tl::expected<std::vector<std::uint8_t>, Error>
+      -> tl::expected<std::vector<uint8_t>, Error>
     {
       unimplemented();
     }
 
-    [[nodiscard]] static auto deserialize(const std::vector<std::uint8_t> &) noexcept
+    [[nodiscard]] static auto deserialize(const std::vector<uint8_t> &) noexcept
       -> tl::expected<Tp_serialize_type, Error>
     {
       unimplemented();

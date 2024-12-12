@@ -31,7 +31,7 @@ namespace toocal::core::collection
 
     if (0 == this->root)
       {
-        root = std::move(this->dal->new_node(std::vector{item}, std::vector<page::Page_num>{}));
+        root = std::move(this->dal->new_node(std::deque{item}, std::deque<page::Page_num>{}));
 
         return this->dal->write_node(root).map([&](const auto &&_) {
           this->root = root.page_num;
@@ -105,11 +105,11 @@ namespace toocal::core::collection
     return nullptr;
   }
 
-  [[nodiscard]] auto Collection::get_nodes(std::vector<uint32_t> indexes) const noexcept
-    -> tl::expected<std::vector<Node>, Error>
+  [[nodiscard]] auto Collection::get_nodes(std::deque<uint32_t> indexes) const noexcept
+    -> tl::expected<std::deque<Node>, Error>
   {
     return this->dal->get_node(this->root).map([&](const auto &&root) {
-      auto nodes = std::vector<Node>{root};
+      auto nodes = std::deque<Node>{root};
       auto child = root;
 
       for (uint32_t i = 1; i < indexes.size(); i++)

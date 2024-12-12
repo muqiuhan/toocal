@@ -12,7 +12,7 @@ int main(int argc, char ** argv)
   const auto data_size = 10000;
   const auto collection_name = std::string{"collection1"};
 
-  auto dal = Data_access_layer{__FILE_NAME__".db", builtin_options::BEST_PERFORMANCE};
+  auto dal = Data_access_layer{__FILE_NAME__ ".db", builtin_options::BEST_PERFORMANCE};
 
   auto collection = Collection{
     &dal, std::vector<uint8_t>{collection_name.begin(), collection_name.end()}, dal.meta.root};

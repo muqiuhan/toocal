@@ -1,10 +1,9 @@
 #ifndef TOOCAL_CORE_UTILS_H
 #define TOOCAL_CORE_UTILS_H
 
-#include <cstdint>
 #include <cstring>
 #include <string>
-#include <vector>
+#include <cstdint>
 #include <tl/expected.hpp>
 
 namespace toocal::core::utils

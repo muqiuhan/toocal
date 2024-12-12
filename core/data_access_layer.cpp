@@ -40,7 +40,7 @@ namespace toocal::core::data_access_layer
     return this->write_freelist()
       .and_then([&](const auto &&_) {
         /* init root */
-        auto node = Node{std::vector<node::Item>{}, std::vector<page::Page_num>{}};
+        auto node = Node{std::deque<node::Item>{}, std::deque<page::Page_num>{}};
 
         return this->write_node(node);
       })
@@ -227,7 +227,7 @@ namespace toocal::core::data_access_layer
   }
 
   [[nodiscard]] auto Data_access_layer::new_node(
-    std::vector<node::Item> items, std::vector<page::Page_num> children) noexcept -> Node
+    std::deque<node::Item> items, std::deque<page::Page_num> children) noexcept -> Node
   {
     return Node{this, this->freelist.get_next_page(), std::move(items), std::move(children)};
   }

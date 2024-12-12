@@ -12,14 +12,13 @@ int main(int argc, char ** argv)
   const auto data_size = 10000;
   const auto collection_name = std::string{"collection1"};
 
-  auto dal = Data_access_layer{__FILE_NAME__".db"};
+  auto dal = Data_access_layer{__FILE_NAME__ ".db"};
 
   auto collection = Collection{
     &dal, std::vector<uint8_t>{collection_name.begin(), collection_name.end()}, dal.meta.root};
 
   std::string keys[data_size], values[data_size];
 
-  const auto generation_start_time = std::chrono::high_resolution_clock::now();
   for (uint32_t i = 0; i < data_size; i++)
     {
       keys[i] = fmt::format("Key{}", i);
@@ -27,6 +26,7 @@ int main(int argc, char ** argv)
     }
 
   spdlog::info("10k data are being generated and stored in {}", dal.path);
+  const auto generation_start_time = std::chrono::high_resolution_clock::now();
   for (uint32_t i = 0; i < data_size; i++)
     {
       collection

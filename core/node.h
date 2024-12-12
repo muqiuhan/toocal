@@ -3,11 +3,12 @@
 
 #include "errors.hpp"
 #include "page.h"
+#include <cstddef>
 #include <cstdint>
+#include <deque>
 #include <span>
 #include <tuple>
 #include <utility>
-#include <vector>
 #include "tl/expected.hpp"
 #include "tl/optional.hpp"
 #include "types.hpp"
@@ -39,22 +40,22 @@ namespace toocal::core::node
   class Node
   {
   public:
-    Data_access_layer*          dal{};
-    page::Page_num              page_num{};
-    std::vector<Item>           items;
-    std::vector<page::Page_num> children;
+    Data_access_layer*         dal{};
+    page::Page_num             page_num{};
+    std::deque<Item>           items;
+    std::deque<page::Page_num> children;
 
     Node() = default;
 
-    Node(std::vector<Item> items, std::vector<page::Page_num> children)
+    Node(std::deque<Item> items, std::deque<page::Page_num> children)
       : items(std::move(items)), children(std::move(children))
     {}
 
     Node(
-      Data_access_layer*          dal,
-      const page::Page_num        page_num,
-      std::vector<Item>           items,
-      std::vector<page::Page_num> children)
+      Data_access_layer*         dal,
+      const page::Page_num       page_num,
+      std::deque<Item>           items,
+      std::deque<page::Page_num> children)
       : dal(dal), page_num(page_num), items(std::move(items)), children(std::move(children))
     {}
 
@@ -82,7 +83,7 @@ namespace toocal::core::node
      ** find_key is used to locate where a new key should be inserted so the
      ** position is returned. */
     [[nodiscard]] auto find_key(const std::vector<uint8_t>& key, bool exact) const noexcept
-      -> tl::expected<std::tuple<int, tl::optional<Node>, std::vector<uint32_t>>, Error>;
+      -> tl::expected<std::tuple<int, tl::optional<Node>, std::deque<uint32_t>>, Error>;
 
     auto add_item(const Item& item, uint32_t insertion_index) noexcept -> uint32_t;
 
@@ -102,28 +103,62 @@ namespace toocal::core::node
      ** support splitting a node more than once. (Though in practice used only
      ** once):
      ** 	       n                                  n
-     **                3                                 3,6
-     **	            /    \       ------>       /          |           \
-     **	          a    modifiedNode            a       modifiedNode  newNode
-     **         1,2      4,5,6,7,8            1,2          4,5         7,8 */
+     **          3                                 3,6
+     **	       /   \       ------>         /        |           \
+     **	      a    modifiedNode           a     modifiedNode  newNode
+     **      1,2    4,5,6,7,8            1,2       4,5          7,8   */
     auto split(Node& node_to_split, uint32_t node_to_split_index) noexcept -> void;
 
   private:
+    auto remove_item_from_leaf(int32_t index) noexcept -> void;
+
+    /** Take element before inorder (The biggest element from the left branch),
+     ** put it in the removed index and remove it from the original node.
+     ** Track in affectedNodes any nodes in the path leading to that node.
+     ** It will be used in case the tree needs to be rebalanced.
+     **          p
+     **        /
+     **      ..
+     **   /     \
+     ** ..       a     */
+    [[nodiscard]] auto remove_item_from_internal(int32_t index) noexcept
+      -> tl::expected<std::deque<int32_t>, Error>;
+
+    /**      p                              p
+     **      4                              3
+     **    /   \           ------>        /   \
+     **   a     b (unbalanced)           a     b (unbalanced)
+     ** 1,2,3   5                       1,2   4,5 */
+    auto rotate_right(Node& anode, Node& pnode, Node& bnode, int32_t bnode_index) noexcept -> void;
+
+    /** 	              p                                   p
+     **                 2                                   3
+     **	              /   \     ------>                   /   \
+     **  (unbalanced)a     b                 (unbalanced)a     b
+     **  1               3,4,5                          1,2   4,5 */
+    auto rotate_left(Node& anode, Node& pnode, Node& bnode, int32_t bnode_index) noexcept -> void;
+
+    /**       p                       p
+     **      3,5                      5
+     **	  /   |   \   ------>      /     \
+     **  a    b    c              a       c
+     ** 1,2   4   6,7          1,2,3,4   6,7 */
+    [[nodiscard]] auto merge(Node& bnode, int32_t bnode_index) noexcept
+      -> tl::expected<std::nullptr_t, Error>;
+
+    [[nodiscard]] static auto find_key_helper(
+      const Node&                 node,
+      const std::vector<uint8_t>& key,
+      bool                        exact,
+      std::deque<uint32_t>&       ancestors_indexes) noexcept
+      -> tl::expected<std::tuple<int, tl::optional<Node>>, Error>;
+
     /** find_key_in_node iterates all the items and finds the key. If the key is
      ** found, then the item is returned. If the key isn't found then return the
      ** index where it should have been (the first index that key is greater
      ** than it's previous). */
     [[nodiscard]] auto find_key_in_node(const std::vector<uint8_t>& key) const noexcept
       -> std::tuple<bool, uint32_t>;
-
-    auto remove_items_from_leaf(int32_t index) noexcept -> void;
-
-    [[nodiscard]] static auto find_key_helper(
-      const Node&                 node,
-      const std::vector<uint8_t>& key,
-      bool                        exact,
-      std::vector<uint32_t>&      ancestors_indexes) noexcept
-      -> tl::expected<std::tuple<int, tl::optional<Node>>, Error>;
 
   public:
     static constexpr uint32_t HEADER_SIZE = 3;
@@ -141,7 +176,7 @@ namespace toocal::core::types
   public:
     [[nodiscard]] static auto
       serialize(const Node& self, const uint32_t buffer_size = Page::DEFAULT_PAGE_SIZE) noexcept
-      -> tl::expected<std::vector<std::uint8_t>, Error>
+      -> tl::expected<std::vector<uint8_t>, Error>
     {
       const auto is_leaf = self.is_leaf();
       const auto items_count = static_cast<uint16_t>(self.items.size());
@@ -225,7 +260,7 @@ namespace toocal::core::types
       return buffer;
     }
 
-    [[nodiscard]] static auto deserialize(const std::vector<std::uint8_t>& buffer) noexcept
+    [[nodiscard]] static auto deserialize(const std::vector<uint8_t>& buffer) noexcept
       -> tl::expected<Node, Error>
     {
       uint8_t  is_leaf;
@@ -236,8 +271,8 @@ namespace toocal::core::types
           >> items_count;
       }
 
-      auto     children = std::vector<page::Page_num>{};
-      auto     items = std::vector<node::Item>{items_count};
+      auto     children = std::deque<page::Page_num>{};
+      auto     items = std::deque<node::Item>{items_count};
       uint32_t left = 3;
       for (uint32_t i = 0; i < items_count; i++)
         {

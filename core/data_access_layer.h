@@ -120,8 +120,8 @@ namespace toocal::core::data_access_layer
     /** Use read_page to write meta and return it. */
     [[nodiscard]] auto write_meta(const Meta& meta) noexcept -> tl::expected<std::nullptr_t, Error>;
 
-    [[nodiscard]] auto new_node(
-      std::vector<node::Item> items, std::vector<page::Page_num> children) noexcept -> Node;
+    [[nodiscard]] auto
+      new_node(std::deque<node::Item> items, std::deque<page::Page_num> children) noexcept -> Node;
 
     [[nodiscard]] auto write_node(Node& node) noexcept -> tl::expected<std::nullptr_t, Error>;
 

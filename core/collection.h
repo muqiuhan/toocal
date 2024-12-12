@@ -8,7 +8,6 @@
 #include "tl/optional.hpp"
 #include <cstddef>
 #include <cstdint>
-#include <vector>
 
 namespace toocal::core::data_access_layer
 {
@@ -23,16 +22,16 @@ namespace toocal::core::collection
   class Collection
   {
   public:
-    data_access_layer::Data_access_layer * dal;
-    std::vector<uint8_t>                   name;
-    page::Page_num                         root;
+    data_access_layer::Data_access_layer *dal;
+    std::vector<uint8_t>                  name;
+    page::Page_num                        root;
 
     Collection(std::vector<uint8_t> name, const page::Page_num root)
       : dal{nullptr}, name(std::move(name)), root(root)
     {}
 
     Collection(
-      data_access_layer::Data_access_layer * dal, std::vector<uint8_t> name, page::Page_num root)
+      data_access_layer::Data_access_layer *dal, std::vector<uint8_t> name, page::Page_num root)
       : dal(dal), name(std::move(name)), root(root)
     {}
 
@@ -58,8 +57,8 @@ namespace toocal::core::collection
      **   /     \     /   \
      **  c       d   e     f
      **  For [0,1,0] -> p,b,e    */
-    [[nodiscard]] auto get_nodes(std::vector<uint32_t> indexes) const noexcept
-      -> tl::expected<std::vector<Node>, Error>;
+    [[nodiscard]] auto get_nodes(std::deque<uint32_t> indexes) const noexcept
+      -> tl::expected<std::deque<Node>, Error>;
   };
 } // namespace toocal::core::collection
 

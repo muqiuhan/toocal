@@ -6,7 +6,7 @@
 #include "types.hpp"
 #include <algorithm>
 #include <cstdint>
-#include <vector>
+#include <deque>
 #include <endian/stream_reader.hpp>
 #include <endian/stream_writer.hpp>
 #include <endian/little_endian.hpp>
@@ -29,7 +29,7 @@ namespace toocal::core::freelist
      ** New page ids are first given from the releasedPageIDs to avoid growing
      ** the file. If it's empty, then max_page is incremented and a new page is
      ** created thus increasing the file size. */
-    std::vector<page::Page_num> released_pages;
+    std::deque<page::Page_num> released_pages;
 
     /** get_next_page returns page ids for writing New page ids are first given
      ** from the releasedPageIDs to avoid growing the file. If it's empty, then
@@ -49,7 +49,7 @@ namespace toocal::core::types
   {
   public:
     [[nodiscard]] static auto serialize(const Freelist &self) noexcept
-      -> tl::expected<std::vector<std::uint8_t>, Error>
+      -> tl::expected<std::vector<uint8_t>, Error>
     {
       const uint16_t max_page = static_cast<uint16_t>(self.max_page);
       const uint16_t released_pages_count = static_cast<uint16_t>(self.released_pages.size());
@@ -72,7 +72,7 @@ namespace toocal::core::types
       return buffer;
     }
 
-    [[nodiscard]] static auto deserialize(const std::vector<std::uint8_t> &buffer) noexcept
+    [[nodiscard]] static auto deserialize(const std::vector<uint8_t> &buffer) noexcept
       -> tl::expected<Freelist, Error>
     {
       auto deserializer =
@@ -83,7 +83,7 @@ namespace toocal::core::types
 
       deserializer >> max_page >> released_pages_count;
 
-      std::vector<page::Page_num> released_pages(released_pages_count);
+      std::deque<page::Page_num> released_pages(released_pages_count);
       for (uint16_t i = 0; i < released_pages_count; i++)
         deserializer >> released_pages[i];
 
