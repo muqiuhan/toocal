@@ -42,10 +42,7 @@ int main(int argc, char ** argv)
       generation_end_time - generation_start_time)
       .count());
 
-  spdlog::info("removing db file...{}KB", utils::Filesystem::sizeof_file(dal.path));
   std::filesystem::remove(dal.path);
-
-  spdlog::info("closing db...");
   dal.close();
 
   return 0;

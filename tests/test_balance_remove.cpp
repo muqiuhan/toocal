@@ -1,6 +1,5 @@
 #include "data_access_layer.h"
 #include "collection.h"
-#include "utils.h"
 
 using namespace toocal::core;
 using namespace toocal::core::data_access_layer;
@@ -19,7 +18,6 @@ int main(int argc, char ** argv)
 
   std::string keys[data_size], values[data_size];
 
-  const auto generation_start_time = std::chrono::high_resolution_clock::now();
   for (uint32_t i = 0; i < data_size; i++)
     {
       keys[i] = fmt::format("Key{}", i);
@@ -34,34 +32,19 @@ int main(int argc, char ** argv)
           std::vector<uint8_t>{values[i].begin(), values[i].end()})
         .map_error([&](const auto && error) { return error.panic(); });
     }
-  auto generation_end_time = std::chrono::high_resolution_clock::now();
 
-  spdlog::info("querying {} data...", data_size);
-  const auto finding_start_time = std::chrono::high_resolution_clock::now();
+  spdlog::info("removing 10k data...");
+  const auto removing_start_time = std::chrono::high_resolution_clock::now();
   for (uint32_t i = 0; i < data_size; i++)
     {
-      collection.find(std::vector<uint8_t>{keys[i].begin(), keys[i].end()})
-        .map([&](const auto && item) {
-          if (item == tl::nullopt)
-            fatal("item is nullopt");
-
-          auto       finding_end_time = std::chrono::high_resolution_clock::now();
-          const auto finded_key = std::string{item.value().key.begin(), item.value().key.end()},
-                     finded_value =
-                       std::string{item.value().value.begin(), item.value().value.end()};
-
-          if (keys[i] != finded_key)
-            fatal(fmt::format("finded key is {}", finded_key));
-
-          if (values[i] != finded_value)
-            fatal(fmt::format("finded value is {}", finded_key));
-        })
+      collection.remove(std::vector<uint8_t>{keys[i].begin(), keys[i].end()})
         .map_error([&](const auto && error) { return error.panic(); });
     }
-  const auto finding_end_time = std::chrono::high_resolution_clock::now();
+
+  const auto removing_end_time = std::chrono::high_resolution_clock::now();
   spdlog::info(
-    "querying completed, spend {}ms",
-    std::chrono::duration_cast<std::chrono::milliseconds>(finding_end_time - finding_start_time)
+    "removing completed, spend {}ms",
+    std::chrono::duration_cast<std::chrono::milliseconds>(removing_end_time - removing_end_time)
       .count());
 
   std::filesystem::remove(dal.path);

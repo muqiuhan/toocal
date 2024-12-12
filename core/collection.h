@@ -59,6 +59,17 @@ namespace toocal::core::collection
      **  For [0,1,0] -> p,b,e    */
     [[nodiscard]] auto get_nodes(std::deque<uint32_t> indexes) const noexcept
       -> tl::expected<std::deque<Node>, Error>;
+
+    /** Remove removes a key from the tree.
+     ** It finds the correct node and the index to remove the item from and removes it.
+     ** When performing the search, the ancestors are returned as well.
+     ** This way we can iterate over them to check which nodes were modified and rebalance by
+     ** rotating or merging the unbalanced nodes. Rotation is done first.
+     ** If the siblings don't have enough items, then merging occurs.
+     ** If the root is without items after a split, then the root is removed and the tree is one
+     ** level shorter. */
+    [[nodiscard]] auto remove(const std::vector<uint8_t> &key) noexcept
+      -> tl::expected<std::nullptr_t, Error>;
   };
 } // namespace toocal::core::collection
 

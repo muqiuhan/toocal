@@ -27,7 +27,7 @@ target("toocal_core")
     add_links("mimalloc")
 
 target("toocal")
-    set_kind("static")
+    set_kind("binary")
     set_languages("c++20")
     add_files("cli/*.cpp")
     add_includedirs("core", "libs")

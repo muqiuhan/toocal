@@ -25,7 +25,7 @@ int main(int argc, char ** argv)
       values[i] = fmt::format("Value{}", i);
     }
 
-  spdlog::info("10k data are being generated and stored in {}", dal.path);
+  spdlog::info("10k data are being generated and inserted in {}", dal.path);
   const auto generation_start_time = std::chrono::high_resolution_clock::now();
   for (uint32_t i = 0; i < data_size; i++)
     {
@@ -35,14 +35,8 @@ int main(int argc, char ** argv)
           std::vector<uint8_t>{values[i].begin(), values[i].end()})
         .map_error([&](const auto && error) { return error.panic(); });
     }
-  auto generation_end_time = std::chrono::high_resolution_clock::now();
-  spdlog::info(
-    "inserting completed, spend {}ms",
-    std::chrono::duration_cast<std::chrono::milliseconds>(
-      generation_end_time - generation_start_time)
-      .count());
 
-  spdlog::info("removing db file...{}KB", utils::Filesystem::sizeof_file(dal.path));
+  spdlog::info("file size: {}KB", utils::Filesystem::sizeof_file(dal.path));
   std::filesystem::remove(dal.path);
 
   spdlog::info("closing db...");

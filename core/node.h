@@ -109,9 +109,6 @@ namespace toocal::core::node
      **      1,2    4,5,6,7,8            1,2       4,5          7,8   */
     auto split(Node& node_to_split, uint32_t node_to_split_index) noexcept -> void;
 
-  private:
-    auto remove_item_from_leaf(int32_t index) noexcept -> void;
-
     /** Take element before inorder (The biggest element from the left branch),
      ** put it in the removed index and remove it from the original node.
      ** Track in affectedNodes any nodes in the path leading to that node.
@@ -123,6 +120,22 @@ namespace toocal::core::node
      ** ..       a     */
     [[nodiscard]] auto remove_item_from_internal(int32_t index) noexcept
       -> tl::expected<std::deque<int32_t>, Error>;
+    auto remove_item_from_leaf(int32_t index) noexcept -> void;
+
+    /** rebalances the tree after a remove operation.
+     ** This can be either by rotating to the right, to the left or by merging.
+     ** First, the sibling nodes are checked to see
+     ** if they have enough items for rebalancing (>= minItems+1).
+     ** If they don't have enough items, then merging with one of the sibling nodes occurs.
+     ** This may leave the parent unbalanced by having too little items so rebalancing has to be
+     ** checked for all the ancestors. */
+    [[nodiscard]] auto
+      rebalance_remove(Node& unbalanced_node, int32_t unbalanced_node_index) noexcept
+      -> tl::expected<std::nullptr_t, Error>;
+
+  private:
+    /** checks if the node size is big enough to populate a page after giving away one item. */
+    [[nodiscard]] auto can_spare_an_element() const noexcept -> bool;
 
     /**      p                              p
      **      4                              3

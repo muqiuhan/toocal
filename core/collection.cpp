@@ -1,8 +1,10 @@
 #include "collection.h"
 #include "data_access_layer.h"
+#include "errors.hpp"
 #include "node.h"
 #include "page.h"
 #include <cstring>
+#include "tl/expected.hpp"
 #include "utils.h"
 
 namespace toocal::core::collection
@@ -11,8 +13,8 @@ namespace toocal::core::collection
     -> tl::expected<tl::optional<node::Item>, Error>
   {
     return this->dal->get_node(this->root)
-      .and_then([&](auto &&node) { return node.find_key(key, true); })
-      .map([&](const auto &&result) -> tl::optional<node::Item> {
+      .and_then([&](const auto &node) { return node.find_key(key, true); })
+      .map([&](const auto &result) -> tl::optional<node::Item> {
         const auto [index, containing_node, _] = result;
         if (-1 == index)
           return tl::nullopt;
@@ -125,6 +127,75 @@ namespace toocal::core::collection
 
       return nodes;
     });
+  }
+
+  [[nodiscard]] auto Collection::remove(const std::vector<uint8_t> &key) noexcept
+    -> tl::expected<std::nullptr_t, Error>
+  {
+    auto root = this->dal->get_node(this->root)
+                  .map_error([&](auto &&error) {
+                    error.append("get_node error in Collection::remove");
+                    return error.panic();
+                  })
+                  .value();
+
+    auto &&[remove_item_index, node_to_remove_from, ancestors_indexes] =
+      root.find_key(key, true)
+        .map_error([&](auto &&error) {
+          error.append("find_key error in Collection::remove");
+          return error.panic();
+        })
+        .value();
+
+    if (remove_item_index == -1 || !node_to_remove_from.has_value())
+      return tl::unexpected(_error(fmt::format(
+        "key {} not found in Collection::remove", std::string{key.begin(), key.end()})));
+        
+    if (node_to_remove_from->is_leaf())
+      node_to_remove_from->remove_item_from_leaf(remove_item_index);
+    else
+      {
+        node_to_remove_from->remove_item_from_internal(remove_item_index)
+          .map([&](const auto &&affected_nodes) {
+            return ancestors_indexes.insert(
+              ancestors_indexes.end(), affected_nodes.begin(), affected_nodes.end());
+          })
+          .map_error([&](auto &&error) {
+            error.append("remove_item_from_internal error in Collection::remove");
+            return error.panic();
+          })
+          .value();
+      }
+
+    auto ancestors = this->get_nodes(ancestors_indexes)
+                       .map_error([&](auto &&error) {
+                         error.append("get_node error in Collection::remove");
+                         return error.panic();
+                       })
+                       .value();
+
+    /* Rebalance the nodes all the way up.
+     * Start From one node before the last and go all the way up. Exclude root. */
+    for (auto i = static_cast<int64_t>(ancestors.size() - 2); i >= 0; i--)
+      {
+        auto pnode = ancestors[i];
+        auto node = ancestors[i + 1];
+
+        if (node.is_under_populated())
+          pnode.rebalance_remove(node, ancestors_indexes[i + 1]).map_error([&](auto &&error) {
+            error.append("rebalance_remove error in Collection::remove");
+            return error.panic();
+          });
+      }
+
+    root = ancestors[0];
+
+    /* If the root has no items after rebalancing,
+     * there's no need to save it because we ignore it. */
+    if (root.items.empty() && !root.children.empty())
+      this->root = ancestors[1].page_num;
+
+    return nullptr;
   }
 
 } // namespace toocal::core::collection

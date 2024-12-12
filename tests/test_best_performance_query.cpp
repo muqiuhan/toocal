@@ -19,7 +19,6 @@ int main(int argc, char ** argv)
 
   std::string keys[data_size], values[data_size];
 
-  const auto generation_start_time = std::chrono::high_resolution_clock::now();
   for (uint32_t i = 0; i < data_size; i++)
     {
       keys[i] = fmt::format("Key{}", i);
@@ -34,7 +33,6 @@ int main(int argc, char ** argv)
           std::vector<uint8_t>{values[i].begin(), values[i].end()})
         .map_error([&](const auto && error) { return error.panic(); });
     }
-  auto generation_end_time = std::chrono::high_resolution_clock::now();
 
   spdlog::info("querying {} data...", data_size);
   const auto finding_start_time = std::chrono::high_resolution_clock::now();
@@ -64,10 +62,7 @@ int main(int argc, char ** argv)
     std::chrono::duration_cast<std::chrono::milliseconds>(finding_end_time - finding_start_time)
       .count());
 
-  spdlog::info("removing db file...{}KB", utils::Filesystem::sizeof_file(dal.path));
   std::filesystem::remove(dal.path);
-
-  spdlog::info("closing db...");
   dal.close();
 
   return 0;

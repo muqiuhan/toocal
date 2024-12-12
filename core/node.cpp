@@ -22,7 +22,7 @@ namespace toocal::core::node
   {
     try
       {
-        const auto& [key, value] = this->items.at(index);
+        const auto& [key, value] = this->items[index];
         return key.size() + value.size() + sizeof(Page::page_num);
       }
     catch (const std::out_of_range& e)
@@ -70,7 +70,7 @@ namespace toocal::core::node
       }
 
     ancestors_indexes.push_back(index);
-    const auto next_child = node.dal->get_node(node.children.at(index)).map_error([](auto&& error) {
+    const auto next_child = node.dal->get_node(node.children[index]).map_error([](auto&& error) {
       error.append("get_node error in find_key_helper");
       return error;
     });
@@ -186,7 +186,7 @@ namespace toocal::core::node
     /* the first index where min amount of bytes to populate a page is archived.
      * then add 1 so it will be split one index after. */
     const auto split_index = node_to_split.dal->get_split_index(node_to_split);
-    const auto middle_item = node_to_split.items.at(split_index);
+    const auto middle_item = node_to_split.items[split_index];
 
     Node new_node;
     if (node_to_split.is_leaf())
@@ -212,7 +212,7 @@ namespace toocal::core::node
 
   auto Node::remove_item_from_leaf(int32_t index) noexcept -> void
   {
-    this->items.erase(this->items.begin() + index);
+    this->items.erase(this->items.begin() + index + 1);
     this->dal->write_node(*this).map_error([&](auto&& error) {
       error.append("write_node error in Node::remove_items_from_leaf");
       return error.panic();
@@ -339,5 +339,76 @@ namespace toocal::core::node
           return nullptr;
         });
     });
+  }
+
+  [[nodiscard]] auto
+    Node::rebalance_remove(Node& unbalanced_node, int32_t unbalanced_node_index) noexcept
+    -> tl::expected<std::nullptr_t, Error>
+  {
+    auto pnode = *this;
+
+    /* right rotate */
+    if (unbalanced_node_index == 0)
+      {
+        auto left_node = this->dal->get_node(pnode.children[unbalanced_node_index - 1])
+                           .map_error([](auto&& error) {
+                             error.append("get_node error in Node::rebalance_remove");
+                             return error.panic();
+                           })
+                           .value();
+
+        if (left_node.can_spare_an_element())
+          {
+            rotate_right(left_node, pnode, unbalanced_node, unbalanced_node_index);
+            return this->dal->write_node(left_node)
+              .and_then([&](const auto&& _) { return this->dal->write_node(pnode); })
+              .and_then([&](const auto&& _) { return this->dal->write_node(unbalanced_node); });
+          }
+      }
+
+    /* left rotate */
+    if (unbalanced_node_index == pnode.children.size() - 1)
+      {
+        auto right_node = this->dal->get_node(pnode.children[unbalanced_node_index + 1])
+                            .map_error([](auto&& error) {
+                              error.append("get_node error in Node::rebalance_remove");
+                              return error.panic();
+                            })
+                            .value();
+
+        if (right_node.can_spare_an_element())
+          {
+            rotate_left(unbalanced_node, pnode, right_node, unbalanced_node_index);
+            return this->dal->write_node(unbalanced_node)
+              .and_then([&](const auto&& _) { return this->dal->write_node(pnode); })
+              .and_then([&](const auto&& _) { return this->dal->write_node(right_node); });
+          }
+      }
+
+    /* The merge function merges a given node with its node to the right.
+     * So by default, we merge an unbalanced node with its right sibling.
+     * In the case where the unbalanced node is the leftmost,
+     * we have to replace the merge parameters, so the unbalanced node right sibling,
+     * will be merged into the unbalanced node. */
+    if (unbalanced_node_index == 0)
+      {
+        auto right_node = this->dal->get_node(this->children[unbalanced_node_index + 1])
+                            .map_error([](auto&& error) {
+                              error.append("get_node error in Node::rebalance_remove");
+                              return error.panic();
+                            })
+                            .value();
+
+        return pnode.merge(right_node, unbalanced_node_index + 1);
+      }
+
+    return pnode.merge(unbalanced_node, unbalanced_node_index);
+  }
+
+  [[nodiscard]] auto Node::can_spare_an_element() const noexcept -> bool
+  {
+    if (this->dal->get_split_index(*this) == -1)
+      return false;
+    return true;
   }
 } // namespace toocal::core::node
