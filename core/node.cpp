@@ -107,7 +107,7 @@ namespace toocal::core::node
     auto ancestors_indexes = std::deque<uint32_t>{/* index of root */ 0};
 
     return find_key_helper(*this, key, exact, ancestors_indexes).map([&](const auto& result) {
-      const auto &[index, node] = result;
+      const auto& [index, node] = result;
       return std::make_tuple(index, node, ancestors_indexes);
     });
   }
@@ -242,7 +242,6 @@ namespace toocal::core::node
 
         /* replace the item that should be removed with
          * the item before inorder which we just found. */
-        this->items[index] = node.items.back();
         node.items.pop_back();
 
         return this->dal->write_node(*this)
@@ -263,21 +262,16 @@ namespace toocal::core::node
     anode.items.pop_back();
 
     /* get item from parent node and assign the aNodeItem item instead. */
-    const auto pnode_item_index = [&]() {
-      if (this->is_first(bnode_index))
-        return 0;
-      else
-        return bnode_index - 1;
-    }();
-
+    const auto pnode_item_index = (this->is_first(bnode_index)) ? 0 : bnode_index - 1;
     const auto pnode_item = pnode.items[pnode_item_index];
+
     pnode.items[pnode_item_index] = anode_item;
 
     /* assign parent item to b and make it first */
     bnode.items.push_front(pnode_item);
 
     /* if it's an inner leaf then move children as well. */
-    if (anode.is_leaf())
+    if (!anode.is_leaf())
       {
         const auto child_to_shift = anode.children.back();
         anode.children.pop_back();
@@ -295,12 +289,8 @@ namespace toocal::core::node
     bnode.items.pop_front();
 
     /* get item from parent node and assign the bNodeItem item instead */
-    const auto pnode_item_index = [&]() {
-      if (this->is_last(bnode_index, pnode))
-        return static_cast<int32_t>(pnode.items.size() - 1);
-      else
-        return bnode_index;
-    }();
+    const auto pnode_item_index =
+      (this->is_last(bnode_index, pnode)) ? (pnode.items.size() - 1) : bnode_index;
 
     const auto pnode_item = pnode.items[pnode_item_index];
     pnode.items[pnode_item_index] = bnode_item;
@@ -309,7 +299,7 @@ namespace toocal::core::node
     anode.items.push_back(pnode_item);
 
     /* if it's an inner leaf then move children as well. */
-    if (bnode.is_leaf())
+    if (!bnode.is_leaf())
       {
         const auto child_to_shift = bnode.children[0];
         bnode.children.pop_front();
@@ -327,9 +317,8 @@ namespace toocal::core::node
       const auto pnode_item = this->items[bnode_index - 1];
       this->items.erase(this->items.begin() + bnode_index - 1);
       node.items.push_back(pnode_item);
-      node.items.insert(node.items.end(), node.items.begin(), bnode.items.end());
 
-      if (node.is_leaf())
+      if (!node.is_leaf())
         node.children.insert(node.children.end(), bnode.children.begin(), bnode.children.end());
 
       return this->dal->write_node(node)
@@ -346,43 +335,38 @@ namespace toocal::core::node
     -> tl::expected<std::nullptr_t, Error>
   {
     auto pnode = *this;
-
     /* right rotate */
-    if (unbalanced_node_index == 0)
+    if (unbalanced_node_index != 0)
       {
-        auto left_node = this->dal->get_node(pnode.children[unbalanced_node_index - 1])
-                           .map_error([](auto&& error) {
-                             error.append("get_node error in Node::rebalance_remove");
-                             return error.panic();
-                           })
-                           .value();
+        this->dal->get_node(pnode.children[unbalanced_node_index - 1])
+          .and_then([&](auto&& left_node) -> tl::expected<std::nullptr_t, Error> {
+            if (left_node.can_spare_an_element())
+              {
+                rotate_right(left_node, pnode, unbalanced_node, unbalanced_node_index);
+                return this->dal->write_node(left_node)
+                  .and_then([&](const auto&& _) { return this->dal->write_node(pnode); })
+                  .and_then([&](const auto&& _) { return this->dal->write_node(unbalanced_node); });
+              }
 
-        if (left_node.can_spare_an_element())
-          {
-            rotate_right(left_node, pnode, unbalanced_node, unbalanced_node_index);
-            return this->dal->write_node(left_node)
-              .and_then([&](const auto&& _) { return this->dal->write_node(pnode); })
-              .and_then([&](const auto&& _) { return this->dal->write_node(unbalanced_node); });
-          }
+            return nullptr;
+          });
       }
 
-    /* left rotate */
-    if (unbalanced_node_index == pnode.children.size() - 1)
+    /* left balance */
+    if (unbalanced_node_index != pnode.children.size() - 1)
       {
-        auto right_node = this->dal->get_node(pnode.children[unbalanced_node_index + 1])
-                            .map_error([](auto&& error) {
-                              error.append("get_node error in Node::rebalance_remove");
-                              return error.panic();
-                            })
-                            .value();
+        this->dal->get_node(pnode.children[unbalanced_node_index + 1])
+          .and_then([&](auto&& right_node) -> tl::expected<std::nullptr_t, Error> {
+            if (right_node.can_spare_an_element())
+              {
+                rotate_left(unbalanced_node, pnode, right_node, unbalanced_node_index);
+                return this->dal->write_node(unbalanced_node)
+                  .and_then([&](const auto&& _) { return this->dal->write_node(pnode); })
+                  .and_then([&](const auto&& _) { return this->dal->write_node(right_node); });
+              }
 
-        if (right_node.can_spare_an_element())
-          {
-            rotate_left(unbalanced_node, pnode, right_node, unbalanced_node_index);
-            return this->dal->write_node(unbalanced_node)
-              .and_then([&](const auto&& _) { return this->dal->write_node(pnode); })
-              .and_then([&](const auto&& _) { return this->dal->write_node(right_node); });
-          }
+            return nullptr;
+          });
       }
 
     /* The merge function merges a given node with its node to the right.
@@ -391,16 +375,8 @@ namespace toocal::core::node
      * we have to replace the merge parameters, so the unbalanced node right sibling,
      * will be merged into the unbalanced node. */
     if (unbalanced_node_index == 0)
-      {
-        auto right_node = this->dal->get_node(this->children[unbalanced_node_index + 1])
-                            .map_error([](auto&& error) {
-                              error.append("get_node error in Node::rebalance_remove");
-                              return error.panic();
-                            })
-                            .value();
-
-        return pnode.merge(right_node, unbalanced_node_index + 1);
-      }
+      return this->dal->get_node(this->children[unbalanced_node_index + 1])
+        .and_then([&](auto&& node) { return pnode.merge(node, unbalanced_node_index + 1); });
 
     return pnode.merge(unbalanced_node, unbalanced_node_index);
   }

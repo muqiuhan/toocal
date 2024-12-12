@@ -9,7 +9,7 @@ using namespace toocal::core::page;
 
 int main(int argc, char ** argv)
 {
-  const auto data_size = 10;
+  const auto data_size = 1000;
   const auto collection_name = std::string{"collection1"};
 
   auto dal = Data_access_layer{"test_collection_put_big_data.db"};
@@ -26,7 +26,7 @@ int main(int argc, char ** argv)
       values[i] = fmt::format("Value{}", i);
     }
 
-  spdlog::info("10k data are being generated and stored in {}", dal.path);
+  spdlog::info("{} data are being generated and stored in {}", data_size, dal.path);
   for (uint32_t i = 0; i < data_size; i++)
     {
       collection
@@ -42,7 +42,7 @@ int main(int argc, char ** argv)
       generation_end_time - generation_start_time)
       .count());
      
-  spdlog::info("querying 10k data...");
+  spdlog::info("querying {} data...", data_size);
   const auto finding_start_time = std::chrono::high_resolution_clock::now();
   for (uint32_t i = 0; i < data_size; i++)
     {
@@ -70,7 +70,7 @@ int main(int argc, char ** argv)
     std::chrono::duration_cast<std::chrono::milliseconds>(finding_end_time - finding_start_time)
       .count());
 
-  spdlog::info("removing 10k data...");
+  spdlog::info("removing {} data...", data_size);
   const auto removing_start_time = std::chrono::high_resolution_clock::now();
   for (uint32_t i = 0; i < data_size; i++)
     {

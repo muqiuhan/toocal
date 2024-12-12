@@ -46,6 +46,11 @@ namespace toocal::core::node
     std::deque<page::Page_num> children;
 
     Node() = default;
+    Node(const Node&) = default;
+    Node(Node&&) = default;
+    Node& operator=(const Node&) = default;
+    Node& operator=(Node&&) = default;
+    ~Node() = default;
 
     Node(std::deque<Item> items, std::deque<page::Page_num> children)
       : items(std::move(items)), children(std::move(children))

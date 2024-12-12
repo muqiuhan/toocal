@@ -111,7 +111,7 @@ namespace toocal::core::data_access_layer
 
   [[nodiscard]] auto Data_access_layer::read_freelist() noexcept -> tl::expected<Freelist, Error>
   {
-    return this->read_page(this->meta.freelist_page).and_then([&](const auto &&page) {
+    return this->read_page(this->meta.freelist_page).and_then([&](const auto &page) {
       return types::Serializer<Freelist>::deserialize(page.data);
     });
   }
@@ -120,7 +120,7 @@ namespace toocal::core::data_access_layer
     -> tl::expected<std::nullptr_t, Error>
   {
     auto page = this->allocate_empty_page(this->meta.freelist_page);
-    return types::Serializer<Freelist>::serialize(this->freelist).and_then([&](const auto &&data) {
+    return types::Serializer<Freelist>::serialize(this->freelist).and_then([&](const auto &data) {
       std::copy(data.begin(), data.end(), page.data.begin());
       return this->write_page(page);
     });
@@ -128,7 +128,7 @@ namespace toocal::core::data_access_layer
 
   [[nodiscard]] auto Data_access_layer::read_meta() noexcept -> tl::expected<Meta, Error>
   {
-    return this->read_page(Meta::PAGE_NUM).and_then([&](const auto &&page) {
+    return this->read_page(Meta::PAGE_NUM).and_then([&](const auto &page) {
       return types::Serializer<Meta>::deserialize(page.data);
     });
   }
@@ -137,7 +137,7 @@ namespace toocal::core::data_access_layer
     -> tl::expected<std::nullptr_t, Error>
   {
     auto page = this->allocate_empty_page(Meta::PAGE_NUM);
-    return types::Serializer<Meta>::serialize(meta).and_then([&](const auto &&data) {
+    return types::Serializer<Meta>::serialize(meta).and_then([&](const auto &data) {
       std::copy(data.begin(), data.end(), page.data.begin());
       return this->write_page(page);
     });
@@ -155,7 +155,7 @@ namespace toocal::core::data_access_layer
     else
       page.page_num = node.page_num;
 
-    return types::Serializer<Node>::serialize(node).and_then([&](const auto &&data) {
+    return types::Serializer<Node>::serialize(node).and_then([&](const auto &data) {
       std::copy(data.begin(), data.end(), page.data.begin());
       return this->write_page(page);
     });
@@ -170,7 +170,7 @@ namespace toocal::core::data_access_layer
     else
       page.page_num = node.page_num;
 
-    return types::Serializer<Node>::serialize(node).and_then([&](const auto &&data) {
+    return types::Serializer<Node>::serialize(node).and_then([&](const auto &data) {
       std::copy(data.begin(), data.end(), page.data.begin());
       return this->write_page(page);
     });
@@ -180,7 +180,7 @@ namespace toocal::core::data_access_layer
     -> tl::expected<Node, Error>
   {
     return this->read_page(page_num)
-      .and_then([](const auto&&page) { return types::Serializer<Node>::deserialize(page.data); })
+      .and_then([](const auto&page) { return types::Serializer<Node>::deserialize(page.data); })
       .map([&](const auto &node) { return Node{this, page_num, node.items, node.children}; });
   }
 
@@ -196,7 +196,7 @@ namespace toocal::core::data_access_layer
 
   [[nodiscard]] auto Data_access_layer::is_under_populated(const Node &node) const noexcept -> bool
   {
-    return static_cast<float>(node.size()) < this->max_threshold();
+    return static_cast<float>(node.size()) < this->min_threshold();
   }
 
   [[nodiscard]] auto Data_access_layer::is_over_populated(const Node &node) const noexcept -> bool
