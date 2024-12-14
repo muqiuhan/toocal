@@ -8,19 +8,21 @@ namespace toocal::core::utils
 {
   [[nodiscard]] auto Safecmp::memcmp(const std::string& k1, const std::string& k2) noexcept -> int
   {
-    return k1.size() == k2.size()
-             ? std::memcmp(k1.data(), k2.data(), (k1.size() > k2.size() ? k2.size() : k1.size()))
-           : k1.size() > k2.size() ? 1
-                                   : -1;
+    size_t minSize = std::min(k1.size(), k2.size());
+    for (size_t i = 0; i < minSize; ++i)
+      if (k1[i] != k2[i])
+        return k1[i] < k2[i] ? -1 : 1;
+    return k1.size() < k2.size() ? -1 : (k1.size() > k2.size() ? 1 : 0);
   }
 
   [[nodiscard]] auto Safecmp::bytescmp(
     const std::vector<uint8_t>& k1, const std::vector<uint8_t>& k2) noexcept -> int
   {
-    return k1.size() == k2.size()
-             ? std::memcmp(k1.data(), k2.data(), (k1.size() > k2.size() ? k2.size() : k1.size()))
-           : k1.size() > k2.size() ? 1
-                                   : -1;
+    size_t minSize = std::min(k1.size(), k2.size());
+    for (size_t i = 0; i < minSize; ++i)
+      if (k1[i] != k2[i])
+        return k1[i] < k2[i] ? -1 : 1;
+    return k1.size() < k2.size() ? -1 : (k1.size() > k2.size() ? 1 : 0);
   }
 
   [[nodiscard]] auto Filesystem::sizeof_file(const std::string& path) noexcept -> size_t

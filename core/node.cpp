@@ -5,7 +5,6 @@
 #include <cstdarg>
 #include <cstddef>
 #include <numeric>
-#include <span>
 #include <stdexcept>
 #include "utils.h"
 
@@ -58,7 +57,7 @@ namespace toocal::core::node
     std::deque<uint32_t>&       ancestors_indexes) noexcept
     -> tl::expected<std::tuple<int, tl::optional<Node>>, Error>
   {
-    const auto&& [was_found, index] = node.find_key_in_node(key);
+    const auto [was_found, index] = node.find_key_in_node(key);
     if (was_found)
       return std::make_tuple(index, node);
 
@@ -70,14 +69,9 @@ namespace toocal::core::node
       }
 
     ancestors_indexes.push_back(index);
-    const auto next_child = node.dal->get_node(node.children[index]).map_error([](auto&& error) {
-      error.append("get_node error in find_key_helper");
-      return error;
+    return node.dal->get_node(node.children[index]).and_then([&](const auto& next_child) {
+      return find_key_helper(next_child, key, exact, ancestors_indexes);
     });
-
-    if (next_child.has_value())
-      return find_key_helper(next_child.value(), key, exact, ancestors_indexes);
-    return tl::unexpected(next_child.error());
   }
 
   [[nodiscard]] auto Node::find_key_in_node(const std::vector<uint8_t>& key) const noexcept
@@ -91,7 +85,7 @@ namespace toocal::core::node
 
         /* The key is bigger than the previous item, so it doesn't exist in the
          * node, but may exist in child nodes. */
-        if (compare_result > 0)
+        if (compare_result == 1)
           return {false, index};
         ++index;
       }
@@ -144,8 +138,8 @@ namespace toocal::core::node
     dal->write_node(node)
       .map([&](const auto&& _) {
         new_node = std::move(node);
-        node_to_split.items =
-          std::deque<Item>{node_to_split.items.begin(), node_to_split.items.begin() + split_index};
+        node_to_split.items.erase(
+          node_to_split.items.begin() + split_index, node_to_split.items.end());
 
         return nullptr;
       })
@@ -167,11 +161,11 @@ namespace toocal::core::node
     dal->write_node(node)
       .map([&](const auto&& _) {
         new_node = std::move(node);
-        node_to_split.items =
-          std::deque<Item>{node_to_split.items.begin(), node_to_split.items.begin() + split_index};
+        node_to_split.items.erase(
+          node_to_split.items.begin() + split_index, node_to_split.items.end());
 
-        node_to_split.children = std::deque<page::Page_num>{
-          node_to_split.children.begin(), node_to_split.children.begin() + split_index + 1};
+        node_to_split.children.erase(
+          node_to_split.children.begin() + split_index + 1, node_to_split.children.end());
 
         return nullptr;
       })
@@ -223,33 +217,32 @@ namespace toocal::core::node
     -> tl::expected<std::deque<int32_t>, Error>
   {
     auto affected_nodes = std::deque<int32_t>{index};
+
     return this->dal->get_node(this->children[index])
-      .map([&](auto&& node) {
+      .and_then([&](auto&& node) {
         /* starting from its left child, descend to the rightmost descendant. */
         while (!node.is_leaf())
           {
-            const auto traversing_index = this->children.size() - 1;
+            const auto traversing_index = node.children.size() - 1;
             node.dal->get_node(node.children[traversing_index])
-              .map([&](const auto&& _) {
+              .map([&](const auto&& anode) {
+                node = anode;
                 affected_nodes.push_back(traversing_index);
                 return nullptr;
               })
-              .map_error([](auto&& error) {
-                error.append("get_node error in Node::remote_item_from_internal");
+              .map_error([&](auto&& error) {
+                error.append("get_node error in Node::remove_item_from_internal");
                 return error.panic();
               });
           }
 
         /* replace the item that should be removed with
          * the item before inorder which we just found. */
+        this->items[index] = node.items.back();
         node.items.pop_back();
 
-        return this->dal->write_node(*this)
-          .map([&](const auto&& _) { return this->dal->write_node(node); })
-          .map_error([](auto&& error) {
-            error.append("write_node error in Node::remote_item_from_internal");
-            return error.panic();
-          });
+        return this->dal->write_node(node).map(
+          [&](const auto&& _) { return this->dal->write_node(*this); });
       })
       .map([&](const auto&& _) { return affected_nodes; });
   }
@@ -315,8 +308,11 @@ namespace toocal::core::node
     return this->dal->get_node(this->children[bnode_index - 1]).and_then([&](auto&& node) {
       /* take the item from the parent, remove it and add it to the unbalanced node */
       const auto pnode_item = this->items[bnode_index - 1];
+
       this->items.erase(this->items.begin() + bnode_index - 1);
       node.items.push_back(pnode_item);
+      node.items.insert(node.items.end(), bnode.items.begin(), bnode.items.end());
+      this->children.erase(this->children.begin() + bnode_index);
 
       if (!node.is_leaf())
         node.children.insert(node.children.end(), bnode.children.begin(), bnode.children.end());

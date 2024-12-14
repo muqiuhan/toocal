@@ -38,7 +38,7 @@ namespace toocal::core::data_access_layer
      **   - generate and insert: 1.25s
      **   - query: 0.65s
      **   - file size: 472kb */
-    inline static const auto BALANCE = Options{Page::DEFAULT_PAGE_SIZE, 0.5f, 0.5f};
+    inline static const auto BALANCE = Options{Page::DEFAULT_PAGE_SIZE, 0.0125f, 0.025f};
 
     /** Optimize database file size, database file size is large, but query performance is low.
      ** The test results of 100k data:
@@ -124,9 +124,6 @@ namespace toocal::core::data_access_layer
       new_node(std::deque<node::Item> items, std::deque<page::Page_num> children) noexcept -> Node;
 
     [[nodiscard]] auto write_node(Node& node) noexcept -> tl::expected<std::nullptr_t, Error>;
-
-    [[nodiscard]] auto write_node(const Node&& node) noexcept
-      -> tl::expected<std::nullptr_t, Error>;
 
     [[nodiscard]] auto get_node(page::Page_num page_num) noexcept -> tl::expected<Node, Error>;
 

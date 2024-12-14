@@ -12,7 +12,7 @@ int main(int argc, char ** argv)
   const auto data_size = 1000;
   const auto collection_name = std::string{"collection1"};
 
-  auto dal = Data_access_layer{"test_collection_put_big_data.db"};
+  auto dal = Data_access_layer{"cli.db"};
 
   auto collection = Collection{
     &dal, std::vector<uint8_t>{collection_name.begin(), collection_name.end()}, dal.meta.root};
@@ -41,7 +41,7 @@ int main(int argc, char ** argv)
     std::chrono::duration_cast<std::chrono::milliseconds>(
       generation_end_time - generation_start_time)
       .count());
-     
+
   spdlog::info("querying {} data...", data_size);
   const auto finding_start_time = std::chrono::high_resolution_clock::now();
   for (uint32_t i = 0; i < data_size; i++)
@@ -77,11 +77,20 @@ int main(int argc, char ** argv)
       collection.remove(std::vector<uint8_t>{keys[i].begin(), keys[i].end()})
         .map_error([&](const auto && error) { return error.panic(); });
     }
-
   const auto removing_end_time = std::chrono::high_resolution_clock::now();
+  spdlog::info("checking...");
+  for (uint32_t i = 0; i < data_size; i++)
+    {
+      collection.find(std::vector<uint8_t>{keys[i].begin(), keys[i].end()})
+        .map([&](const auto & item) {
+          if (item != tl::nullopt)
+            fatal(fmt::format("key: {} is not removed", keys[i]));
+        })
+        .map_error([&](const auto && error) { return error.panic(); });
+    }
   spdlog::info(
     "removing completed, spend {}ms",
-    std::chrono::duration_cast<std::chrono::milliseconds>(removing_end_time - removing_end_time)
+    std::chrono::duration_cast<std::chrono::milliseconds>(removing_end_time - removing_start_time)
       .count());
 
   spdlog::info("removing db file...{}KB", utils::Filesystem::sizeof_file(dal.path));

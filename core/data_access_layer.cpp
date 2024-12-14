@@ -59,11 +59,11 @@ namespace toocal::core::data_access_layer
       }
 
     return this->read_meta()
-      .and_then([&](const auto &&meta) {
+      .and_then([&](const auto &meta) {
         this->meta = meta;
         return this->read_freelist();
       })
-      .map([&](const auto &&freelist) {
+      .map([&](const auto &freelist) {
         this->freelist = freelist;
         return nullptr;
       });
@@ -152,21 +152,6 @@ namespace toocal::core::data_access_layer
         page.page_num = this->freelist.get_next_page();
         node.page_num = page.page_num;
       }
-    else
-      page.page_num = node.page_num;
-
-    return types::Serializer<Node>::serialize(node).and_then([&](const auto &data) {
-      std::copy(data.begin(), data.end(), page.data.begin());
-      return this->write_page(page);
-    });
-  }
-
-  [[nodiscard]] auto Data_access_layer::write_node(const Node &&node) noexcept
-    -> tl::expected<std::nullptr_t, Error>
-  {
-    auto page = this->allocate_empty_page();
-    if (node.page_num == 0)
-      page.page_num = this->freelist.get_next_page();
     else
       page.page_num = node.page_num;
 
