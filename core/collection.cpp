@@ -122,66 +122,71 @@ namespace toocal::core::collection
   [[nodiscard]] auto Collection::remove(const std::vector<uint8_t> &key) noexcept
     -> tl::expected<std::nullptr_t, Error>
   {
-    return this->dal->get_node(this->root).and_then([&](auto &&root) {
-      return root.find_key(key, true).and_then(
-        [&](auto &&result) -> tl::expected<std::nullptr_t, Error> {
-          auto &[remove_item_index, node_to_remove_from, ancestors_indexes] = result;
+    return this->dal->get_node(this->root)
+      .and_then([&](auto &&root) {
+        return root.find_key(key, true).and_then(
+          [&](auto &&result) -> tl::expected<std::nullptr_t, Error> {
+            auto &[remove_item_index, node_to_remove_from, ancestors_indexes] = result;
 
-          if (remove_item_index == -1)
-            return tl::unexpected(_error(fmt::format(
-              "key {} not found in Collection::remove", std::string{key.begin(), key.end()})));
+            if (remove_item_index == -1)
+              return tl::unexpected(_error(fmt::format(
+                "key {} not found in Collection::remove", std::string{key.begin(), key.end()})));
 
-          if (node_to_remove_from->is_leaf())
-            node_to_remove_from->remove_item_from_leaf(remove_item_index);
-          else
-            {
-              node_to_remove_from->remove_item_from_internal(remove_item_index)
-                .map([&](const auto &affected_nodes) {
-                  return ancestors_indexes.insert(
-                    ancestors_indexes.end(), affected_nodes.begin(), affected_nodes.end());
-                })
-                .map_error([&](auto &&error) {
-                  error.append("remove_item_from_internal error in Collection::remove");
-                  return error.panic();
-                });
-            }
-
-          return this->get_nodes(ancestors_indexes).map([&](auto &&ancestors) {
-            /* Rebalance the nodes all the way up.
-             * Start From one node before the last and go all the way up. Exclude root. */
-            for (auto i = static_cast<int64_t>(ancestors.size() - 2); i >= 0; i--)
+            if (node_to_remove_from->is_leaf())
+              node_to_remove_from->remove_item_from_leaf(remove_item_index);
+            else
               {
-                auto pnode = ancestors[i];
-                auto node = ancestors[i + 1];
-
-                if (node.is_under_populated())
-                  pnode.rebalance_remove(node, ancestors_indexes[i + 1])
-                    .map_error([&](auto &&error) {
-                      error.append("rebalance_remove error in Collection::remove");
-                      return error.panic();
-                    });
+                node_to_remove_from->remove_item_from_internal(remove_item_index)
+                  .map([&](const auto &affected_nodes) {
+                    return ancestors_indexes.insert(
+                      ancestors_indexes.end(), affected_nodes.begin(), affected_nodes.end());
+                  })
+                  .map_error([&](auto &&error) {
+                    error.append("remove_item_from_internal error in Collection::remove");
+                    return error.panic();
+                  });
               }
 
-            root = ancestors[0];
+            return this->get_nodes(ancestors_indexes).map([&](auto &&ancestors) {
+              /* Rebalance the nodes all the way up.
+               * Start From one node before the last and go all the way up. Exclude root. */
+              for (auto i = static_cast<int64_t>(ancestors.size() - 2); i >= 0; i--)
+                {
+                  auto pnode = ancestors[i];
+                  auto node = ancestors[i + 1];
 
-            /* If the root has no items after rebalancing,
-             * there's no need to save it because we ignore it. */
-            if (root.items.empty() && !root.children.empty())
-              this->root = ancestors[1].page_num;
+                  if (node.is_under_populated())
+                    pnode.rebalance_remove(node, ancestors_indexes[i + 1])
+                      .map_error([&](auto &&error) {
+                        error.append("rebalance_remove error in Collection::remove");
+                        return error.panic();
+                      });
+                }
 
-            return nullptr;
+              root = ancestors[0];
+
+              /* If the root has no items after rebalancing,
+               * there's no need to save it because we ignore it. */
+              if (root.items.empty() && !root.children.empty())
+                this->root = ancestors[1].page_num;
+
+              return nullptr;
+            });
           });
+      })
+      .and_then([&](const auto &) -> tl::expected<std::nullptr_t, Error> {
+        return this->find(key).and_then([&](const auto &item) {
+          if (item != tl::nullopt)
+            {
+              // Key still exists after removal attempt - this is unexpected
+              spdlog::warn(
+                "failed to remove key: {}, key still exists", std::string{key.begin(), key.end()});
+              // We're not retrying because the original implementation had an infinite loop
+              // Could implement retry logic with a counter if needed
+            }
+          return tl::expected<std::nullptr_t, Error>(nullptr);
         });
-    }).and_then([&](const auto &) -> tl::expected<std::nullptr_t, Error> {
-      this->find(key).and_then([&](const auto &item) {
-        while (item == tl::nullopt)
-          {
-            spdlog::warn("failed to remove key: {}, retrying...", std::string{key.begin(), key.end()});
-            this->remove(key);
-          }
-        return tl::expected<std::nullptr_t, Error>(nullptr);
       });
-    });
   }
 
 } // namespace toocal::core::collection
